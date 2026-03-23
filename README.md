@@ -1,8 +1,19 @@
-# OYEE Content Detection System - Complete Summary
+# OYEE Project - Content Detection System
+
+> **Anonymous Messaging Full Stack Project** with Advanced Content Moderation
+
+## 🎯 Overview
+
+This repository contains the **OYEE anonymous chat application** enhanced with a **comprehensive content detection system** that automatically detects and prevents sharing of:
+- Contact information (phone numbers, emails, addresses)
+- Sensitive data (passwords, API keys, credit cards)
+- Offensive content (profanity, hate speech)
+
+---
 
 ## 📦 Files Created
 
-I've created a **complete, production-ready content detection system** for your OYEE chat application with 5 core files:
+Production-ready content detection system with 5 core files:
 
 ### 1. **content-detector.js** ⭐
 The core detection engine that analyzes text for:
@@ -438,3 +449,9 @@ Your OYEE chat application now has enterprise-grade content moderation:
 **Created:** March 23, 2026
 **Version:** 1.0
 **License:** Use freely in your OYEE project
+
+---
+
+## 📖 Original Project
+
+This is an enhancement to the **OYEE Project** - an anonymous messaging full-stack application. The content detection system adds enterprise-grade moderation to keep the platform safe and secure.

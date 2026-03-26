@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
+
+:root {
+  /* Default Wine-Purple Theme */
+  --bg-main: #f0f0f5;
+  --bg-chat: #2D0052;
+  --text-main: #000000;
+  --text-chat: #ffffff;
+  --accent-primary: #8c1a30;
+  --accent-secondary: #c42850;
+  --cursor-color: #8c1a30;
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(140, 26, 48, 0.1);
+  --font-bebas: 'Bebas Neue', cursive;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-inter: 'Inter', sans-serif;
+}
+
+[data-theme='blue'] {
+  /* Blue-Tan Theme */
+  --bg-main: #A6C8FF; /* Blue Light */
+  --bg-chat: #001B5E; /* Deep Blue */
+  --text-main: #001B5E;
+  --text-chat: #ffffff;
+  --accent-primary: #0047FF; /* Brutal Blue */
+  --accent-secondary: #F5C400; /* Crown Yellow */
+  --cursor-color: #0047FF;
+  --glass: rgba(210, 180, 140, 0.4); /* Tan with opacity */
+  --glass-border: rgba(0, 71, 255, 0.2);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: none !important;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  background-color: var(--cursor-color);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease, background-color 0.3s ease;
+}
+
+.custom-cursor.hovering {
+  transform: translate(-50%, -50%) scale(1.5);
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+
+/* Animations */
+@keyframes star-fall {
+  from { transform: translateY(-10vh) translateX(0); opacity: 1; }
+  to { transform: translateY(110vh) translateX(-20vw); opacity: 0; }
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: star-fall linear infinite;
+}

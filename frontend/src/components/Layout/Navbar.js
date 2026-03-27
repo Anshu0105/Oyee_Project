@@ -62,7 +62,8 @@ const Navbar = () => {
       height: '64px',
       margin: '12px',
       justifyContent: 'space-between',
-      position: 'relative'
+      position: 'relative',
+      zIndex: 100
     }}>
       <div className="nav-left" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
         <div className="brand interactive" style={{
@@ -82,6 +83,22 @@ const Navbar = () => {
           
           <NavItem icon={User} label="PROFILE" to="/profile">
             <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', opacity: 0.7, marginBottom: '8px' }}>Identity: {user.name}</div>
+            
+            {user.claimedItems && user.claimedItems.length > 0 && (
+              <>
+                <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
+                <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Aura Stash:</div>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '4px 0' }}>
+                  {user.claimedItems.map(item => (
+                    <span key={item.id} title={item.name} style={{ fontSize: '1.2rem', cursor: 'help' }}>
+                      {item.emoji}
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
             <Link to="/profile/promotions" className="interactive" style={{ color: 'inherit', textDecoration: 'none', fontSize: '0.9rem' }}>Promotions (Ads)</Link>
             <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
             <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Last Rooms Joined:</div>

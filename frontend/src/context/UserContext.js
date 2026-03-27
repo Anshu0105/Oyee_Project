@@ -11,7 +11,8 @@ export const UserProvider = ({ children }) => {
     friends: [],
     enemies: [],
     lastRooms: ['WiFi Room'],
-    mood: 'happy'
+    mood: 'happy',
+    claimedItems: []
   });
 
   const updateAura = (delta) => {
@@ -34,8 +35,12 @@ export const UserProvider = ({ children }) => {
     setUser(prev => ({ ...prev, enemies: [...prev.enemies, name] }));
   };
 
+  const addClaimedItem = (item) => {
+    setUser(prev => ({ ...prev, claimedItems: [...prev.claimedItems, item] }));
+  };
+
   return (
-    <UserContext.Provider value={{ user, updateAura, addFriend, addEnemy }}>
+    <UserContext.Provider value={{ user, updateAura, addFriend, addEnemy, addClaimedItem }}>
       {children}
     </UserContext.Provider>
   );

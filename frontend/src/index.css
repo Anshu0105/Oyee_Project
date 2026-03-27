@@ -1,9 +1,146 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
 
-@layer base {
-  body {
-    @apply bg-white dark:bg-discord-gray text-gray-900 dark:text-gray-100 font-sans antialiased;
-  }
+:root {
+  /* Default Wine-Purple Theme */
+  --bg-main: #0a0a0a;
+  --bg-panel: #1a0a1a;
+  --bg-light: #f8f9fa; /* For Login Page */
+  --bg-chat: #0a0a0a;
+  --text-main: #ffffff;
+  --text-dim: #888888;
+  --text-chat: #ffffff;
+  --accent-primary: #e91e63; /* Pink/Magenta */
+  --accent-secondary: #ff4081;
+  --accent-blue: #2196f3;
+  --accent-green: #4caf50;
+  --streak-orange: #ff9800;
+  --cursor-color: #e91e63;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(233, 30, 99, 0.2);
+  --border-main: rgba(255, 255, 255, 0.1);
+  --font-bebas: 'Bebas Neue', cursive;
+  --font-mono: 'Share Tech Mono', monospace;
+  --font-inter: 'Inter', sans-serif;
+}
+
+[data-theme='blue'] {
+  /* Blue-Tan Theme */
+  --bg-main: #001B5E; /* Deep Blue */
+  --bg-panel: #002580;
+  --text-main: #ffffff;
+  --text-dim: #A6C8FF;
+  --accent-primary: #F5C400; /* Crown Yellow */
+  --accent-secondary: #0047FF;
+  --glass: rgba(210, 180, 140, 0.15); /* Tan with opacity */
+  --glass-border: rgba(245, 196, 0, 0.2);
+  --border-main: rgba(245, 196, 0, 0.1);
+  --cursor-color: #F5C400;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  cursor: none !important;
+}
+
+body {
+  font-family: var(--font-inter);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+.App {
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+/* Custom Cursor */
+.custom-cursor {
+  position: fixed;
+  width: 12px;
+  height: 12px;
+  background-color: var(--cursor-color);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  transition: transform 0.1s ease, background-color 0.3s ease;
+}
+
+.custom-cursor.hovering {
+  transform: translate(-50%, -50%) scale(1.5);
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+}
+
+/* Animations */
+@keyframes star-fall {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(110vh) translateX(-20vw) rotate(360deg); opacity: 0; }
+}
+
+@keyframes pulse-pink {
+  0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.7); }
+  70% { transform: scale(1.1); opacity: 0.8; box-shadow: 0 0 0 10px rgba(233, 30, 99, 0); }
+  100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(233, 30, 99, 0); }
+}
+
+@keyframes rgb-outline {
+  0% { border-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+  33% { border-color: #00ff00; box-shadow: 0 0 10px #00ff00; }
+  66% { border-color: #0000ff; box-shadow: 0 0 10px #0000ff; }
+  100% { border-color: #ff0000; box-shadow: 0 0 10px #ff0000; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.star {
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: star-fall linear infinite;
+  box-shadow: 0 0 10px white;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-primary);
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 8px;
+  animation: pulse-pink 2s infinite;
+}
+
+.rgb-profile {
+  border: 2px solid transparent;
+  animation: rgb-outline 4s linear infinite;
+}
+
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 10px 30px rgba(233, 30, 99, 0.3);
+  border-color: var(--accent-primary);
 }

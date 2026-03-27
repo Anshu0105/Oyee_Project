@@ -1,15 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wifi, GraduationCap, MapPin, UserSquare2 } from 'lucide-react';
+import { Wifi, GraduationCap, MapPin, MessageSquare, UserSquare2 } from 'lucide-react';
 
 const RoomCard = ({ icon: Icon, title, desc, badge, online, onClick }) => (
-  <div className="glass interactive" onClick={onClick} style={{
+  <div className="glass interactive hover-lift" onClick={onClick} style={{
     padding: '30px',
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
     cursor: 'pointer',
-    transition: 'all 0.3s'
+    transition: 'all 0.3s',
+    border: '1px solid var(--glass-border)',
+    position: 'relative',
+    overflow: 'hidden'
   }}>
     <div style={{ color: 'var(--accent-primary)' }}><Icon size={40} /></div>
     <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.8rem', letterSpacing: '2px' }}>{title}</h3>
@@ -18,7 +21,7 @@ const RoomCard = ({ icon: Icon, title, desc, badge, online, onClick }) => (
       <span style={{ 
         fontSize: '0.7rem', padding: '4px 10px', background: 'var(--glass-border)', borderRadius: '4px', letterSpacing: '1px' 
       }}>{badge}</span>
-      <span style={{ fontSize: '0.8rem', color: '#5ec87a', fontWeight: 'bold' }}>● {online} online</span>
+      <span style={{ fontSize: '0.8rem', color: 'var(--accent-green)', fontWeight: 'bold' }}>● {online} online</span>
     </div>
   </div>
 );
@@ -30,7 +33,7 @@ const Rooms = () => {
     { id: 'wifi', title: 'WIFI ROOM', icon: Wifi, desc: 'Connect with everyone on the same local network. Same router = same room.', badge: 'AUTO-DETECT', online: 42 },
     { id: 'uni', title: 'UNIVERSITY ROOM', icon: GraduationCap, desc: 'Exclusive to your institution. Verified via university mail domain.', badge: 'MAIL VERIFIED', online: 189 },
     { id: 'nearby', title: 'NEARBY ROOMS', icon: MapPin, desc: 'Discover chat rooms within your physical radius. GPS locked.', badge: 'GPS BASED', online: 23 },
-    { id: 'anon', title: '1-ON-1 ANON', icon: UserSquare2, desc: 'Random anonymous pairing. 100% blind match. Chat auto-deletes.', badge: 'RANDOM MATCH', online: 'Active' },
+    { id: 'dm', title: 'DM', icon: MessageSquare, desc: 'Direct anonymous messages. Connect with your campus peers privately.', badge: 'PRIVATE CHAT', online: 'Active' },
   ];
 
   return (

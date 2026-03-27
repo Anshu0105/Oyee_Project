@@ -13,29 +13,29 @@ const mockLeaderboard = [
 ];
 
 const getRankColor = (rank, isCurrentUser) => {
-  if (isCurrentUser) return '#8c1a30'; // Red for current user
+  if (isCurrentUser) return 'var(--accent-primary)'; 
   if (rank === 1) return '#d4af37';    // Gold
   if (rank === 2) return '#a8a9ad';    // Silver
   if (rank === 3) return '#cd7f32';    // Bronze
-  return '#999999';                    // Default Grey
+  return 'var(--text-dim)';                    
 };
 
 const getTierColor = (tier, isCurrentUser) => {
-  if (isCurrentUser) return '#8c1a30';
+  if (isCurrentUser) return 'var(--accent-primary)';
   switch (tier) {
     case 'STARBORN': return '#8c52ff'; // Purple
     case 'THUNDER': return '#d4af37';  // Gold
-    case 'RISING': return '#5cb85c';   // Green
-    case 'GHOST': return '#888888';    // Grey
-    default: return '#888888';
+    case 'RISING': return 'var(--accent-green)';   
+    case 'GHOST': return 'var(--text-dim)';    
+    default: return 'var(--text-dim)';
   }
 };
 
 const getTodayColor = (todayStr) => {
-  if (todayStr === '+0') return '#888888';
-  if (todayStr.startsWith('+')) return '#5cb85c';
-  if (todayStr.startsWith('-')) return '#8c1a30';
-  return '#888888';
+  if (todayStr === '+0') return 'var(--text-dim)';
+  if (todayStr.startsWith('+')) return 'var(--accent-green)';
+  if (todayStr.startsWith('-')) return 'var(--accent-primary)';
+  return 'var(--text-dim)';
 };
 
 const Leaderboard = () => {
@@ -44,8 +44,8 @@ const Leaderboard = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: '#ffffff',
-      color: '#111111',
+      backgroundColor: 'var(--bg-main)',
+      color: 'var(--text-main)',
       padding: '40px 32px',
       fontFamily: 'var(--font-inter)',
     }}>
@@ -55,7 +55,7 @@ const Leaderboard = () => {
           fontFamily: 'var(--font-bebas)',
           fontSize: '3.5rem',
           letterSpacing: '4px',
-          color: '#111111',
+          color: 'var(--text-main)',
           lineHeight: 1,
           marginBottom: '8px',
         }}>
@@ -64,12 +64,12 @@ const Leaderboard = () => {
         <p style={{
           fontFamily: 'var(--font-mono)',
           fontSize: '0.85rem',
-          color: '#888888',
+          color: 'var(--text-dim)',
           letterSpacing: '1px',
         }}>
           // ranked by public aura - earned in the void
         </p>
-        <div style={{ width: '48px', height: '3px', background: '#8c1a30', marginTop: '10px', borderRadius: '2px' }} />
+        <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>
 
       {/* Leaderboard Table Container */}
@@ -78,12 +78,12 @@ const Leaderboard = () => {
         {/* Table Header Row */}
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '60px 2fr 1fr 1fr 100px',
+          gridTemplateColumns: '80px 2fr 1fr 1fr 100px',
           padding: '16px 24px',
-          borderBottom: '1px solid #e0e0e0',
+          borderBottom: '1px solid var(--glass-border)',
           fontFamily: 'var(--font-bebas)',
           fontSize: '1.2rem',
-          color: '#888888',
+          color: 'var(--text-dim)',
           letterSpacing: '2px'
         }}>
           <div style={{ textAlign: 'center' }}>#</div>
@@ -102,50 +102,45 @@ const Leaderboard = () => {
             return (
               <div 
                 key={entry.rank}
+                className="interactive"
                 style={{
                   display: 'grid',
-                  gridTemplateColumns: '60px 2fr 1fr 1fr 100px',
+                  gridTemplateColumns: '80px 2fr 1fr 1fr 100px',
                   padding: '20px 24px',
-                  borderBottom: '1px solid #eeeeee',
-                  background: isCurrentUser ? '#fff5f7' : 'transparent',
-                  borderLeft: isCurrentUser ? '4px solid #8c1a30' : '4px solid transparent',
+                  borderBottom: '1px solid var(--glass-border)',
+                  background: isCurrentUser ? 'rgba(233, 30, 99, 0.05)' : 'transparent',
+                  borderLeft: isCurrentUser ? '4px solid var(--accent-primary)' : '4px solid transparent',
                   alignItems: 'center',
                   transition: 'background 0.2s',
                   cursor: 'default'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isCurrentUser) e.currentTarget.style.background = '#f9f9f9';
-                }}
-                onMouseLeave={(e) => {
-                  if (!isCurrentUser) e.currentTarget.style.background = 'transparent';
                 }}
               >
                 {/* Rank */}
                 <div style={{ 
                   textAlign: 'center', 
                   fontFamily: 'var(--font-bebas)', 
-                  fontSize: '1.6rem', 
+                  fontSize: '1.8rem', 
                   color: rankColor 
                 }}>
                   {entry.rank}
                 </div>
 
                 {/* Identity */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <span style={{ 
                     fontFamily: 'var(--font-bebas)', 
-                    fontSize: '1.4rem', 
-                    color: isCurrentUser ? '#8c1a30' : '#111111',
+                    fontSize: '1.6rem', 
+                    color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)',
                     letterSpacing: '1px'
                   }}>
                     {entry.name}
                   </span>
-                  {entry.badge && <span style={{ fontSize: '1rem' }}>{entry.badge}</span>}
+                  {entry.badge && <span style={{ fontSize: '1.2rem' }}>{entry.badge}</span>}
                   {isCurrentUser && (
                     <span style={{ 
                       fontFamily: 'var(--font-mono)', 
                       fontSize: '0.65rem', 
-                      color: '#888888',
+                      color: 'var(--text-dim)',
                       marginLeft: '8px' 
                     }}>
                       (YOU)
@@ -157,8 +152,8 @@ const Leaderboard = () => {
                 <div style={{ 
                   textAlign: 'center', 
                   fontFamily: 'var(--font-bebas)', 
-                  fontSize: '1.5rem', 
-                  color: (isCurrentUser || entry.aura > 400) ? '#8c1a30' : '#666666'
+                  fontSize: '1.7rem', 
+                  color: (isCurrentUser || entry.aura > 400) ? 'var(--accent-primary)' : 'var(--text-main)'
                 }}>
                   {entry.aura.toLocaleString()}
                 </div>
@@ -166,7 +161,7 @@ const Leaderboard = () => {
                 {/* Tier */}
                 <div style={{ 
                   fontFamily: 'var(--font-bebas)', 
-                  fontSize: '1.2rem', 
+                  fontSize: '1.3rem', 
                   color: getTierColor(entry.tier, isCurrentUser),
                   letterSpacing: '1px'
                 }}>

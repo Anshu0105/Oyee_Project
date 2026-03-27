@@ -1,50 +1,66 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
-const socketIo = require('socket.io');
-require('dotenv').config();
+const { Server } = require('socket.io');
+
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+
+// Initialize Socket.io
+const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: '*', // We'll restrict this in prod
+    methods: ['GET', 'POST']
   }
 });
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const messagesRoute = require('./routes/messages');
-app.use('/api', messagesRoute);
+// Routes
+const roomRoutes = require('./routes/roomRoutes');
+app.use('/api/auth', authRoutes);
+app.use('/api/rooms', roomRoutes);
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/oyee', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => console.log('MongoDB connected'))
-  .catch(err => console.log(err));
+// Make io accessible in controllers
+app.set('io', io);
 
-// Socket.io for real-time chat
+// Socket.io connection listener
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  const foodName = socket.handshake.query.foodName || 'Anonymous Food';
+  console.log(`User connected: ${foodName} (${socket.id})`);
 
-  socket.on('sendMessage', async (message) => {
-    // Save in database
+  socket.on('join_room', (roomName) => {
+    socket.join(roomName);
+    console.log(`${foodName} joined ${roomName}`);
+  });
+
+  socket.on('send_message', async (data) => {
     try {
       const Message = require('./models/Message');
-      const saved = await Message.create(message);
-      io.emit('receiveMessage', saved);
+      const newMessage = new Message({
+        roomName: data.roomName,
+        senderId: data.senderId,
+        content: data.content,
+      });
+      await newMessage.save();
+
+      // Populate sender info before broadcasting
+      await newMessage.populate('senderId', 'foodName aura');
+
+      io.to(data.roomName).emit('receive_message', newMessage);
     } catch (err) {
-      console.error('Socket message save error:', err);
-      io.emit('receiveMessage', { ...message, error: 'Failed to save message' });
+      console.error('Message save error:', err);
     }
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log(`User disconnected: ${foodName}`);
   });
 });
 

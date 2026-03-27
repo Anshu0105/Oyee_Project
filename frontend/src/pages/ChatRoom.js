@@ -60,7 +60,7 @@ const ChatRoom = () => {
         <button onClick={() => navigate('/rooms')} className="interactive" style={{ background: 'none', border: 'none', color: 'inherit', marginRight: '16px' }}><ArrowLeft /></button>
         <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px' }}>{id.toUpperCase()} ROOM</h2>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// 42 users</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{"// 42 users"}</span>
         </div>
       </div>
 

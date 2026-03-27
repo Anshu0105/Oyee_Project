@@ -110,7 +110,7 @@ const AuraStore = () => {
           color: 'var(--text-dim)',
           letterSpacing: '1px',
         }}>
-          // spend your earned aura · real oyeee merch
+          {"// spend your earned aura · real oyeee merch"}
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>

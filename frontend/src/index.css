@@ -1,16 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Share+Tech+Mono&display=swap');
 
 :root {
-  /* Default Wine-Purple Theme */
-  --bg-main: #f0f0f5;
-  --bg-chat: #2D0052;
-  --text-main: #000000;
+  /* Default Wine-Purple Theme (Sleek Dark Mode) */
+  --bg-main: #121214;
+  --bg-chat: #18181c;
+  --text-main: #ffffff;
   --text-chat: #ffffff;
-  --accent-primary: #8c1a30;
-  --accent-secondary: #c42850;
-  --cursor-color: #8c1a30;
-  --glass: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(140, 26, 48, 0.1);
+  --text-dim: #8a8a93;
+  --accent-primary: #e91e63;
+  --accent-secondary: #ff4081;
+  --accent-green: #00e676;
+  --cursor-color: #e91e63;
+  --glass: rgba(26, 26, 30, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.05);
   --font-bebas: 'Bebas Neue', cursive;
   --font-mono: 'Share Tech Mono', monospace;
   --font-inter: 'Inter', sans-serif;

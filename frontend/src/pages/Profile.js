@@ -48,7 +48,7 @@ const Profile = () => {
           color: 'var(--text-dim)',
           letterSpacing: '1px',
         }}>
-          // your anonymous identity
+          {"// your anonymous identity"}
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>
@@ -95,7 +95,7 @@ const Profile = () => {
               fontSize: '0.8rem',
               color: 'var(--text-dim)',
             }}>
-              // {user.email || 'anon@university.edu'}
+              {"// "}{user.email || 'anon@university.edu'}
             </p>
           </div>
 

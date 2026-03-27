@@ -67,7 +67,7 @@ const Leaderboard = () => {
           color: 'var(--text-dim)',
           letterSpacing: '1px',
         }}>
-          // ranked by public aura - earned in the void
+          {"// ranked by public aura - earned in the void"}
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>

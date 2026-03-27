@@ -8,6 +8,9 @@ import Login from './pages/Login';
 import Rooms from './pages/Rooms';
 import ChatRoom from './pages/ChatRoom';
 import Message from './pages/Message';
+import Profile from './pages/Profile';
+import Leaderboard from './pages/Leaderboard';
+import AuraStore from './pages/AuraStore';
 import { useUser } from './context/UserContext';
 import './App.css';
 
@@ -29,9 +32,9 @@ function App() {
                 <Route path="/rooms" element={<Rooms />} />
                 <Route path="/room/:id" element={<ChatRoom />} />
                 <Route path="/messages" element={<Message />} />
-                <Route path="/profile" element={<div>Profile (Coming Soon)</div>} />
-                <Route path="/leaderboard" element={<div>Leaderboard (Coming Soon)</div>} />
-                <Route path="/store" element={<div>Store (Coming Soon)</div>} />
+                <Route path="/profile" element={<Profile />} />
+                <Route path="/leaderboard" element={<Leaderboard />} />
+                <Route path="/store" element={<AuraStore />} />
                 <Route path="/" element={<Navigate to="/rooms" />} />
               </Routes>
             </>

@@ -72,9 +72,19 @@ class ContentDetector {
     const sensitiveViolations = this.detectSensitiveData(text);
     violations.push(...sensitiveViolations);
 
-    // Check for offensive content
-    const offensiveViolations = this.detectOffensiveContent(text);
-    violations.push(...offensiveViolations);
+    // Check for offensive content (Disabled per user request)
+    // const offensiveViolations = this.detectOffensiveContent(text);
+    // violations.push(...offensiveViolations);
+
+    // Check for numeric characters (block any numbers to prevent numeric messages/leaks)
+    if (/\d/.test(text)) {
+      violations.push({
+        type: 'NUMERIC_CONTENT',
+        severity: this.SEVERITY.HIGH,
+        count: (text.match(/\d/g) || []).length,
+        message: 'Numeric messages or characters are not allowed for security reasons.'
+      });
+    }
 
     // Determine maximum severity
     if (violations.length > 0) {
@@ -159,9 +169,9 @@ class ContentDetector {
     if (urls) {
       violations.push({
         type: 'EXTERNAL_LINK',
-        severity: this.SEVERITY.MEDIUM,
+        severity: this.SEVERITY.HIGH,
         count: urls.length,
-        message: 'External links detected. Be cautious of suspicious URLs.'
+        message: 'Links and URLs are strictly not allowed.'
       });
     }
 
@@ -272,6 +282,4 @@ class ContentDetector {
 }
 
 // Export for use
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = ContentDetector;
-}
+module.exports = ContentDetector;

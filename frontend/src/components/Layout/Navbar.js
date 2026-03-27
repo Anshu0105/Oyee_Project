@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, MessageSquare, LayoutGrid, Trophy, ShoppingBag, ChevronDown } from 'lucide-react';
-import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 
 const NavItem = ({ icon: Icon, label, children, to }) => {
@@ -18,7 +17,7 @@ const NavItem = ({ icon: Icon, label, children, to }) => {
         alignItems: 'center',
         gap: '8px',
         padding: '10px 16px',
-        color: 'inherit',
+        color: 'var(--text-main)',
         textDecoration: 'none',
         fontFamily: 'var(--font-bebas)',
         fontSize: '1.2rem',
@@ -51,74 +50,100 @@ const NavItem = ({ icon: Icon, label, children, to }) => {
 };
 
 const Navbar = () => {
-  const { theme, toggleTheme } = useTheme();
   const { user } = useUser();
 
   return (
     <nav className="glass" style={{
       display: 'flex',
       alignItems: 'center',
-      padding: '0 24px',
-      height: '64px',
-      margin: '12px',
+      padding: '0 32px',
+      height: '72px',
+      margin: '16px',
       justifyContent: 'space-between',
       position: 'relative'
     }}>
-      <div className="nav-left" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+      {/* LEFT: BRAND & LIVE INDICATOR */}
+      <div className="nav-left" style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1 }}>
         <div className="brand interactive" style={{
           fontFamily: 'var(--font-bebas)',
-          fontSize: '2rem',
+          fontSize: '2.4rem',
           letterSpacing: '4px',
-          color: 'var(--accent-primary)'
+          color: 'var(--accent-primary)',
+          display: 'flex',
+          alignItems: 'baseline'
         }}>
-          OYEEE<span>.</span>
+          OYEEE<span style={{ color: 'var(--accent-primary)' }}>.</span>
         </div>
-
-        <div className="nav-links" style={{ display: 'flex', gap: '8px' }}>
-          <NavItem icon={LayoutGrid} label="ROOMS" to="/rooms" />
-          <NavItem icon={MessageSquare} label="MESSAGE" to="/messages" />
-          <NavItem icon={Trophy} label="LEADERBOARD" to="/leaderboard" />
-          <NavItem icon={ShoppingBag} label="AURA STORE" to="/store" />
-          
-          <NavItem icon={User} label="PROFILE" to="/profile">
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-main)', opacity: 0.7, marginBottom: '8px' }}>Identity: {user.name}</div>
-            <Link to="/profile/promotions" className="interactive" style={{ color: 'inherit', textDecoration: 'none', fontSize: '0.9rem' }}>Promotions (Ads)</Link>
-            <div style={{ borderTop: '1px solid var(--glass-border)', margin: '4px 0' }} />
-            <div style={{ fontSize: '0.8rem', opacity: 0.7 }}>Last Rooms Joined:</div>
-            {user.lastRooms.map(room => (
-              <button key={room} className="interactive" style={{ 
-                background: 'none', border: 'none', color: 'var(--accent-primary)', textAlign: 'left', padding: '4px 0', fontSize: '0.9rem' 
-              }}>Rejoin {room}</button>
-            ))}
-          </NavItem>
+        
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '12px' }}>
+          <span style={{ 
+            fontFamily: 'var(--font-bebas)', 
+            color: 'var(--accent-primary)', 
+            fontSize: '1rem', 
+            letterSpacing: '2px',
+            opacity: 0.8
+          }}>
+            LIVE
+          </span>
+          <div style={{ 
+            width: '8px', 
+            height: '8px', 
+            borderRadius: '50%', 
+            backgroundColor: 'var(--accent-primary)', 
+            animation: 'pulse 1.5s infinite' 
+          }} />
         </div>
       </div>
 
-      <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>AURA POINTS</span>
-          <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', color: 'var(--accent-secondary)' }}>{user.aura}</span>
+      {/* CENTER: NAV LINKS */}
+      <div className="nav-center" style={{ display: 'flex', gap: '8px', flex: 2, justifyContent: 'center' }}>
+        <NavItem icon={LayoutGrid} label="ROOMS" to="/rooms" />
+        <NavItem icon={MessageSquare} label="MESSAGE" to="/messages" />
+        <NavItem icon={Trophy} label="LEADERBOARD" to="/leaderboard" />
+        <NavItem icon={ShoppingBag} label="AURA STORE" to="/store" />
+      </div>
+
+      {/* RIGHT: STREAK & AVATAR */}
+      <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, justifyContent: 'flex-end' }}>
+        
+        {/* Flame Streak */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '6px', 
+          background: 'rgba(255, 140, 0, 0.1)', 
+          padding: '6px 16px', borderRadius: '20px', 
+          border: '1px solid rgba(255, 140, 0, 0.2)',
+          color: '#ff8c00', fontWeight: 'bold'
+        }}>
+          <span style={{ fontSize: '1.2rem' }}>🔥</span>
+          <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', letterSpacing: '1px' }}>7</span>
         </div>
         
-        <button 
-          onClick={toggleTheme}
-          className="interactive glass"
-          style={{
-            padding: '8px 12px',
-            fontSize: '0.7rem',
-            fontWeight: 'bold',
-            color: 'inherit',
-            cursor: 'pointer'
-          }}
-        >
-          {theme === 'wine' ? 'PURPLE-FREEZE' : 'CROWN-YELLOW'}
-        </button>
+        {/* Avatar Dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <Link to="/profile" className="interactive" style={{ 
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '42px', height: '42px', 
+            borderRadius: '50%', border: '2px solid #ff8c00', 
+            color: '#fff', textDecoration: 'none',
+            boxShadow: '0 0 12px rgba(255, 140, 0, 0.3)',
+            transition: 'all 0.3s ease'
+          }}>
+            <User size={20} />
+          </Link>
+          <ChevronDown size={14} style={{ opacity: 0.6, color: 'var(--text-main)' }} />
+        </div>
+
       </div>
 
       <style>{`
         @keyframes fadeUp {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0.7); }
+          70% { box-shadow: 0 0 0 6px rgba(233, 30, 99, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(233, 30, 99, 0); }
         }
       `}</style>
     </nav>

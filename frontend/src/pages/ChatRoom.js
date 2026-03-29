@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ArrowLeft, Plus, Minus, UserPlus } from 'lucide-react';
+import { Send, ArrowLeft, Plus, Minus, UserPlus, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
+import { detectContent } from '../utils/detector';
+import '../styles/moderation.css';
 
 const ChatRoom = () => {
   const { id } = useParams();
@@ -12,6 +14,7 @@ const ChatRoom = () => {
     { id: 2, user: 'Spicy Ramen', text: 'the wifi in the library is absolutely criminal today', time: '12:02 PM' }
   ]);
   const [input, setInput] = useState('');
+  const [violationNotice, setViolationNotice] = useState(null);
   const scrollRef = useRef();
 
   useEffect(() => {
@@ -20,11 +23,33 @@ const ChatRoom = () => {
     }
   }, [messages]);
 
-  const handleSend = () => {
-    if (input.trim()) {
-      setMessages([...messages, { id: Date.now(), user: 'Anonymous (You)', text: input, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-      setInput('');
+  const handleSend = async () => {
+    if (!input.trim()) return;
+
+    // Content Detection Check
+    const analysis = await detectContent(input);
+    
+    if (!analysis.isSafe) {
+      setViolationNotice(analysis.issues[0] || 'your message has been restricted as you are violating messeaging rules');
+      
+      // Auto-hide notice after 5 seconds
+      setTimeout(() => {
+        setViolationNotice(null);
+      }, 5000);
+      
+      return; // Block the message
     }
+
+    // If safe, proceed with sending
+    setMessages([...messages, { 
+      id: Date.now(), 
+      user: 'Anonymous (You)', 
+      text: input, 
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+    }]);
+    
+    setInput('');
+    setViolationNotice(null);
   };
 
   return (
@@ -33,6 +58,7 @@ const ChatRoom = () => {
       flexDirection: 'column', 
       height: 'calc(100vh - 110px)', 
       margin: '0 12px 12px',
+      position: 'relative'
     }} className="glass">
       {/* Header */}
       <div style={{ 
@@ -94,14 +120,48 @@ const ChatRoom = () => {
         ))}
       </div>
 
+      {/* Violation Notice (System Message) */}
+      {violationNotice && (
+        <div style={{ padding: '0 24px' }}>
+          <div className="detection-warning critical" style={{ 
+            marginBottom: '12px',
+            background: 'rgba(212, 58, 96, 0.15)',
+            border: '1px solid rgba(212, 58, 96, 0.3)',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            color: '#d43a60',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.85rem',
+            fontFamily: 'var(--font-mono)',
+            animation: 'slideUp 0.3s ease-out'
+          }}>
+            <AlertTriangle size={18} />
+            <span><strong>System Notice:</strong> {violationNotice.toLowerCase()}</span>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '12px' }}>
         <input 
           value={input}
-          onChange={e => setInput(e.target.value)}
+          onChange={e => {
+            setInput(e.target.value);
+            if (violationNotice) setViolationNotice(null);
+          }}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Speak into the void..."
-          style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', padding: '12px 20px', color: 'white', borderRadius: '8px' }}
+          style={{ 
+            flex: 1, 
+            background: 'rgba(0,0,0,0.2)', 
+            border: violationNotice ? '1px solid #d43a60' : '1px solid var(--glass-border)', 
+            padding: '12px 20px', 
+            color: 'white', 
+            borderRadius: '8px',
+            transition: 'border-color 0.3s ease'
+          }}
         />
         <button 
           onClick={handleSend}
@@ -116,3 +176,4 @@ const ChatRoom = () => {
 };
 
 export default ChatRoom;
+

@@ -3,19 +3,35 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, Plus, Minus, UserPlus, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { detectContent } from '../utils/detector';
+import io from 'socket.io-client';
 import '../styles/moderation.css';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
 
 const ChatRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { updateAura, addFriend, addEnemy } = useUser();
-  const [messages, setMessages] = useState([
-    { id: 1, user: 'Crunchy Mango', text: 'anyone else cramming for midterms rn or just me 😭', time: '12:01 PM' },
-    { id: 2, user: 'Spicy Ramen', text: 'the wifi in the library is absolutely criminal today', time: '12:02 PM' }
-  ]);
+  const { user, token, updateAura, addFriend, addEnemy } = useUser();
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [violationNotice, setViolationNotice] = useState(null);
   const scrollRef = useRef();
+  const socketRef = useRef(null);
+
+  useEffect(() => {
+    if (!token) return;
+
+    socketRef.current = io(BACKEND_URL);
+    socketRef.current.emit('joinRoom', id);
+
+    socketRef.current.on('receiveMessage', (messageData) => {
+      setMessages(prev => [...prev, messageData]);
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [id, token]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -40,13 +56,15 @@ const ChatRoom = () => {
       return; // Block the message
     }
 
-    // If safe, proceed with sending
-    setMessages([...messages, { 
-      id: Date.now(), 
-      user: 'Anonymous (You)', 
-      text: input, 
+    // Transmit to global room socket
+    const messagePayload = {
+      roomId: id,
+      text: input,
+      user: user.name || 'Anonymous',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
-    }]);
+    };
+    
+    socketRef.current.emit('sendMessage', messagePayload);
     
     setInput('');
     setViolationNotice(null);
@@ -71,7 +89,7 @@ const ChatRoom = () => {
         <button onClick={() => navigate('/rooms')} className="interactive" style={{ background: 'none', border: 'none', color: 'inherit', marginRight: '16px' }}><ArrowLeft /></button>
         <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px' }}>{id.toUpperCase()} ROOM</h2>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// 42 users</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// Connected</span>
         </div>
       </div>
 
@@ -88,36 +106,41 @@ const ChatRoom = () => {
           background: 'var(--bg-chat)'
         }}
       >
-        {messages.map(msg => (
-          <div key={msg.id} style={{ alignSelf: msg.user.includes('You') ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
-            <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', textAlign: msg.user.includes('You') ? 'right' : 'left' }}>{msg.user} • {msg.time}</div>
-            <div className="glass" style={{ padding: '12px 16px', background: msg.user.includes('You') ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', color: 'white' }}>
-              {msg.text}
-            </div>
-            {!msg.user.includes('You') && (
-              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-                <button 
-                  onClick={() => updateAura(7)}
-                  className="interactive" 
-                  style={{ background: 'none', border: '1px solid #5ec87a', color: '#5ec87a', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <Plus size={12} /> Aura
-                </button>
-                <button 
-                  onClick={() => updateAura(-3)}
-                  className="interactive" 
-                  style={{ background: 'none', border: '1px solid #ff4d4d', color: '#ff4d4d', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
-                >
-                  <Minus size={12} /> Aura
-                </button>
-                <div style={{ position: 'relative', display: 'flex', gap: '4px' }}>
-                   <button onClick={() => addFriend(msg.user)} className="interactive" style={{ fontSize: '0.6rem', opacity: 0.7 }}>Add Friend</button>
-                   <button onClick={() => addEnemy(msg.user)} className="interactive" style={{ fontSize: '0.6rem', opacity: 0.7 }}>Add Enemy</button>
-                </div>
+        {messages.map((msg, i) => {
+          const isMe = msg.user === user.name;
+          const timeFormat = msg.time || (msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+          
+          return (
+            <div key={msg._id || msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
+              <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', textAlign: isMe ? 'right' : 'left' }}>{isMe ? 'Anonymous (You)' : msg.user} • {timeFormat}</div>
+              <div className="glass" style={{ padding: '12px 16px', background: isMe ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', color: 'white' }}>
+                {msg.text}
               </div>
-            )}
-          </div>
-        ))}
+              {!isMe && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                  <button 
+                    onClick={() => updateAura(7)}
+                    className="interactive" 
+                    style={{ background: 'none', border: '1px solid #5ec87a', color: '#5ec87a', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Plus size={12} /> Aura
+                  </button>
+                  <button 
+                    onClick={() => updateAura(-3)}
+                    className="interactive" 
+                    style={{ background: 'none', border: '1px solid #ff4d4d', color: '#ff4d4d', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                  >
+                    <Minus size={12} /> Aura
+                  </button>
+                  <div style={{ position: 'relative', display: 'flex', gap: '4px' }}>
+                     <button onClick={() => addFriend(msg.user)} className="interactive" style={{ fontSize: '0.6rem', opacity: 0.7 }}>Add Friend</button>
+                     <button onClick={() => addEnemy(msg.user)} className="interactive" style={{ fontSize: '0.6rem', opacity: 0.7 }}>Add Enemy</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Violation Notice (System Message) */}
@@ -176,4 +199,3 @@ const ChatRoom = () => {
 };
 
 export default ChatRoom;
-

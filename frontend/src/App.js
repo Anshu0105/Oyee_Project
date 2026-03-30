@@ -31,7 +31,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/store" element={<AuraStore />} />
-                <Route path="/" element={<Navigate to="/rooms" />} />
+                <Route path="/" element={<Navigate to="/login" />} />
               </Routes>
             </>
           } />

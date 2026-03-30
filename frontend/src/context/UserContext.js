@@ -45,7 +45,12 @@ export const UserProvider = ({ children }) => {
 
   const loginUser = async (email) => {
     try {
-      const username = email.split('@')[0];
+      const adjectives = ['Quantum', 'Neon', 'Cosmic', 'Midnight', 'Phantom', 'Cyber', 'Ghost', 'Stardust', 'Echo'];
+      const nouns = ['Wanderer', 'Ninja', 'Rider', 'Pulse', 'Specter', 'Vagabond', 'Walker', 'Nova'];
+      const randomPrefix = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const randomSuffix = nouns[Math.floor(Math.random() * nouns.length)];
+      const randomId = Math.floor(Math.random() * 10000);
+      const username = `${randomPrefix}${randomSuffix}${randomId}`;
       const password = 'oyeee_default';
       const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
 

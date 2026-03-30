@@ -1,16 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
+import { motion } from 'framer-motion';
+import UserProfileModal from '../components/UI/UserProfileModal';
 
-const mockLeaderboard = [
-  { rank: 1, name: 'Fluffy Pancake', badge: '⭐', aura: 1247, tier: 'STARBORN', today: '+84' },
-  { rank: 2, name: 'Crunchy Mango', badge: '⚡', aura: 672, tier: 'THUNDER', today: '+49' },
-  { rank: 3, name: 'Smoky Papaya', badge: '⚡', aura: 589, tier: 'THUNDER', today: '+21' },
-  { rank: 4, name: 'Crispy Dragonfruit', badge: '', aura: 421, tier: 'RISING', today: '+14' },
-  { rank: 5, name: 'Tangy Persimmon', badge: '', aura: 387, tier: 'RISING', today: '+7' },
-  { rank: 6, name: 'Tasty Strawberry', badge: '', aura: 342, tier: 'RISING', today: '+0' },
-  { rank: 7, name: 'Spicy Ramen', badge: '', aura: 198, tier: 'GHOST', today: '-3' },
-  { rank: 8, name: 'Juicy Guava', badge: '', aura: 154, tier: 'GHOST', today: '+8' },
-];
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
 
 const getRankColor = (rank, isCurrentUser) => {
   if (isCurrentUser) return 'var(--accent-primary)'; 
@@ -19,6 +12,13 @@ const getRankColor = (rank, isCurrentUser) => {
   if (rank === 3) return '#cd7f32';    // Bronze
   return 'var(--text-dim)';                    
 };
+
+const calculateTier = (aura) => {
+  if (aura > 1000) return 'STARBORN';
+  if (aura > 500) return 'THUNDER';
+  if (aura > 200) return 'RISING';
+  return 'GHOST';
+}
 
 const getTierColor = (tier, isCurrentUser) => {
   if (isCurrentUser) return 'var(--accent-primary)';
@@ -39,7 +39,25 @@ const getTodayColor = (todayStr) => {
 };
 
 const Leaderboard = () => {
-  const { user } = useUser();
+  const { user: currentUser, token } = useUser();
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+
+  useEffect(() => {
+    if (!token) return;
+    
+    fetch(`${BACKEND_URL}/api/users/leaderboard`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+       if (Array.isArray(data)) {
+         setLeaderboard(data);
+       }
+    })
+    .catch(err => console.error("Failed to sync leaderboard:", err));
+  }, [token]);
+
 
   return (
     <div style={{
@@ -61,12 +79,7 @@ const Leaderboard = () => {
         }}>
           LEADERBOARD
         </h1>
-        <p style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.85rem',
-          color: 'var(--text-dim)',
-          letterSpacing: '1px',
-        }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-dim)', letterSpacing: '1px' }}>
           // ranked by public aura - earned in the void
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
@@ -77,113 +90,86 @@ const Leaderboard = () => {
         
         {/* Table Header Row */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '80px 2fr 1fr 1fr 100px',
-          padding: '16px 24px',
-          borderBottom: '1px solid var(--glass-border)',
-          fontFamily: 'var(--font-bebas)',
-          fontSize: '1.2rem',
-          color: 'var(--text-dim)',
-          letterSpacing: '2px'
+          display: 'grid', gridTemplateColumns: '80px 2fr 1fr 1fr 100px', padding: '16px 24px', borderBottom: '1px solid var(--glass-border)',
+          fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', color: 'var(--text-dim)', letterSpacing: '2px'
         }}>
           <div style={{ textAlign: 'center' }}>#</div>
           <div>IDENTITY</div>
           <div style={{ textAlign: 'center' }}>AURA PTS</div>
           <div>TIER</div>
-          <div style={{ textAlign: 'right' }}>TODAY</div>
+          <div style={{ textAlign: 'right' }}>TREND</div>
         </div>
 
         {/* Table Body */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {mockLeaderboard.map((entry) => {
-            const isCurrentUser = entry.name === user.name;
-            const rankColor = getRankColor(entry.rank, isCurrentUser);
-            
-            return (
-              <div 
-                key={entry.rank}
-                className="interactive"
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '80px 2fr 1fr 1fr 100px',
-                  padding: '20px 24px',
-                  borderBottom: '1px solid var(--glass-border)',
-                  background: isCurrentUser ? 'rgba(233, 30, 99, 0.05)' : 'transparent',
-                  borderLeft: isCurrentUser ? '4px solid var(--accent-primary)' : '4px solid transparent',
-                  alignItems: 'center',
-                  transition: 'background 0.2s',
-                  cursor: 'default'
-                }}
-              >
-                {/* Rank */}
-                <div style={{ 
-                  textAlign: 'center', 
-                  fontFamily: 'var(--font-bebas)', 
-                  fontSize: '1.8rem', 
-                  color: rankColor 
-                }}>
-                  {entry.rank}
-                </div>
-
-                {/* Identity */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ 
-                    fontFamily: 'var(--font-bebas)', 
-                    fontSize: '1.6rem', 
-                    color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)',
-                    letterSpacing: '1px'
-                  }}>
-                    {entry.name}
-                  </span>
-                  {entry.badge && <span style={{ fontSize: '1.2rem' }}>{entry.badge}</span>}
-                  {isCurrentUser && (
+          {leaderboard.length === 0 ? (
+             <div style={{ padding: '40px', textAlign: 'center', opacity: 0.3, fontFamily: 'var(--font-mono)' }}>Void is empty...</div>
+          ) : (
+            leaderboard.map((entry, index) => {
+              const rank = index + 1;
+              const isCurrentUser = entry._id === currentUser.id;
+              const rankColor = getRankColor(rank, isCurrentUser);
+              const tier = calculateTier(entry.aura);
+              const todayStr = entry.weeklyAuraGain >= 0 ? `+${entry.weeklyAuraGain}` : `${entry.weeklyAuraGain}`;
+              
+              return (
+                <div 
+                  key={entry._id}
+                  className="interactive hover-lift"
+                  onClick={() => setSelectedUserId(entry._id)}
+                  style={{
+                    display: 'grid', gridTemplateColumns: '80px 2fr 1fr 1fr 100px', padding: '20px 24px',
+                    borderBottom: '1px solid var(--glass-border)',
+                    background: isCurrentUser ? 'rgba(233, 30, 99, 0.05)' : 'transparent',
+                    borderLeft: isCurrentUser ? '4px solid var(--accent-primary)' : '4px solid transparent',
+                    alignItems: 'center', transition: 'background 0.2s', cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ textAlign: 'center', fontFamily: 'var(--font-bebas)', fontSize: '1.8rem', color: rankColor }}>
+                    {rank}
+                  </div>
+  
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ fontSize: '1.5rem' }}>{entry.avatarEmoji}</span>
                     <span style={{ 
-                      fontFamily: 'var(--font-mono)', 
-                      fontSize: '0.65rem', 
-                      color: 'var(--text-dim)',
-                      marginLeft: '8px' 
+                      fontFamily: 'var(--font-bebas)', fontSize: '1.6rem', color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)', letterSpacing: '1px'
                     }}>
-                      (YOU)
+                      {entry.auraName}
                     </span>
-                  )}
+                    {entry.equippedBadge && <span style={{ fontSize: '1.2rem' }}>{entry.equippedBadge}</span>}
+                    {isCurrentUser && (
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-dim)', marginLeft: '8px' }}>
+                        (YOU)
+                      </span>
+                    )}
+                  </div>
+  
+                  <div style={{ textAlign: 'center', fontFamily: 'var(--font-bebas)', fontSize: '1.7rem', color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)' }}>
+                    {entry.aura.toLocaleString()}
+                  </div>
+  
+                  <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.3rem', color: getTierColor(tier, isCurrentUser), letterSpacing: '1px' }}>
+                    {tier}
+                  </div>
+  
+                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 'bold', color: getTodayColor(todayStr) }}>
+                    {todayStr}
+                  </div>
                 </div>
-
-                {/* Aura Points */}
-                <div style={{ 
-                  textAlign: 'center', 
-                  fontFamily: 'var(--font-bebas)', 
-                  fontSize: '1.7rem', 
-                  color: (isCurrentUser || entry.aura > 400) ? 'var(--accent-primary)' : 'var(--text-main)'
-                }}>
-                  {entry.aura.toLocaleString()}
-                </div>
-
-                {/* Tier */}
-                <div style={{ 
-                  fontFamily: 'var(--font-bebas)', 
-                  fontSize: '1.3rem', 
-                  color: getTierColor(entry.tier, isCurrentUser),
-                  letterSpacing: '1px'
-                }}>
-                  {entry.tier}
-                </div>
-
-                {/* Today */}
-                <div style={{ 
-                  textAlign: 'right', 
-                  fontFamily: 'var(--font-mono)', 
-                  fontSize: '0.85rem', 
-                  fontWeight: 'bold',
-                  color: getTodayColor(entry.today)
-                }}>
-                  {entry.today}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
-
       </div>
+      
+      {/* Dynamic Profile Overlays */}
+      <UserProfileModal 
+         isOpen={selectedUserId !== null} 
+         userId={selectedUserId} 
+         token={token}
+         currentUserId={currentUser.id}
+         onClose={() => setSelectedUserId(null)} 
+      />
     </div>
   );
 };

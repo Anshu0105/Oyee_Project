@@ -3,76 +3,65 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-
-// Configure Allowed Origins for Both Panels
-const allowedOrigins = [
-  "http://localhost:3000", // User Panel
-  "http://localhost:3001"  // Admin Panel (expected port)
-];
-
 const io = socketIo(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
     methods: ["GET", "POST"]
   }
 });
 
-// Configure Global CORS
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true // Important for cookies/authorization headers
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  credentials: true
 }));
 app.use(express.json());
 
-// Routes
 const messagesRoute = require('./routes/messages');
+const detectorRoute = require('./routes/detector');
 const authRoute = require('./routes/auth');
 const adminRoute = require('./routes/admin');
+const roomRoute = require('./routes/rooms');
+const dmRoute = require('./routes/dm');
+const usersRoute = require('./routes/users');
 
-// Separate public/user routes from admin routes
 app.use('/api', messagesRoute);
+app.use('/api', detectorRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/admin', adminRoute);
+app.use('/api/rooms', roomRoute);
+app.use('/api/dm', dmRoute);
+app.use('/api/users', usersRoute);
 
-// Socket.io for real-time chat
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+// Serve Standalone Admin UI Safe Zone
+app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
 
-  socket.on('sendMessage', async (message) => {
-    // Save in database
-    try {
-      const Message = require('./models/Message');
-      const saved = await Message.create(message);
-      io.emit('receiveMessage', saved);
-    } catch (err) {
-      console.error('Socket message save error:', err);
-      io.emit('receiveMessage', { ...message, error: 'Failed to save message' });
-    }
-  });
+// Serve raw file uploads for unmoderated Direct Messages
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
 
-const PORT = process.env.PORT || 5000;
+// Socket.io for real-time segmented chat and DMs
+const setupSockets = require('./sockets/socketController');
+setupSockets(io);
+
+// MongoDB connection and Server Start
+const PORT = process.env.PORT || 5002;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/oyee';
 
-// Connect to MongoDB and start Server (Consolidated)
 mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
-})
-  .then(() => {
-    console.log('Connected to MongoDB successfully');
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
+}).then(() => {
+  console.log('Connected to MongoDB');
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
   });
+}).catch(err => {
+  console.error('MongoDB connection error:', err);
+});
+
+

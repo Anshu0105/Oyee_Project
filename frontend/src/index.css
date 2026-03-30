@@ -21,7 +21,18 @@
   --font-bebas: 'Bebas Neue', cursive;
   --font-mono: 'Share Tech Mono', monospace;
   --font-inter: 'Inter', sans-serif;
+
+  /* Moderation Variables */
+  --wine3: #c42850;
+  --wine2: #d43a60;
+  --wine: #a11b3c;
+  --w3: #ffffff;
+  --bg3: rgba(0, 0, 0, 0.3);
+  --gray2: rgba(255, 255, 255, 0.1);
+  --fm: var(--font-mono);
+  --fh: var(--font-bebas);
 }
+
 
 [data-theme='blue'] {
   /* Blue-Tan Theme */

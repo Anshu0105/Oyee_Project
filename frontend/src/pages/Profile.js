@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { Settings, Shield, Palette, Zap, Users, Megaphone } from 'lucide-react';
 
-const mockFriends = [
-  { id: 1, name: 'Crunchy Mango', tier: 'thunder', aura: 672 },
-  { id: 2, name: 'Spicy Ramen', tier: 'none', aura: 198 },
-  { id: 3, name: 'Fluffy Pancake', tier: 'star', aura: 1247 },
-  { id: 4, name: 'Zesty Lemon', tier: 'none', aura: 88 },
-];
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+
+const calculateTier = (aura) => {
+  if (aura > 1000) return 'STARBORN';
+  if (aura > 500) return 'THUNDER';
+  if (aura > 200) return 'RISING';
+  return 'GHOST';
+}
 
 const pricingOptions = [
   { days: 1, price: 49, impressions: '~500' },
@@ -17,10 +19,29 @@ const pricingOptions = [
 ];
 
 const Profile = () => {
-  const { user } = useUser();
+  const { user, token } = useUser();
   const { setTheme, theme: currentTheme } = useTheme();
   const [selectedPricing, setSelectedPricing] = useState(1);
   const [promoText, setPromoText] = useState('');
+  
+  const [friends, setFriends] = useState([]);
+  const [enemies, setEnemies] = useState([]);
+  const [activeTab, setActiveTab] = useState('friends');
+
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${BACKEND_URL}/api/users/me/social`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      setFriends(data.friends || []);
+      setEnemies(data.enemies || []);
+    })
+    .catch(err => console.error("Failed to load social graph:", err));
+  }, [token]);
+
+  const displayedConnections = activeTab === 'friends' ? friends : enemies;
 
   return (
     <div style={{
@@ -283,49 +304,64 @@ const Profile = () => {
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: '32px', borderBottom: '1px solid var(--glass-border)', marginBottom: '24px' }}>
-              <div style={{
-                fontFamily: 'var(--font-bebas)',
-                fontSize: '1.1rem',
-                letterSpacing: '1px',
-                color: 'var(--accent-primary)',
-                paddingBottom: '8px',
-                borderBottom: '2px solid var(--accent-primary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                FRIENDS (4)
+              <div 
+                className="interactive"
+                onClick={() => setActiveTab('friends')}
+                style={{
+                  fontFamily: 'var(--font-bebas)',
+                  fontSize: '1.1rem',
+                  letterSpacing: '1px',
+                  color: activeTab === 'friends' ? 'var(--accent-primary)' : 'var(--text-dim)',
+                  paddingBottom: '8px',
+                  borderBottom: activeTab === 'friends' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer'
+                }}>
+                FRIENDS ({friends.length})
               </div>
-              <div style={{
-                fontFamily: 'var(--font-bebas)',
-                fontSize: '1.1rem',
-                letterSpacing: '1px',
-                color: 'var(--text-dim)',
-                paddingBottom: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                ENEMIES (2)
+              <div 
+                className="interactive"
+                onClick={() => setActiveTab('enemies')}
+                style={{
+                  fontFamily: 'var(--font-bebas)',
+                  fontSize: '1.1rem',
+                  letterSpacing: '1px',
+                  color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'var(--text-dim)',
+                  paddingBottom: '8px',
+                  borderBottom: activeTab === 'enemies' ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  cursor: 'pointer'
+                }}>
+                ENEMIES ({enemies.length})
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {mockFriends.map((f, i) => (
-                <div key={f.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--accent-green)' }} />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: 'var(--text-main)', fontWeight: 'bold' }}>
-                      {f.name}
-                    </span>
-                    {f.tier === 'thunder' && <span style={{ color: '#f7c948', fontSize: '0.9rem' }}>⚡</span>}
-                    {f.tier === 'star' && <span style={{ color: '#f7c948', fontSize: '0.9rem' }}>⭐</span>}
+              {displayedConnections.length === 0 ? (
+                 <div style={{ opacity: 0.4, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center', padding: '20px' }}>Void links empty...</div>
+              ) : displayedConnections.map((f, i) => {
+                const tier = calculateTier(f.aura);
+                return (
+                  <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ fontSize: '1.2rem', filter: activeTab === 'enemies' ? 'grayscale(100%) opacity(0.5)' : 'none' }}>{f.avatarEmoji}</div>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'var(--text-main)', fontWeight: 'bold' }}>
+                        {f.auraName}
+                      </span>
+                      {tier === 'THUNDER' && <span style={{ color: '#f7c948', fontSize: '0.9rem' }}>⚡</span>}
+                      {tier === 'STARBORN' && <span style={{ color: '#8c52ff', fontSize: '0.9rem' }}>⭐</span>}
+                      {f.equippedBadge && <span style={{ fontSize: '0.9rem' }}>{f.equippedBadge}</span>}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                      {f.aura.toLocaleString()} aura
+                    </div>
                   </div>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                    {f.aura.toLocaleString()} aura
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

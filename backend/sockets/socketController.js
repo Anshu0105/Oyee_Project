@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Message = require('../models/Message');
 const DirectMessage = require('../models/DirectMessage');
+const Room = require('../models/Room');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
@@ -15,13 +16,24 @@ module.exports = (io) => {
     });
 
     // Group Management
-    socket.on('joinRoom', (roomId) => {
+    socket.on('joinRoom', async (roomId) => {
       socket.join(roomId);
       console.log(`Socket ${socket.id} joined isolated room: ${roomId}`);
+      
+      if (socket.userId && roomId && !roomId.startsWith('dm_') && roomId !== 'global') {
+        try {
+          await Room.findByIdAndUpdate(roomId, { $addToSet: { members: socket.userId } });
+        } catch(err) { console.error('Room DB sync failed:', err.message); }
+      }
     });
 
-    socket.on('leaveRoom', (roomId) => {
+    socket.on('leaveRoom', async (roomId) => {
       socket.leave(roomId);
+      if (socket.userId && roomId && !roomId.startsWith('dm_') && roomId !== 'global') {
+        try {
+          await Room.findByIdAndUpdate(roomId, { $pull: { members: socket.userId } });
+        } catch(err) {}
+      }
     });
 
     // Segmented Public Room Communication (Moderated)
@@ -61,6 +73,8 @@ module.exports = (io) => {
             isOnline: false, 
             lastActive: new Date() 
           });
+          // Unlink from all DB rooms immediately upon disconnecting
+          await Room.updateMany({ members: socket.userId }, { $pull: { members: socket.userId } });
         } catch(err) {}
       }
     });

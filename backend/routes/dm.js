@@ -22,17 +22,51 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage, limits: { fileSize: 25 * 1024 * 1024 } }); // 25MB
 
-// Get all online users for DM sidebar
+// Get all valid users for DM sidebar (friends and enemies only)
 router.get('/available-users', verifyToken, async (req, res) => {
   try {
+    const currentUser = await User.findById(req.user.id).select('friends enemies');
+    if (!currentUser) return res.status(404).json({ error: "User not found" });
+
+    const allowedIds = [
+      ...(currentUser.friends || []),
+      ...(currentUser.enemies || [])
+    ];
+
+    if (allowedIds.length === 0) {
+      return res.json([]);
+    }
+
     const users = await User.find({ 
-      isOnline: true, 
-      _id: { $ne: req.user.id } // Exclude self
+      _id: { $in: allowedIds }
     })
-    .select('_id username auraName aura avatarEmoji equippedBadge')
+    .select('_id username auraName aura avatarEmoji equippedBadge isOnline')
     .sort({ username: 1 })
     .limit(200);
-    res.json(users);
+
+    const formattedUsers = await Promise.all(users.map(async (u) => {
+      let isFriend = currentUser.friends.some(id => id.toString() === u._id.toString());
+      let relationship = isFriend ? 'Friend' : 'Enemy';
+
+      const lastMessage = await DirectMessage.findOne({
+        $or: [
+          { senderId: req.user.id, receiverId: u._id },
+          { senderId: u._id, receiverId: req.user.id }
+        ]
+      }).sort({ createdAt: -1 });
+
+      return {
+        ...u.toObject(),
+        relationship,
+        lastMessage: lastMessage ? {
+          content: lastMessage.content,
+          createdAt: lastMessage.createdAt,
+          type: lastMessage.type
+        } : null
+      };
+    }));
+
+    res.json(formattedUsers);
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 

@@ -197,23 +197,44 @@ const Message = () => {
                 gap: '12px'
               }}
             >
-              <div style={{ fontSize: '1.5rem', background: 'var(--bg-light)', padding: '8px', borderRadius: '50%', border: '1px solid var(--glass-border)' }}>
+              <div style={{ fontSize: '1.5rem', background: 'var(--bg-light)', padding: '8px', borderRadius: '50%', border: '1px solid var(--glass-border)', position: 'relative' }}>
                 {contact.avatarEmoji}
+                {contact.isOnline && <div style={{ position: 'absolute', bottom: 0, right: 0, width: '10px', height: '10px', background: 'var(--accent-green)', borderRadius: '50%', border: '2px solid var(--bg-main)' }} />}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', color: 'var(--text-main)', letterSpacing: '1px' }}>
-                  {contact.auraName} {contact.equippedBadge}
-                </span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--accent-primary)' }}>
-                  {contact.username} // ID:{contact._id.slice(-4)}
-                </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', color: 'var(--text-main)', letterSpacing: '1px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {contact.auraName} {contact.equippedBadge}
+                  </span>
+                  <span style={{ 
+                    fontSize: '0.6rem', fontFamily: 'var(--font-mono)', padding: '2px 6px', borderRadius: '4px',
+                    background: contact.relationship === 'Friend' ? 'rgba(72, 187, 120, 0.2)' : 'rgba(236, 201, 75, 0.2)',
+                    color: contact.relationship === 'Friend' ? '#48bb78' : '#ecc94b'
+                  }}>
+                    {contact.relationship?.toUpperCase() || 'UNKNOWN'}
+                  </span>
+                </div>
+                
+                {contact.lastMessage ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '160px' }}>
+                      {contact.lastMessage.type === 'file' ? '📎 Attachment' : contact.lastMessage.content}
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)' }}>
+                      {new Date(contact.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                ) : (
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--accent-primary)', opacity: 0.7 }}>
+                    Start connection...
+                  </span>
+                )}
               </div>
-              <div style={{ marginLeft: 'auto', width: '8px', height: '8px', background: 'var(--accent-green)', borderRadius: '50%', boxShadow: '0 0 8px var(--accent-green)' }} />
             </div>
           ))}
           {contacts.length === 0 && (
             <div style={{ padding: '32px', textAlign: 'center', opacity: 0.5, fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-              NO OTHER USERS CURRENTLY LOGGED IN.
+              NO FRIENDS OR ENEMIES AVAILABLE.
             </div>
           )}
         </div>

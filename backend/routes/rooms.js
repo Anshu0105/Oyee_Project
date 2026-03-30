@@ -2,59 +2,133 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
+const Room = require('../models/Room');
 
-// University Room Validation Endpoint
+// =====================================
+// UNIVERSITY ROOMS
+// =====================================
 router.get('/university/check-access', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
-    if (!user.email.endsWith('@cgu-odisha.ac.in')) {
+    
+    // Extract domain from email (e.g. user@mit.edu -> mit.edu)
+    const emailParts = user.email.split('@');
+    if (emailParts.length !== 2) {
+      return res.status(400).json({ error: "Invalid email format" });
+    }
+    const domain = emailParts[1].toLowerCase();
+
+    // Exclude generic domains
+    const commonDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com'];
+    if (commonDomains.includes(domain)) {
       return res.status(403).json({ 
         error: "University email required", 
-        message: "Please log out and verify your @cgu-odisha.ac.in identity" 
+        message: "Please use your institution email, generic domains not allowed." 
       });
     }
-    if (!user.emailVerified) {
-       return res.status(403).json({ 
-         error: "Email not verified", 
-         message: "Verification pending. Check your university inbox." 
-       });
+
+    // Check if room exists
+    let room = await Room.findOne({ type: 'university', universityDomain: domain });
+    
+    if (!room) {
+      // Auto-create University room
+      room = new Room({
+        name: `${domain.split('.')[0].toUpperCase()} Global Connect`,
+        type: 'university',
+        universityDomain: domain,
+        createdBy: user._id,
+        members: [] // Handled via sockets
+      });
+      await room.save();
     }
-    res.json({ access: true, roomId: "uni_global" });
+
+    res.json({ access: true, room });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
-// GPS Based Room Clustering Endpoint using Haversine algorithm
+// =====================================
+// NEARBY ROOMS
+// =====================================
 router.post('/nearby', verifyToken, async (req, res) => {
   try {
-    const { lat, lng, radiusKm = 5 } = req.body;
+    const { lat, lng, radiusKm = 2 } = req.body;
     
-    // First, update the calling user's geospatial location in the DB
+    // Update user's latest location
     await User.findByIdAndUpdate(req.user.id, {
       location: { type: 'Point', coordinates: [lng, lat] }
     });
     
-    // Convert km to radians for MongoDB $centerSphere (Earth radius = ~6371km)
-    const radiusInRadians = radiusKm / 6371;
+    const radiusInRadians = radiusKm / 6371; // Earth radius = ~6371km
     
-    // Find all users (excluding self) within the geographic sphere who are Online
-    const nearbyUsers = await User.find({
-      isOnline: true,
-      _id: { $ne: req.user.id },
+    // Query active rooms within the radius
+    const nearbyRooms = await Room.find({
+      type: 'nearby',
+      active: true,
       location: {
         $geoWithin: { $centerSphere: [[lng, lat], radiusInRadians] }
       }
     });
     
-    // Build dynamic room based on cluster logic
-    // Using a hashed generic bounding name or simple radius name to group peers
-    const clusterRoomId = `nearby_${Math.floor(lat * 10)}_${Math.floor(lng * 10)}`;
-    
     res.json({
       success: true,
-      roomId: clusterRoomId,
-      usersFound: nearbyUsers.length,
-      users: nearbyUsers.map((u) => ({ auraName: u.auraName, badge: u.equippedBadge })) // Anonymized subset
+      rooms: nearbyRooms
     });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/nearby/create', verifyToken, async (req, res) => {
+  try {
+    const { lat, lng, name } = req.body;
+    
+    const newRoom = new Room({
+      name: name || `Nearby Point ${Math.floor(lat*10)}x${Math.floor(lng*10)}`,
+      type: 'nearby',
+      location: {
+        type: 'Point',
+        coordinates: [lng, lat]
+      },
+      createdBy: req.user.id
+    });
+    await newRoom.save();
+    
+    res.json({ success: true, room: newRoom });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// =====================================
+// WIFI ROOMS
+// =====================================
+router.post('/wifi', verifyToken, async (req, res) => {
+  try {
+    const { ssid } = req.body;
+    
+    if (!ssid || ssid.trim() === '') {
+      return res.status(400).json({ error: "SSID is required" });
+    }
+
+    const rooms = await Room.find({ type: 'wifi', wifiSsid: ssid.trim(), active: true });
+    
+    res.json({ success: true, rooms });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/wifi/create', verifyToken, async (req, res) => {
+  try {
+    const { ssid } = req.body;
+    
+    if (!ssid || ssid.trim() === '') {
+      return res.status(400).json({ error: "SSID is required" });
+    }
+
+    const newRoom = new Room({
+      name: `${ssid} Local Connect`,
+      type: 'wifi',
+      wifiSsid: ssid.trim(),
+      createdBy: req.user.id
+    });
+    await newRoom.save();
+    
+    res.json({ success: true, room: newRoom });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 

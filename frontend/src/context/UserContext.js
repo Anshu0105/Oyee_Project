@@ -94,8 +94,33 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const logoutUser = () => {
+    localStorage.removeItem('oyeeeToken');
+    setToken(null);
+    setUser({
+      name: 'Tasty Strawberry', aura: 342, friends: [], enemies: [], lastRooms: ['WiFi Room'], mood: 'happy', claimedItems: [], id: null, avatarEmoji: '👤', auraColor: '#e91e63'
+    });
+    window.location.href = '/login';
+  };
+
+  const deleteAccount = async () => {
+    try {
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+      const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Deletion failed');
+      
+      logoutUser();
+    } catch(err) {
+      console.error(err);
+      alert('Failed to delete identity.');
+    }
+  };
+
   return (
-    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser }}>
+    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser, deleteAccount }}>
       {children}
     </UserContext.Provider>
   );

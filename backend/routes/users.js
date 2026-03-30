@@ -109,4 +109,14 @@ router.post('/relationship/:id', verifyToken, async (req, res) => {
   }
 });
 
+// Delete user identity
+router.delete('/me', verifyToken, async (req, res) => {
+  try {
+    await User.findByIdAndDelete(req.user.id);
+    res.json({ success: true, message: 'Identity permanently erased.' });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

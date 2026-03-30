@@ -19,7 +19,7 @@ const pricingOptions = [
 ];
 
 const Profile = () => {
-  const { user, token } = useUser();
+  const { user, token, deleteAccount } = useUser();
   const { setTheme, theme: currentTheme } = useTheme();
   const [selectedPricing, setSelectedPricing] = useState(1);
   const [promoText, setPromoText] = useState('');
@@ -280,6 +280,35 @@ const Profile = () => {
                    * Theme selection is saved to your local device. 
                    Consistent across all pages of the void.
                  </p>
+               </div>
+
+               <div style={{ padding: '16px', background: 'rgba(255,0,0,0.05)', borderRadius: '8px', border: '1px solid rgba(255,0,0,0.3)' }}>
+                 <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', color: '#ff4d4d', marginBottom: '8px', letterSpacing: '1px' }}>DANGER ZONE</h3>
+                 <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', lineHeight: '1.5', marginBottom: '16px' }}>
+                   Permanently erase your identity, aura points, and connections. This action cannot be reversed.
+                 </p>
+                 <button 
+                   onClick={() => {
+                     if (window.confirm("Are you absolutely sure you want to permanently delete your identity? This cannot be undone.")) {
+                       deleteAccount();
+                     }
+                   }}
+                   className="interactive"
+                   style={{
+                     width: '100%',
+                     padding: '12px',
+                     background: '#ff4d4d',
+                     color: 'white',
+                     border: 'none',
+                     borderRadius: '4px',
+                     fontFamily: 'var(--font-bebas)',
+                     fontSize: '1.1rem',
+                     letterSpacing: '1px',
+                     cursor: 'pointer'
+                   }}
+                 >
+                   DELETE IDENTITY
+                 </button>
                </div>
             </div>
           </div>

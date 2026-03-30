@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -22,31 +23,30 @@ app.use(express.json());
 
 const messagesRoute = require('./routes/messages');
 const detectorRoute = require('./routes/detector');
+const authRoute = require('./routes/auth');
+const adminRoute = require('./routes/admin');
+const roomRoute = require('./routes/rooms');
+const dmRoute = require('./routes/dm');
+const usersRoute = require('./routes/users');
 
 app.use('/api', messagesRoute);
 app.use('/api', detectorRoute);
+app.use('/api/auth', authRoute);
+app.use('/api/admin', adminRoute);
+app.use('/api/rooms', roomRoute);
+app.use('/api/dm', dmRoute);
+app.use('/api/users', usersRoute);
+
+// Serve Standalone Admin UI Safe Zone
+app.use('/admin', express.static(path.join(__dirname, 'public/admin')));
+
+// Serve raw file uploads for unmoderated Direct Messages
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 
-// Socket.io for real-time chat
-io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
-
-  socket.on('sendMessage', async (message) => {
-    // Save in database
-    try {
-      const Message = require('./models/Message');
-      const saved = await Message.create(message);
-      io.emit('receiveMessage', saved);
-    } catch (err) {
-      console.error('Socket message save error:', err);
-      io.emit('receiveMessage', { ...message, error: 'Failed to save message' });
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
-  });
-});
+// Socket.io for real-time segmented chat and DMs
+const setupSockets = require('./sockets/socketController');
+setupSockets(io);
 
 // MongoDB connection and Server Start
 const PORT = process.env.PORT || 5002;

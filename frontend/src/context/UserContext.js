@@ -5,6 +5,7 @@ const UserContext = createContext();
 export const useUser = () => useContext(UserContext);
 
 export const UserProvider = ({ children }) => {
+  const [token, setToken] = useState(localStorage.getItem('oyeeeToken') || null);
   const [user, setUser] = useState({
     name: 'Tasty Strawberry',
     aura: 342,
@@ -12,7 +13,10 @@ export const UserProvider = ({ children }) => {
     enemies: [],
     lastRooms: ['WiFi Room'],
     mood: 'happy',
-    claimedItems: []
+    claimedItems: [],
+    id: null,
+    avatarEmoji: '👤',
+    auraColor: '#e91e63'
   });
 
   const updateAura = (delta) => {
@@ -39,8 +43,54 @@ export const UserProvider = ({ children }) => {
     setUser(prev => ({ ...prev, claimedItems: [...prev.claimedItems, item] }));
   };
 
+  const loginUser = async (email) => {
+    try {
+      const username = email.split('@')[0];
+      const password = 'oyeee_default';
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+
+      // Attempt to login
+      let res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      // If user not found, dynamically register them!
+      if (res.status === 404) {
+        res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, password })
+        });
+        if (!res.ok) throw new Error('Failed to bootstrap new identity');
+        
+        // Auto-login after registration
+        res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Authentication error');
+
+      setToken(data.token);
+      localStorage.setItem('oyeeeToken', data.token);
+      
+      setUser(prev => ({
+        ...prev,
+        name: data.user.username,
+        id: data.user.id
+      }));
+
+      return true;
+    } catch(err) {
+      console.error("Login bypass failed: ", err);
+      return false;
+    }
+  };
+
   return (
-    <UserContext.Provider value={{ user, updateAura, addFriend, addEnemy, addClaimedItem }}>
+    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser }}>
       {children}
     </UserContext.Provider>
   );

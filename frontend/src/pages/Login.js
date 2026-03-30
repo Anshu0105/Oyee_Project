@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Shield, Wifi, GraduationCap, MapPin, Zap, MessageSquare, Image, Store, Megaphone, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useUser } from '../context/UserContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { loginUser } = useUser();
   const [stars, setStars] = useState([]);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -43,11 +45,17 @@ const Login = () => {
     }
     
     setIsLoading(true);
-    // Simulate loading
-    setTimeout(() => {
+    
+    // Execute real backend dynamic registration/login!
+    const success = await loginUser(email);
+    
+    if (success) {
       setIsLoading(false);
       navigate('/rooms');
-    }, 1500);
+    } else {
+      setIsLoading(false);
+      setError('Network synchronization failed. Is backend running on port 5002?');
+    }
   };
 
   const features = [

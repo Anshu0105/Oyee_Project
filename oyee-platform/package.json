@@ -1,0 +1,19 @@
+{
+  "name": "oyee-platform",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:user\" \"npm run dev:admin\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:user": "cd client-user && npm run dev",
+    "dev:admin": "cd client-admin && npm run dev"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^7.6.0",
+    "nodemon": "^2.0.20"
+  }
+}

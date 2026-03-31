@@ -1,0 +1,42 @@
+const express = require('express');
+const router = express.Router();
+const adminController = require('../controllers/adminController');
+const notificationController = require('../controllers/notificationController');
+const announcementController = require('../controllers/announcementController');
+const orderController = require('../controllers/orderController');
+const roomController = require('../controllers/roomController');
+const auditController = require('../controllers/auditController');
+const { authenticate, isAdmin } = require('../middleware/authMiddleware');
+
+router.use(authenticate);
+router.use(isAdmin);
+
+router.get('/stats', adminController.getDashboardStats);
+router.get('/users', adminController.getUsers);
+router.put('/ban/:id', adminController.banUser);
+router.post('/declaration', adminController.createDeclaration);
+router.get('/notifications', adminController.getNotifications);
+router.post('/notification', notificationController.createNotification);
+router.get('/orders', adminController.getOrders);
+router.put('/order/:id', orderController.updateOrderStatus);
+router.get('/rooms', adminController.getRooms);
+router.put('/room/:id', roomController.updateRoomStatus);
+router.delete('/room/:id', roomController.deleteRoom);
+router.get('/room/:roomId/messages', adminController.getRoomMessages);
+router.delete('/message/:id', adminController.deleteMessage);
+router.put('/user/:id', adminController.updateUser);
+router.get('/audit', adminController.getAuditLogs);
+router.post('/announcement', announcementController.createAnnouncement);
+router.get('/activity-data', adminController.getActivityData);
+router.get('/violation-data', adminController.getViolationData);
+router.get('/economy-data', adminController.getEconomyData);
+router.get('/room-data', adminController.getRoomData);
+router.get('/hourly-data', adminController.getHourlyData);
+router.get('/analytics-kpis', adminController.getAnalyticsKPIs);
+router.get('/moderation-stats', adminController.getModerationStats);
+router.post('/shadow-ban', adminController.shadowBanUser);
+router.post('/hard-ban', adminController.hardBanUser);
+router.post('/adjust-aura', adminController.adjustAura);
+router.get('/system-health', adminController.getSystemHealth);
+
+module.exports = router;

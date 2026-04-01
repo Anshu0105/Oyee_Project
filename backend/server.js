@@ -6,17 +6,30 @@ const socketIo = require('socket.io');
 const path = require('path');
 require('dotenv').config();
 
+const allowedOrigins = [
+  "https://oyeee.chat",
+  "https://www.oyeee.chat",
+  "https://oyeee-frontend.pages.dev",
+  "http://localhost:3000"
+];
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by Void Security (CORS)'));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());

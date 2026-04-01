@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { motion } from 'framer-motion';
 import UserProfileModal from '../components/UI/UserProfileModal';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+import { BACKEND_URL } from '../config';
 
 const getRankColor = (rank, isCurrentUser) => {
   if (isCurrentUser) return 'var(--accent-primary)'; 

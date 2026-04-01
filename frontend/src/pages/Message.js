@@ -3,8 +3,7 @@ import { useUser } from '../context/UserContext';
 import { MessageSquare, ChevronLeft, Paperclip, Loader2 } from 'lucide-react';
 import io from 'socket.io-client';
 import MessageBubble from '../components/UI/MessageBubble';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+import { BACKEND_URL } from '../config';
 
 const Message = () => {
   const { user, token } = useUser();

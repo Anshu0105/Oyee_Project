@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, FastForward, Key, Users, ArrowLeft, Loader2, CheckCircle, Copy } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+import { BACKEND_URL } from '../config';
 
 const PrivateHub = () => {
     const navigate = useNavigate();

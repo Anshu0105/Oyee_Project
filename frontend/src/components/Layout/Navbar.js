@@ -5,6 +5,7 @@ import {
   ChevronDown, Flame, Sparkles, Zap, LogOut, Palette, UserCheck, Settings
 } from 'lucide-react';
 
+import { BACKEND_URL } from '../../config';
 import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 import AIBotIcon from '../UI/AIBotIcon';
@@ -125,7 +126,6 @@ const Navbar = () => {
     };
   }, []);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
 
   const handleBotClick = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, Plus, Minus, UserPlus, AlertTriangle } from 'lucide-react';
+import { BACKEND_URL } from '../config';
 import { useUser } from '../context/UserContext';
 import { detectContent } from '../utils/detector';
 import '../styles/moderation.css';
@@ -18,7 +19,6 @@ const ChatRoom = () => {
   const [room, setRoom] = useState(null);
   const scrollRef = useRef();
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
   const { token } = useUser();
 
   useEffect(() => {

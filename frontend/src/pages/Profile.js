@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { Settings, Shield, Palette, Zap, Users, Megaphone } from 'lucide-react';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+import { BACKEND_URL } from '../config';
 
 const calculateTier = (aura) => {
   if (aura > 1000) return 'STARBORN';

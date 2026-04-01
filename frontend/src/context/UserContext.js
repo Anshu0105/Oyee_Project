@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { BACKEND_URL } from '../config';
 
 const UserContext = createContext();
 
@@ -47,7 +48,6 @@ export const UserProvider = ({ children }) => {
     try {
       const username = email.split('@')[0];
       const password = 'oyeee_default';
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
 
       // Attempt to login
       let res = await fetch(`${BACKEND_URL}/api/auth/login`, {

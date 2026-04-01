@@ -79,7 +79,8 @@ export const UserProvider = ({ children }) => {
       setUser(prev => ({
         ...prev,
         name: data.user.username,
-        id: data.user.id
+        id: data.user.id,
+        profilePic: data.user.profilePic
       }));
 
       return true;
@@ -89,8 +90,26 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const logoutUser = () => {
+    localStorage.removeItem('oyeeeToken');
+    setToken(null);
+    setUser({
+      name: 'Anonymous Wanderer',
+      aura: 0,
+      friends: [],
+      enemies: [],
+      lastRooms: [],
+      mood: 'happy',
+      claimedItems: [],
+      id: null,
+      avatarEmoji: '👤',
+      auraColor: '#e91e63',
+      profilePic: ''
+    });
+  };
+
   return (
-    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser }}>
+    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser }}>
       {children}
     </UserContext.Provider>
   );

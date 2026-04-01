@@ -258,7 +258,7 @@ const Profile = () => {
                        className="interactive"
                        style={{
                          flex: 1,
-                         padding: '16px',
+                         padding: '12px',
                          background: currentTheme === 'blue' ? 'var(--accent-primary)' : 'rgba(245, 196, 0, 0.1)',
                          border: `1px solid ${currentTheme === 'blue' ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
                          borderRadius: '8px',
@@ -272,6 +272,27 @@ const Profile = () => {
                      >
                         CROWN-BLUE
                      </button>
+                     <button 
+                       onClick={() => setTheme('titanium')}
+                       className="interactive"
+                       style={{
+                         flex: 1,
+                         padding: '12px',
+                         background: currentTheme === 'titanium' ? 'white' : 'rgba(255, 255, 255, 0.05)',
+                         border: `1px solid ${currentTheme === 'titanium' ? 'white' : 'rgba(255, 255, 255, 0.2)'}`,
+                         borderRadius: '8px',
+                         color: currentTheme === 'titanium' ? 'black' : 'white',
+                         fontFamily: 'var(--font-bebas)',
+                         fontSize: '1.1rem',
+                         letterSpacing: '1px',
+                         cursor: 'pointer',
+                         transition: 'all 0.3s',
+                         boxShadow: currentTheme === 'titanium' ? '0 0 15px rgba(255, 255, 255, 0.5)' : 'none'
+                       }}
+                     >
+                        TITANIUM-SILVER
+                     </button>
+
                   </div>
                </div>
                

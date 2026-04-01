@@ -8,9 +8,9 @@
    ============================================================ */
 
 .violation-msg {
-  background: rgba(196, 40, 80, 0.08);
-  border: 1px solid rgba(196, 40, 80, 0.4);
-  border-left: 3px solid var(--wine3);
+  background: rgba(var(--accent-rgb), 0.08);
+  border: 1px solid rgba(var(--accent-rgb), 0.4);
+  border-left: 3px solid var(--accent-primary);
   padding: 12px 18px;
   font-family: var(--fm);
   font-size: 11px;
@@ -32,10 +32,10 @@
 }
 
 .violation-msg.critical {
-  background: rgba(212, 58, 96, 0.15);
-  border-color: rgba(212, 58, 96, 0.4);
-  border-left-color: #d43a60;
-  color: #d43a60;
+  background: rgba(var(--accent-rgb), 0.15);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  border-left-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 .violation-msg.critical strong {
@@ -138,9 +138,9 @@
    ============================================================ */
 
 .chat-input.violation-detected {
-  border-color: var(--wine3);
-  box-shadow: 0 0 8px rgba(196, 40, 80, 0.2),
-              inset 0 0 12px rgba(196, 40, 80, 0.03);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.2),
+              inset 0 0 12px rgba(var(--accent-rgb), 0.03);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -166,8 +166,8 @@
 
 .msg-bubble.flagged {
   border-left-width: 4px;
-  border-left-color: var(--wine3);
-  background: rgba(140, 26, 48, 0.15);
+  border-left-color: var(--accent-primary);
+  background: rgba(var(--accent-rgb), 0.15);
   position: relative;
 }
 
@@ -262,8 +262,8 @@
   height: 100%;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               background 0.3s ease;
-  background: linear-gradient(90deg, var(--wine), var(--wine3));
-  box-shadow: 0 0 6px rgba(196, 40, 80, 0.4);
+  background: linear-gradient(90deg, var(--accent-primary), var(--accent-primary));
+  box-shadow: 0 0 6px rgba(var(--accent-rgb), 0.4);
 }
 
 .risk-fill.green {

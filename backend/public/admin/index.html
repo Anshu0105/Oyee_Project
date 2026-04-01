@@ -3,189 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OYEEE - Admin Moderation Console</title>
-    <!-- Include the moderation styling imported from the Admin branch -->
+    <title>OYEE - Admin Portal | Declarations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="oyee-moderation-styles.css">
-    <style>
-        body {
-            font-family: 'Inter', 'Segoe UI', sans-serif;
-            background-color: #0d0f12; /* Dark theme */
-            color: #e2e8f0;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .admin-dashboard {
-            background: #1a1e26;
-            border-radius: 12px;
-            border: 1px solid #2d3748;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            width: 100%;
-            max-width: 800px;
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            overflow: hidden;
-            height: 90vh; /* Fill the screen */
-        }
-
-        .dashboard-header {
-            background: #2d3748;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #e53e3e; /* Accent red */
-        }
-
-        .dashboard-header h1 {
-            margin: 0;
-            font-size: 1.25rem;
-            color: #fff;
-            position: relative;
-        }
-
-        .chat-room-name {
-            font-size: 0.9rem;
-            color: #a0aec0;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px 8px;
-            border-radius: 4px;
-        }
-
-        /* Mock Chat Container - Required by oyee-moderation-ui.js */
-        .chat-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-            background: #111419;
-            padding: 20px;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            padding-bottom: 20px;
-        }
-
-        /* Default message styling (before moderation interception) */
-        .msg-wrap {
-            background: #2d3748;
-            padding: 12px 16px;
-            border-radius: 8px;
-            align-self: flex-start;
-            max-width: 80%;
-            word-wrap: break-word;
-            border-left: 3px solid #718096;
-        }
-        .msg-wrap.own {
-            align-self: flex-end;
-            background: #2b6cb0;
-            border-left: none;
-            border-right: 3px solid #4299e1;
-        }
-
-        .msg-hdr {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-            font-size: 0.8rem;
-            color: #a0aec0;
-        }
-        .msg-name { font-weight: bold; color: #cbd5e0; }
-
-        /* The Input Area required by the JS */
-        .chat-input-wrap {
-            display: flex;
-            gap: 10px;
-            margin-top: auto; /* Push to bottom */
-            background: #1a1e26;
-            padding: 15px;
-            border-top: 1px solid #2d3748;
-        }
-
-        .chat-input {
-            flex: 1;
-            padding: 12px;
-            background: #2d3748;
-            border: 1px solid #4a5568;
-            color: white;
-            border-radius: 6px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-
-        .chat-input:focus {
-            border-color: #63b3ed;
-        }
-
-        .send-btn {
-            background: #e53e3e;
-            color: white;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .send-btn:hover {
-            background: #c53030;
-        }
-        
-    </style>
 </head>
 <body>
 
-    <div class="admin-dashboard">
-        <div class="dashboard-header">
-            <h1>🛡️ Moderation Console Simulator</h1>
-            <span class="chat-room-name">ADMIN_TEST_ENV</span>
+    <!-- TOP NAVIGATION / HEADER -->
+    <header class="main-header">
+        <div class="brand">
+            <div class="menu-trigger">
+                <span></span><span></span><span></span>
+            </div>
+            <h1 class="logo">DECLARATIONS</h1>
         </div>
 
-        <div class="chat-container">
-            <div class="chat-messages">
-                <div class="msg-wrap">
-                    <div class="msg-hdr">
-                        <span class="msg-name">System</span>
-                        <span class="msg-time">Now</span>
-                    </div>
-                    <div class="msg-bubble">Admin Moderation active. Test typing sensitive information like phone numbers or explicit language below to trigger the interception UI.</div>
-                </div>
+        <div class="stats-row">
+            <div class="stat-item">
+                <span class="dot green"></span>
+                <span class="val">3,241</span>
+                <span class="lbl">Users Online</span>
             </div>
+            <div class="stat-item">
+                <span class="dot blue"></span>
+                <span class="val">12</span>
+                <span class="lbl">Violations</span>
+            </div>
+            <div class="stat-item">
+                <span class="dot orange"></span>
+                <span class="val">99.8%</span>
+                <span class="lbl">Uptime</span>
+            </div>
+        </div>
 
-            <!-- Warning/Notice target area -->
-            
-            <div class="chat-input-wrap">
-                <input type="text" class="chat-input" placeholder="Type a message to test content detection..." autocomplete="off">
-                <button class="send-btn">Test Send</button>
+        <div class="user-profile">
+            <div class="user-avatar">E</div>
+            <div class="user-info">
+                <span class="user-id">EMP-001</span>
+                <span class="user-role">Super Admin</span>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn-outline"><span class="icon">🔥</span> CLASSIC FIRE</button>
+            <button class="btn-dark"><span class="icon">📢</span> DECLARE</button>
+            <button class="btn-blue"><span class="icon">🔔</span> NOTIF</button>
+        </div>
+    </header>
+
+    <!-- LIVE STATUS BAR -->
+    <div class="live-status-bar">
+        <div class="status-pill red">
+            <span class="icon">⚠</span> LIVE
+        </div>
+        <div class="marquee-wrap">
+            <div class="marquee-content">
+                VIOLATION: Spicy Ramen - phone number blocked - ACTIVE ROOM: UNIVERSITY_CHITKARA | VIOLATION: Crunchy Mango - link detected - ACTIVE ROOM: WIFI_ROOM_01 | SYSTEM: Server maintenance scheduled for 03:00 AM UTC
             </div>
         </div>
     </div>
 
-    <!-- Core Scripts Imported from Anshuman Branch -->
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="dashboard-grid">
+        <!-- LEFT COLUMN: SETTINGS / FORM -->
+        <section class="panel declaration-form">
+            <div class="panel-header">
+                <h2><span class="icon">📢</span> SEND NEW DECLARATION</h2>
+                <p class="panel-sub">// this will appear LIVE on every user's screen immediately</p>
+            </div>
+            
+            <form id="new-declaration-form">
+                <div class="form-group">
+                    <label>DECLARATION TYPE</label>
+                    <div class="custom-select">
+                        <select id="decl-type">
+                            <option value="general">📣 General Announcement</option>
+                            <option value="alert">🔔 Alert</option>
+                            <option value="violation">⚠ Violation Warning</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>DECLARATION TITLE</label>
+                    <input type="text" id="decl-title" placeholder="e.g. AURA HUNT BEGINS NOW">
+                </div>
+
+                <div class="form-group">
+                    <label>DECLARATION MESSAGE</label>
+                    <textarea id="decl-message" placeholder="Write the full declaration message that all users will see..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>TARGET AUDIENCE</label>
+                    <div class="custom-select">
+                        <select id="decl-audience">
+                            <option value="all">All Users (Global)</option>
+                            <option value="uni">University Only</option>
+                            <option value="nearby">Nearby Only</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>DISPLAY DURATION</label>
+                    <div class="custom-select">
+                        <select id="decl-duration">
+                            <option value="10">10 Seconds</option>
+                            <option value="30">30 Seconds</option>
+                            <option value="60">1 Minute</option>
+                            <option value="0">Endless (Manual Dismiss)</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </section>
+
+        <!-- RIGHT COLUMN: ACTIVE & HISTORY -->
+        <div class="right-column">
+            <section class="panel active-declarations">
+                <div class="panel-header">
+                    <h2>ACTIVE DECLARATIONS</h2>
+                    <p class="panel-sub">// currently live on the user platform</p>
+                </div>
+                <div class="panel-content empty">
+                    <p>// no active declarations at this moment</p>
+                </div>
+            </section>
+
+            <section class="panel declaration-history">
+                <div class="panel-header">
+                    <h2>DECLARATION HISTORY</h2>
+                    <p class="panel-sub">// past declarations · last 10</p>
+                </div>
+                <div class="panel-content">
+                    <div class="history-list" id="history-list">
+                        <!-- History items will be injected here -->
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- CORE SCRIPTS -->
     <script src="content-detector.js"></script>
     <script src="detector-integration.js"></script>
     <script src="oyee-moderation-ui.js"></script>
-
-    <!-- Console Logging Instructions for the User -->
-    <script>
-        console.log("=========================================");
-        console.log("🛡️ ADMIN MODERATION CONSOLE LOADED");
-        console.log("Global functions available for testing:");
-        console.log("- window.OyeeModeration.analyzeText('string')");
-        console.log("- window.OyeeModeration.getStats()");
-        console.log("- window.OyeeModeration.scanHistory()");
-        console.log("=========================================");
-    </script>
 </body>
 </html>

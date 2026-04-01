@@ -124,12 +124,12 @@ const Login = () => {
               lineHeight: 0.9,
               marginBottom: '20px'
             }}>
-              OYEEE<span style={{ color: 'var(--accent-primary)' }}>.</span>
+              OYEEE<span style={{ color: '#e91e63' }}>.</span>
             </h1>
             <p style={{
               fontFamily: 'var(--font-mono)',
               fontSize: '1.2rem',
-              color: 'var(--accent-primary)',
+              color: '#e91e63',
               letterSpacing: '2px',
               marginBottom: '40px'
             }}>
@@ -165,7 +165,7 @@ const Login = () => {
                     color: '#666'
                   }}
                 >
-                  <feat.icon size={14} style={{ color: 'var(--accent-primary)' }} />
+                  <feat.icon size={14} style={{ color: '#e91e63' }} />
                   {feat.label}
                 </motion.div>
               ))}
@@ -241,7 +241,7 @@ const Login = () => {
                 style={{
                   width: '100%',
                   padding: '18px',
-                  background: 'var(--accent-primary)',
+                  background: '#e91e63',
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
@@ -313,6 +313,7 @@ const Login = () => {
         .interactive:hover {
           transform: translateY(-2px);
           filter: brightness(1.1);
+          box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2);
         }
         .interactive:active {
           transform: translateY(0);

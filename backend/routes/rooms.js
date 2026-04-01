@@ -4,6 +4,15 @@ const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Room = require('../models/Room');
 
+router.get('/:id', verifyToken, async (req, res) => {
+  try {
+    const room = await Room.findById(req.params.id);
+    if (!room) return res.status(404).json({ error: "Room not found" });
+    res.json({ success: true, room });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+
 // =====================================
 // UNIVERSITY ROOMS
 // =====================================
@@ -132,4 +141,53 @@ router.post('/wifi/create', verifyToken, async (req, res) => {
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
+// =====================================
+// PRIVATE ROOMS (4-DIGIT CODES)
+// =====================================
+router.post('/create-with-code', verifyToken, async (req, res) => {
+  try {
+    const { name } = req.body;
+    
+    // Generate unique 4-digit code
+    let roomCode;
+    let isUnique = false;
+    let attempts = 0;
+    
+    while (!isUnique && attempts < 10) {
+      roomCode = Math.floor(1000 + Math.random() * 9000).toString(); // 1000-9999
+      const existing = await Room.findOne({ roomCode });
+      if (!existing) isUnique = true;
+      attempts++;
+    }
+    
+    if (!isUnique) throw new Error("Server overloaded. Failed to generate unique code.");
+
+    const newRoom = new Room({
+      name: name || `Secret Hub ${roomCode}`,
+      type: 'private',
+      roomCode,
+      createdBy: req.user.id
+    });
+    
+    await newRoom.save();
+    res.json({ success: true, room: newRoom });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/join-with-code', verifyToken, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "Room code is required" });
+
+    const room = await Room.findOne({ roomCode: code.toString(), type: 'private', active: true });
+    
+    if (!room) {
+      return res.status(404).json({ error: "Void link expired or invalid code." });
+    }
+
+    res.json({ success: true, room });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;
+

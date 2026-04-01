@@ -10,8 +10,13 @@ export const ThemeProvider = ({ children }) => {
   });
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'wine' ? 'blue' : 'wine'));
+    setTheme(prev => {
+      if (prev === 'wine') return 'blue';
+      if (prev === 'blue') return 'titanium';
+      return 'wine';
+    });
   };
+
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

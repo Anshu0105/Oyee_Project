@@ -101,9 +101,41 @@ const Leaderboard = () => {
         </div>
 
         {/* Table Body */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
           {leaderboard.length === 0 ? (
-             <div style={{ padding: '40px', textAlign: 'center', opacity: 0.3, fontFamily: 'var(--font-mono)' }}>Void is empty...</div>
+             <div style={{ 
+               padding: '100px 40px', 
+               textAlign: 'center', 
+               background: 'rgba(255,255,255,0.01)',
+               border: '1px solid var(--glass-border)',
+               borderRadius: '16px',
+               marginTop: '20px',
+               display: 'flex',
+               flexDirection: 'column',
+               alignItems: 'center',
+               gap: '20px'
+             }}>
+                <div style={{ position: 'relative' }}>
+                  <div style={{ 
+                    width: '60px', height: '60px', border: '1px solid var(--accent-primary)', borderRadius: '50%', opacity: 0.1,
+                    animation: 'pulse 2s infinite'
+                  }} />
+                  <div style={{ 
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    color: 'var(--accent-primary)', scale: '1.5'
+                  }}>
+                    !
+                  </div>
+                </div>
+                <div>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.1rem', color: 'var(--text-main)', letterSpacing: '2px', marginBottom: '8px' }}>
+                    SCANNING_STAGNANT_VOID...
+                  </p>
+                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '1px' }}>
+                    // NO_ACTIVE_PRESENCE_DETECTED_IN_THIS_SECTOR
+                  </p>
+                </div>
+             </div>
           ) : (
             leaderboard.map((entry, index) => {
               const rank = index + 1;

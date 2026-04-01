@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useUser } from '../context/UserContext';
-import { Package, ShoppingBag, Zap, CheckCircle } from 'lucide-react';
+import { Package, ShoppingBag, Zap, CheckCircle, Shirt, Coffee, Ghost, Award } from 'lucide-react';
 
 const storeItems = [
   {
     id: 1,
     name: 'OYEEE TEE',
-    emoji: '👕',
-    emojiColor: '#5cb85c',
+    icon: Shirt,
+    iconColor: '#5cb85c',
     description: 'Premium cotton tee with the iconic OYEEE wordmark. Wear the void on your chest.',
     price: 500,
     badge: null,
@@ -15,8 +15,8 @@ const storeItems = [
   {
     id: 2,
     name: 'VOID MUG',
-    emoji: '☕',
-    emojiColor: '#8B4513',
+    icon: Coffee,
+    iconColor: '#8B4513',
     description: 'Ceramic mug with OYEEE branding. Fill it with whatever fuels your chats.',
     price: 300,
     badge: null,
@@ -24,8 +24,8 @@ const storeItems = [
   {
     id: 3,
     name: 'GHOST CAP',
-    emoji: '🧢',
-    emojiColor: '#4a90d9',
+    icon: Ghost,
+    iconColor: '#4a90d9',
     description: 'Snapback cap embroidered with the OYEEE ghost mark. Represent anonymously.',
     price: 400,
     badge: null,
@@ -33,8 +33,8 @@ const storeItems = [
   {
     id: 4,
     name: 'BAG BADGE',
-    emoji: '🏅',
-    emojiColor: '#FFD700',
+    icon: Award,
+    iconColor: '#FFD700',
     description: 'Enamel pin badge, Thunder or Starborn variant — claim your tier in the real world.',
     price: 150,
     badge: null,
@@ -151,29 +151,41 @@ const AuraStore = () => {
               borderRadius: '20px',
               overflow: 'hidden',
               border: '1px solid var(--glass-border)',
-              transition: 'all 0.3s ease',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'flex',
               flexDirection: 'column',
-              background: 'rgba(255,255,255,0.02)'
+              background: 'rgba(255,255,255,0.02)',
+              position: 'relative'
             }}
           >
-            {/* Emoji Display Area */}
+            
+            {/* Icon Display Area */}
             <div style={{
-              background: 'rgba(0,0,0,0.2)',
+              background: 'rgba(0,0,0,0.3)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              height: '160px',
-              fontSize: '4.5rem',
+              height: '180px',
+              position: 'relative',
+              overflow: 'hidden'
             }}>
-              {item.emoji}
+               <div style={{
+                 padding: '24px',
+                 borderRadius: '50%',
+                 background: 'rgba(255,255,255,0.03)',
+                 border: '1px solid var(--glass-border)',
+                 boxShadow: `0 0 20px ${item.iconColor}22`,
+                 color: item.iconColor
+               }}>
+                 <item.icon size={56} strokeWidth={1.5} />
+               </div>
             </div>
 
             {/* Card Body */}
             <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
               <h2 style={{
                 fontFamily: 'var(--font-bebas)',
-                fontSize: '1.6rem',
+                fontSize: '1.8rem',
                 letterSpacing: '2px',
                 color: 'var(--text-main)',
               }}>
@@ -184,14 +196,15 @@ const AuraStore = () => {
                 color: 'var(--text-dim)',
                 lineHeight: '1.6',
                 flex: 1,
+                fontFamily: 'var(--font-inter)'
               }}>
                 {item.description}
               </p>
 
               {/* Price + Claim Row */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '20px' }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                  <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.6rem', color: 'var(--accent-primary)' }}>
+                  <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.8rem', color: 'var(--accent-primary)' }}>
                     {item.price}
                   </span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '1px' }}>
@@ -202,25 +215,16 @@ const AuraStore = () => {
                 <button
                   onClick={() => handleClaim(item)}
                   disabled={user.claimedItems.some(i => i.id === item.id)}
-                  className="interactive"
+                  className="neural-button"
                   style={{
-                    background: user.claimedItems.some(i => i.id === item.id) ? 'rgba(255,255,255,0.1)' : 'var(--accent-primary)',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '10px',
-                    padding: '10px 20px',
-                    fontFamily: 'var(--font-bebas)',
-                    fontSize: '1rem',
-                    letterSpacing: '1.5px',
-                    cursor: user.claimedItems.some(i => i.id === item.id) ? 'default' : 'pointer',
-                    transition: 'all 0.3s',
-                    opacity: user.claimedItems.some(i => i.id === item.id) ? 0.5 : 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
+                    background: user.claimedItems.some(i => i.id === item.id) ? 'rgba(255,255,255,0.05)' : 'var(--accent-primary)',
+                    color: user.claimedItems.some(i => i.id === item.id) ? 'var(--text-dim)' : 'var(--bg-main)',
+                    opacity: user.claimedItems.some(i => i.id === item.id) ? 0.6 : 1,
+                    padding: '8px 20px',
+                    fontSize: '0.9rem'
                   }}
                 >
-                  {user.claimedItems.some(i => i.id === item.id) ? <CheckCircle size={14} /> : <ShoppingBag size={14} />}
+                  {user.claimedItems.some(i => i.id === item.id) ? <CheckCircle size={16} /> : <ShoppingBag size={16} />}
                   {user.claimedItems.some(i => i.id === item.id) ? 'CLAIMED' : 'CLAIM'}
                 </button>
               </div>

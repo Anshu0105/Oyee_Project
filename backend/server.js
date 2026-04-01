@@ -28,6 +28,7 @@ const adminRoute = require('./routes/admin');
 const roomRoute = require('./routes/rooms');
 const dmRoute = require('./routes/dm');
 const usersRoute = require('./routes/users');
+const aiRoute = require('./routes/ai');
 
 app.use('/api', messagesRoute);
 app.use('/api', detectorRoute);
@@ -36,6 +37,7 @@ app.use('/api/admin', adminRoute);
 app.use('/api/rooms', roomRoute);
 app.use('/api/dm', dmRoute);
 app.use('/api/users', usersRoute);
+app.use('/api/ai', aiRoute);
 
 // Serve Standalone Admin UI Safe Zone
 app.use('/admin', express.static(path.join(__dirname, 'public/admin')));

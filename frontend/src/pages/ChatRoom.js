@@ -15,7 +15,27 @@ const ChatRoom = () => {
   ]);
   const [input, setInput] = useState('');
   const [violationNotice, setViolationNotice] = useState(null);
+  const [room, setRoom] = useState(null);
   const scrollRef = useRef();
+
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+  const { token } = useUser();
+
+  useEffect(() => {
+    const fetchRoom = async () => {
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/rooms/${id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok) setRoom(data.room);
+      } catch (err) {
+        console.error("Failed to fetch room:", err);
+      }
+    };
+    fetchRoom();
+  }, [id, token, BACKEND_URL]);
+
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -69,10 +89,30 @@ const ChatRoom = () => {
         background: 'rgba(0,0,0,0.1)'
       }}>
         <button onClick={() => navigate('/rooms')} className="interactive" style={{ background: 'none', border: 'none', color: 'inherit', marginRight: '16px' }}><ArrowLeft /></button>
-        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px' }}>{id.toUpperCase()} ROOM</h2>
+        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px' }}>
+          {room ? room.name.toUpperCase() : id.toUpperCase()}
+        </h2>
+        
+        {room?.roomCode && (
+          <div style={{
+            marginLeft: '16px',
+            padding: '4px 12px',
+            background: 'var(--accent-primary)',
+            borderRadius: '4px',
+            color: 'black',
+            fontFamily: 'var(--font-mono)',
+            fontSize: '0.8rem',
+            fontWeight: 'bold',
+            boxShadow: '0 0 10px var(--accent-primary)'
+          }}>
+            CODE: {room.roomCode}
+          </div>
+        )}
+
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// 42 users</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// {room?.members?.length || 1} online</span>
         </div>
+
       </div>
 
       {/* Messages */}

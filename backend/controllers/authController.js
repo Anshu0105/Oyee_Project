@@ -16,11 +16,20 @@ exports.registerUser = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: role || 'user'
+      role: role || 'user',
+      profilePic: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`
     });
 
     const savedUser = await newUser.save();
-    res.status(201).json({ message: 'User created successfully', user: { id: savedUser._id, username: savedUser.username, role: savedUser.role } });
+    res.status(201).json({ 
+      message: 'User created successfully', 
+      user: { 
+        id: savedUser._id, 
+        username: savedUser.username, 
+        role: savedUser.role,
+        profilePic: savedUser.profilePic
+      } 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -41,7 +50,16 @@ exports.loginUser = async (req, res) => {
       { expiresIn: '3d' }
     );
 
-    res.status(200).json({ token, user: { id: user._id, username: user.username, role: user.role, email: user.email } });
+    res.status(200).json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        username: user.username, 
+        role: user.role, 
+        email: user.email,
+        profilePic: user.profilePic || `https://api.dicebear.com/7.x/bottts/svg?seed=${user.username}`
+      } 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

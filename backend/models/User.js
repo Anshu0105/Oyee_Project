@@ -20,6 +20,7 @@ const UserSchema = new mongoose.Schema({
   auraName: { type: String, default: 'Anonymous Wanderer' },
   aura: { type: Number, default: Math.floor(Math.random() * 1000), index: -1 },
   avatarEmoji: { type: String, default: '👤' },
+  profilePic: { type: String, default: '' },
   equippedBadge: { type: String, default: '' },
   
   // Leaderboard Stats

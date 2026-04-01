@@ -10,7 +10,8 @@ import Message from './pages/Message';
 import AuraStore from './pages/AuraStore';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
-import { useUser } from './context/UserContext';
+import PrivateHub from './pages/PrivateHub';
+import ProtectedRoute from './components/Common/ProtectedRoute';
 import './App.css';
 
 function App() {
@@ -20,21 +21,24 @@ function App() {
         <CustomCursor />
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/*" element={
-            <>
-              <Navbar />
-              <LiveDeclaration />
-              <Routes>
-                <Route path="/rooms" element={<Rooms />} />
-                <Route path="/room/:id" element={<ChatRoom />} />
-                <Route path="/messages" element={<Message />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/store" element={<AuraStore />} />
-                <Route path="/" element={<Navigate to="/rooms" />} />
-              </Routes>
-            </>
-          } />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/*" element={
+              <>
+                <Navbar />
+                <LiveDeclaration />
+                <Routes>
+                  <Route path="/rooms" element={<Rooms />} />
+                  <Route path="/room/:id" element={<ChatRoom />} />
+                  <Route path="/private-hub" element={<PrivateHub />} />
+                  <Route path="/messages" element={<Message />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/leaderboard" element={<Leaderboard />} />
+                  <Route path="/store" element={<AuraStore />} />
+                  <Route path="/" element={<Navigate to="/rooms" />} />
+                </Routes>
+              </>
+            } />
+          </Route>
         </Routes>
       </div>
     </Router>

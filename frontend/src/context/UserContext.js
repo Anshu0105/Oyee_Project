@@ -5,20 +5,27 @@ const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
 
+const DEFAULT_USER = {
+  name: 'Void Wanderer',
+  auraName: null,
+  aura: 0,
+  spendableAura: 0,
+  lifetimeAura: 0,
+  maxLifetimeAura: 0,
+  friends: [],
+  enemies: [],
+  lastRooms: [],
+  mood: 'happy',
+  claimedItems: [],
+  id: null,
+  email: null,
+  avatarEmoji: '👤',
+  auraColor: '#e91e63'
+};
+
 export const UserProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('oyeeeToken') || null);
-  const [user, setUser] = useState({
-    name: 'Tasty Strawberry',
-    aura: 342,
-    friends: [],
-    enemies: [],
-    lastRooms: ['WiFi Room'],
-    mood: 'happy',
-    claimedItems: [],
-    id: null,
-    avatarEmoji: '👤',
-    auraColor: '#e91e63'
-  });
+  const [user, setUser] = useState(DEFAULT_USER);
   const [socket, setSocket] = useState(null);
 
   const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
@@ -114,26 +121,34 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  // login: called after successful signup or login from Auth page
+  const login = useCallback((newToken, userData) => {
+    setToken(newToken);
+    localStorage.setItem('oyeeeToken', newToken);
+    setUser(prev => ({
+      ...prev,
+      id: userData.id,
+      name: userData.username || userData.auraName || 'Void Wanderer',
+      auraName: userData.auraName || null,
+      email: userData.email || null,
+      avatarEmoji: userData.avatarEmoji || '👤',
+      spendableAura: userData.spendableAura || 0,
+      lifetimeAura: userData.lifetimeAura || 0,
+      maxLifetimeAura: userData.maxLifetimeAura || 0,
+      auraColor: userData.auraColor || '#e91e63'
+    }));
+  }, []);
+
   const logout = useCallback(() => {
     setToken(null);
     localStorage.removeItem('oyeeeToken');
+    if (socket) socket.close();
     setSocket(null);
-    setUser({
-      name: 'Tasty Strawberry',
-      aura: 342,
-      friends: [],
-      enemies: [],
-      lastRooms: ['WiFi Room'],
-      mood: 'happy',
-      claimedItems: [],
-      id: null,
-      avatarEmoji: '👤',
-      auraColor: '#e91e63'
-    });
-  }, []);
+    setUser(DEFAULT_USER);
+  }, [socket]);
 
   return (
-    <UserContext.Provider value={{ user, token, socket, setToken, updateAura, addFriend, addEnemy, addClaimedItem, initiateLogin, verifyOTP, logout }}>
+    <UserContext.Provider value={{ user, token, socket, setToken, updateAura, addFriend, addEnemy, addClaimedItem, initiateLogin, verifyOTP, login, logout }}>
       {children}
     </UserContext.Provider>
   );

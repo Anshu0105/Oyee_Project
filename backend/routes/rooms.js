@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
+const crypto = require('crypto');
 
 // University Room Validation Endpoint
 router.get('/university/check-access', verifyToken, async (req, res) => {
@@ -55,6 +56,23 @@ router.post('/nearby', verifyToken, async (req, res) => {
       usersFound: nearbyUsers.length,
       users: nearbyUsers.map((u) => ({ auraName: u.auraName, badge: u.equippedBadge })) // Anonymized subset
     });
+  } catch(err) { res.status(500).json({ error: err.message }); }
+});
+
+// Automated WiFi Room Discovery (Based on IP)
+router.get('/wifi/discover', verifyToken, async (req, res) => {
+  try {
+    // Get client IP, taking into account Render/Cloudflare headers
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    
+    // Hash the IP to create a unique, privacy-safe room ID
+    const hash = crypto
+      .createHash('sha256')
+      .update(clientIp + (process.env.JWT_SECRET || 'oyeee_secret'))
+      .digest('hex')
+      .substring(0, 12);
+      
+    res.json({ success: true, roomId: `wifi_${hash}` });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 

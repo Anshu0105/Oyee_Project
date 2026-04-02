@@ -47,12 +47,22 @@ const Rooms = () => {
     return Math.abs(hash).toString(16);
   };
 
-  const handleWifiRoom = () => {
+  const handleWifiRoom = async () => {
     setError('');
-    const ssid = prompt("Enter your exact WiFi network name to discover others logically connected:");
-    if (!ssid || ssid.trim() === '') return;
-    const roomId = "wifi_" + hashString(ssid.trim());
-    navigate(`/room/${roomId}`);
+    setLoadingRoom('wifi');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/rooms/wifi/discover`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to detect network');
+      
+      navigate(`/room/${data.roomId}`);
+    } catch(err) {
+      setError(err.message);
+    } finally {
+      setLoadingRoom(null);
+    }
   };
 
   const handleUniversityRoom = async () => {

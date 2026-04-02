@@ -39,7 +39,8 @@ router.get('/available-users', verifyToken, async (req, res) => {
 // Upload a file to Local Storage for DM
 router.post('/upload-file', verifyToken, upload.single('file'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  const fileUrl = `${process.env.BACKEND_URL || 'http://localhost:5002'}/uploads/${req.file.filename}`;
+  const BACKEND_URL = process.env.BACKEND_URL || 'https://oyeee-backend.onrender.com';
+  const fileUrl = `${BACKEND_URL}/uploads/${req.file.filename}`;
   res.json({
     fileUrl,
     fileName: req.file.originalname,

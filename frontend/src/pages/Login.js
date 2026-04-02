@@ -54,7 +54,7 @@ const Login = () => {
       navigate('/rooms');
     } else {
       setIsLoading(false);
-      setError('Network synchronization failed. Is backend running on port 5002?');
+      setError('Connection to the Void failed. The server might be waking up, please wait 30 seconds and try again.');
     }
   };
 

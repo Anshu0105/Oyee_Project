@@ -62,9 +62,15 @@ router.post('/nearby', verifyToken, async (req, res) => {
 // Automated WiFi Room Discovery (Based on IP)
 router.get('/wifi/discover', verifyToken, async (req, res) => {
   try {
-    // Get client IP, prioritizing Cloudflare's direct header, then proxy list, then socket
+    // Get client IP, prioritizing Cloudflare's direct header
     const rawIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const clientIp = rawIp.split(',')[0].trim();
+    let clientIp = rawIp.split(',')[0].trim().toLowerCase();
+    
+    // If IPv6, truncate to the first 4 segments (the /64 prefix) to group devices on the same WiFi
+    if (clientIp.includes(':')) {
+      const segments = clientIp.split(':');
+      clientIp = segments.slice(0, 4).join(':');
+    }
     
     // Hash the IP to create a unique, privacy-safe room ID
     const hash = crypto

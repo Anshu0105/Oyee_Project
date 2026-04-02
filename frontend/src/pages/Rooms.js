@@ -35,7 +35,7 @@ const Rooms = () => {
   const { token } = useUser();
   const [error, setError] = useState('');
   const [loadingRoom, setLoadingRoom] = useState(null);
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
 
   const hashString = (str) => {
     let hash = 0;

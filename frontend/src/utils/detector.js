@@ -3,7 +3,7 @@
  * Communicates with the backend /api/detect endpoint
  */
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:5002";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://oyeee-backend.onrender.com";
 
 export const detectContent = async (message) => {
   if (!message || message.trim().length === 0) {

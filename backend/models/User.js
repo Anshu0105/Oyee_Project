@@ -23,7 +23,7 @@ const UserSchema = new mongoose.Schema({
   maxLifetimeAura: { type: Number, default: 100 },
   
   // Visual Profile
-  auraName: { type: String, default: 'Anonymous Wanderer' },
+  auraName: { type: String, default: 'Anonymous Wanderer', unique: true, sparse: true },
   avatarEmoji: { type: String, default: '👤' },
   equippedBadge: { type: String, default: '' },
   auraColor: { type: String, default: '#e91e63' },
@@ -37,6 +37,9 @@ const UserSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+// Geospatial index for Nearby Rooms
 UserSchema.index({ location: '2dsphere' });
+// Unique aura name index (enforces uniqueness at DB level)
+UserSchema.index({ auraName: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('User', UserSchema);

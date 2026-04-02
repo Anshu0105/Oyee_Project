@@ -67,59 +67,6 @@ export const UserProvider = ({ children }) => {
     setUser(prev => ({ ...prev, claimedItems: [...prev.claimedItems, item] }));
   };
 
-  const initiateLogin = async (email) => {
-    try {
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
-      const res = await fetch(`${BACKEND_URL}/api/auth/initiate-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to initiate login');
-      
-      if (data.directLogin) {
-        setToken(data.token);
-        localStorage.setItem('oyeeeToken', data.token);
-        setUser(prev => ({
-          ...prev,
-          name: data.user.username,
-          id: data.user.id
-        }));
-        return { directLogin: true };
-      }
-      
-      return { directLogin: false };
-    } catch(err) {
-      console.error("Initiate login failed: ", err);
-      throw err;
-    }
-  };
-
-  const verifyOTP = async (email, otp) => {
-    try {
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
-      const res = await fetch(`${BACKEND_URL}/api/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Invalid OTP');
-
-      setToken(data.token);
-      localStorage.setItem('oyeeeToken', data.token);
-      setUser(prev => ({
-        ...prev,
-        name: data.user.username,
-        id: data.user.id
-      }));
-      return true;
-    } catch(err) {
-      console.error("OTP verification failed: ", err);
-      throw err;
-    }
-  };
 
   // login: called after successful signup or login from Auth page
   const login = useCallback((newToken, userData) => {
@@ -148,7 +95,7 @@ export const UserProvider = ({ children }) => {
   }, [socket]);
 
   return (
-    <UserContext.Provider value={{ user, token, socket, setToken, updateAura, addFriend, addEnemy, addClaimedItem, initiateLogin, verifyOTP, login, logout }}>
+    <UserContext.Provider value={{ user, token, socket, setToken, updateAura, addFriend, addEnemy, addClaimedItem, login, logout }}>
       {children}
     </UserContext.Provider>
   );

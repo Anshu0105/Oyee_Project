@@ -59,23 +59,16 @@ router.post('/nearby', verifyToken, async (req, res) => {
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
 
-// Automated WiFi Room Discovery (Based on IP)
-router.get('/wifi/discover', verifyToken, async (req, res) => {
+// Automated WiFi Room Discovery (Based on Public IPv4)
+router.post('/wifi/discover', verifyToken, async (req, res) => {
   try {
-    // Get client IP, prioritizing Cloudflare's direct header
-    const rawIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    let clientIp = rawIp.split(',')[0].trim().toLowerCase();
+    const { ip } = req.body;
+    if (!ip) return res.status(400).json({ error: 'IP address is required' });
     
-    // If IPv6, truncate to the first 4 segments (the /64 prefix) to group devices on the same WiFi
-    if (clientIp.includes(':')) {
-      const segments = clientIp.split(':');
-      clientIp = segments.slice(0, 4).join(':');
-    }
-    
-    // Hash the IP to create a unique, privacy-safe room ID
+    // Hash the public IPv4 to create a unique, privacy-safe room ID
     const hash = crypto
       .createHash('sha256')
-      .update(clientIp + (process.env.JWT_SECRET || 'oyeee_secret'))
+      .update(ip.trim() + (process.env.JWT_SECRET || 'oyeee_secret'))
       .digest('hex')
       .substring(0, 12);
       

@@ -51,15 +51,26 @@ const Rooms = () => {
     setError('');
     setLoadingRoom('wifi');
     try {
+      // Step 1: Get the user's public IPv4 from a reliable third-party service
+      const ipRes = await fetch('https://api.ipify.org?format=json');
+      const ipData = await ipRes.json();
+      const publicIp = ipData.ip;
+
+      // Step 2: Send it to the backend for secure hashing into a room ID
       const res = await fetch(`${BACKEND_URL}/api/rooms/wifi/discover`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ ip: publicIp })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to detect network');
       
       navigate(`/room/${data.roomId}`);
     } catch(err) {
-      setError(err.message);
+      setError(err.message || 'Network detection failed. Please try again.');
     } finally {
       setLoadingRoom(null);
     }

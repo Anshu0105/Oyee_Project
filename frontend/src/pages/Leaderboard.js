@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
-import { motion } from 'framer-motion';
 import UserProfileModal from '../components/UI/UserProfileModal';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
@@ -80,7 +79,7 @@ const Leaderboard = () => {
           LEADERBOARD
         </h1>
         <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-dim)', letterSpacing: '1px' }}>
-          // ranked by public aura - earned in the void
+          {'// ranked by public aura - earned in the void'}
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>

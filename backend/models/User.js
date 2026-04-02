@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema({
   // DM Visual Profile
   auraName: { type: String, default: 'Anonymous Wanderer' },
   aura: { type: Number, default: Math.floor(Math.random() * 1000), index: -1 },
+  auraCount: { type: Number, default: 0 },
   avatarEmoji: { type: String, default: '👤' },
   equippedBadge: { type: String, default: '' },
   

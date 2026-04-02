@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Settings, Shield, Palette, Zap, Users, Megaphone } from 'lucide-react';
+import { Settings, Palette, Users, Megaphone } from 'lucide-react';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
 
@@ -12,16 +12,9 @@ const calculateTier = (aura) => {
   return 'GHOST';
 }
 
-const pricingOptions = [
-  { days: 1, price: 49, impressions: '~500' },
-  { days: 3, price: 99, impressions: '~1,500' },
-  { days: 7, price: 199, impressions: '~4,000' },
-];
-
 const Profile = () => {
-  const { user, token, deleteAccount } = useUser();
+  const { user, token, updateAura, deleteAccount } = useUser();
   const { setTheme, theme: currentTheme } = useTheme();
-  const [selectedPricing, setSelectedPricing] = useState(1);
   const [promoText, setPromoText] = useState('');
   
   const [friends, setFriends] = useState([]);
@@ -69,7 +62,7 @@ const Profile = () => {
           color: 'var(--text-dim)',
           letterSpacing: '1px',
         }}>
-          // your anonymous identity
+          {`// your anonymous identity`}
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>
@@ -116,72 +109,85 @@ const Profile = () => {
               fontSize: '0.8rem',
               color: 'var(--text-dim)',
             }}>
-              // {user.email || 'anon@university.edu'}
+              {`// ${user.email || 'anon@university.edu'}`}
             </p>
           </div>
 
-          {/* Aura Points Card */}
-          <div className="glass" style={{
-            padding: '32px',
-            position: 'relative',
-            overflow: 'hidden',
-            border: '1px solid var(--glass-border)'
-          }}>
-            <div style={{
-              position: 'absolute',
-              right: '-10px',
-              top: '10px',
-              fontSize: '6rem',
-              color: 'var(--accent-primary)',
-              opacity: 0.1,
-              fontFamily: 'var(--font-bebas)',
-              pointerEvents: 'none'
+          {/* Aura Stats Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            {/* Aura Points Card */}
+            <div className="glass" style={{
+              padding: '24px',
+              position: 'relative',
+              overflow: 'hidden',
+              border: '1px solid var(--glass-border)'
             }}>
-              ⚡
-            </div>
-
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>
-              AURA POINTS
-            </p>
-            <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '4.5rem', color: 'var(--text-main)', lineHeight: 1, marginBottom: '24px' }}>
-              {user.aura}
-            </div>
-
-            {/* Progress Bar */}
-            <div style={{ position: 'relative', height: '6px', background: 'rgba(255,255,255,0.1)', marginBottom: '16px', borderRadius: '3px' }}>
-              <div style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${Math.min((user.aura / 1000) * 100, 100)}%`,
-                background: 'var(--accent-primary)',
-                borderRadius: '3px',
-                boxShadow: '0 0 10px var(--accent-primary)'
-              }} />
-            </div>
-            
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.65rem',
-              color: 'var(--text-dim)',
-              marginBottom: '24px'
-            }}>
-              <span>0</span>
-              <span style={{ color: 'var(--accent-primary)' }}>⚡ 500 (THUNDER)</span>
-              <span>⭐ 1000 (STARBORN)</span>
-            </div>
-
-            <div style={{ height: '1px', background: 'var(--glass-border)', margin: '16px 0' }} />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                 <span style={{ color: 'var(--accent-green)' }}>AuraPlus+++</span>
-                 <span style={{ color: 'var(--accent-primary)' }}>AuraMinus---</span>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>
+                RANKING POINTS
+              </p>
+              <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '3rem', color: 'var(--text-main)', lineHeight: 1, marginBottom: '8px' }}>
+                {user.aura} <span style={{ fontSize: '1.5rem', verticalAlign: 'middle', opacity: 0.8 }}>🔥</span>
+              </div>
+              <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px' }}>
+                <div style={{ width: `${Math.min((user.aura / 1000) * 100, 100)}%`, height: '100%', background: 'var(--accent-primary)' }} />
               </div>
             </div>
+
+            {/* Aura Counts Card */}
+            <div className="glass" style={{
+              padding: '24px',
+              position: 'relative',
+              overflow: 'hidden',
+              border: '1px solid var(--glass-border)'
+            }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>
+                SPENDABLE COUNTS
+              </p>
+              <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '3rem', color: '#f7c948', lineHeight: 1, marginBottom: '8px' }}>
+                {user.auraCount} <span style={{ fontSize: '1.5rem', verticalAlign: 'middle', opacity: 0.8 }}>⚡</span>
+              </div>
+              <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+                USE IN STORE
+              </div>
+            </div>
+          </div>
+
+          {/* Test Controls */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              onClick={() => updateAura(7, 1)}
+              className="interactive"
+              style={{
+                background: 'rgba(94, 200, 122, 0.1)',
+                border: '1px solid #5ec87a',
+                color: '#5ec87a',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontFamily: 'var(--font-bebas)',
+                fontSize: '0.9rem',
+                flex: 1,
+                cursor: 'pointer'
+              }}
+            >
+              AuraPlus+++ (+7 Pts / +1 Count)
+            </button>
+            <button 
+              onClick={() => updateAura(-3, -1)}
+              className="interactive"
+              style={{
+                background: 'rgba(212, 58, 96, 0.1)',
+                border: '1px solid #d43a60',
+                color: '#d43a60',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontFamily: 'var(--font-bebas)',
+                fontSize: '0.9rem',
+                flex: 1,
+                cursor: 'pointer'
+              }}
+            >
+              AuraMinus--- (-3 Pts / -1 Count)
+            </button>
           </div>
 
           {/* Recent Rooms */}

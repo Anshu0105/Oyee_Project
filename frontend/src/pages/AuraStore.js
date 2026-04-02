@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useUser } from '../context/UserContext';
-import { Package, ShoppingBag, Zap, CheckCircle } from 'lucide-react';
+import { ShoppingBag, CheckCircle } from 'lucide-react';
 
 const storeItems = [
   {
@@ -55,11 +55,11 @@ const AuraStore = () => {
 
   const handleClaim = (item) => {
     if (user.claimedItems.some(i => i.id === item.id)) return;
-    if (user.aura < item.price) {
-      showToast(`Not enough aura! You need ${item.price - user.aura} more pts.`, 'error');
+    if (user.auraCount < item.price) {
+      showToast(`Not enough counts! You need ${item.price - user.auraCount} more counts.`, 'error');
       return;
     }
-    updateAura(-item.price);
+    updateAura(0, -item.price);
     addClaimedItem(item);
     showToast(`✅ ${item.name} claimed! Check your profile.`, 'success');
   };
@@ -110,7 +110,7 @@ const AuraStore = () => {
           color: 'var(--text-dim)',
           letterSpacing: '1px',
         }}>
-          // spend your earned aura · real oyeee merch
+          {'// spend your earned counts · real oyeee merch'}
         </p>
         <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
       </div>
@@ -131,7 +131,7 @@ const AuraStore = () => {
       }}>
         <span style={{ color: 'var(--text-dim)' }}>BALANCE:</span>
         <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.6rem', color: '#f7c948', letterSpacing: '2px' }}>
-          {user.aura}
+          {user.auraCount}
         </span>
         <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>⚡</span>
       </div>
@@ -195,7 +195,7 @@ const AuraStore = () => {
                     {item.price}
                   </span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '1px' }}>
-                    AURA
+                    COUNTS
                   </span>
                 </div>
 

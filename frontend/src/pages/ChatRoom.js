@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ArrowLeft, Plus, Minus, UserPlus, AlertTriangle } from 'lucide-react';
+import { Send, ArrowLeft, Plus, Minus, AlertTriangle } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { detectContent } from '../utils/detector';
 import io from 'socket.io-client';
@@ -70,6 +70,14 @@ const ChatRoom = () => {
     setViolationNotice(null);
   };
 
+  if (!user || !user.name) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', color: 'var(--text-dim)' }}>
+        <p style={{ fontFamily: 'var(--font-mono)' }}>Loading your identity...</p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ 
       display: 'flex', 
@@ -89,7 +97,7 @@ const ChatRoom = () => {
         <button onClick={() => navigate('/rooms')} className="interactive" style={{ background: 'none', border: 'none', color: 'inherit', marginRight: '16px' }}><ArrowLeft /></button>
         <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px' }}>{id.toUpperCase()} ROOM</h2>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// Connected</span>
+          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>{'// Connected'}</span>
         </div>
       </div>
 
@@ -119,14 +127,14 @@ const ChatRoom = () => {
               {!isMe && (
                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                   <button 
-                    onClick={() => updateAura(7)}
+                    onClick={() => updateAura(7, 1)}
                     className="interactive" 
                     style={{ background: 'none', border: '1px solid #5ec87a', color: '#5ec87a', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
                     <Plus size={12} /> Aura
                   </button>
                   <button 
-                    onClick={() => updateAura(-3)}
+                    onClick={() => updateAura(-3, -1)}
                     className="interactive" 
                     style={{ background: 'none', border: '1px solid #ff4d4d', color: '#ff4d4d', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
                   >
@@ -175,7 +183,7 @@ const ChatRoom = () => {
             if (violationNotice) setViolationNotice(null);
           }}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="Speak into the void..."
+          placeholder={'Speak into the void...'}
           style={{ 
             flex: 1, 
             background: 'rgba(0,0,0,0.2)', 

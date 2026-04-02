@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, MessageSquare, LayoutGrid, Trophy, ShoppingBag, ChevronDown, Flame } from 'lucide-react';
+import { User, MessageSquare, LayoutGrid, Trophy, ShoppingBag, ChevronDown } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 
@@ -104,22 +104,39 @@ const Navbar = () => {
       </div>
 
       <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+        {/* Aura Pts Display */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '8px 16px',
+          background: 'rgba(233, 30, 99, 0.1)',
+          borderRadius: '20px',
+          border: '1px solid rgba(233, 30, 99, 0.2)',
+          color: 'var(--accent-primary)',
+          fontFamily: 'var(--font-bebas)',
+          fontSize: '1.2rem',
+          letterSpacing: '1px'
+        }}>
+          <span style={{ opacity: 0.8 }}>🔥</span>
+          <span>{user.aura}</span>
+        </div>
+
         {/* Streak Counter */}
         <div className="streak-counter" title={`${user.streak || 7} day streak`} style={{
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
           padding: '8px 12px',
-          background: 'rgba(255, 152, 0, 0.1)',
+          background: 'rgba(255, 152, 0, 0.05)',
           borderRadius: '20px',
-          border: '1px solid rgba(255, 152, 0, 0.2)',
+          border: '1px solid rgba(255, 152, 0, 0.1)',
           color: 'var(--streak-orange)',
           fontFamily: 'var(--font-bebas)',
-          fontSize: '1.1rem',
-          boxShadow: '0 0 15px rgba(255, 152, 0, 0.1)',
-          animation: 'pulse-streak 2s infinite'
+          fontSize: '1rem',
+          opacity: 0.8
         }}>
-          <Flame size={18} fill="currentColor" />
+          <span>STRK:</span>
           <span>{user.streak || 7}</span>
         </div>
 
@@ -143,7 +160,14 @@ const Navbar = () => {
             to="/profile"
           >
             <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--accent-primary)', marginBottom: '4px' }}>{user.name}</div>
-            <div style={{ fontSize: '0.7rem', opacity: 0.6, marginBottom: '12px' }}>Aura: {user.aura} pts</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
+              <div style={{ fontSize: '0.7rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ color: 'var(--accent-secondary)' }}>🔥</span> {user.aura} <span style={{ opacity: 0.6 }}>Aura Pts</span>
+              </div>
+              <div style={{ fontSize: '0.7rem', opacity: 0.8, display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ color: '#f7c948' }}>⚡</span> {user.auraCount} <span style={{ opacity: 0.6 }}>Aura Counts</span>
+              </div>
+            </div>
             
             <div style={{ borderTop: '1px solid var(--glass-border)', margin: '8px 0' }} />
             <Link to="/profile/settings" className="interactive" style={{ color: 'inherit', textDecoration: 'none', fontSize: '0.9rem' }}>Settings</Link>

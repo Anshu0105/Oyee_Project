@@ -10,7 +10,6 @@ import Message from './pages/Message';
 import AuraStore from './pages/AuraStore';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
-import { useUser } from './context/UserContext';
 import './App.css';
 
 function App() {
@@ -27,6 +26,7 @@ function App() {
               <Routes>
                 <Route path="/rooms" element={<Rooms />} />
                 <Route path="/room/:id" element={<ChatRoom />} />
+                <Route path="/chat/:id" element={<ChatRoom />} />
                 <Route path="/messages" element={<Message />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />

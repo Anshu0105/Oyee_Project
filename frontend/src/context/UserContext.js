@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const UserContext = createContext();
 
@@ -8,7 +8,8 @@ export const UserProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('oyeeeToken') || null);
   const [user, setUser] = useState({
     name: 'Tasty Strawberry',
-    aura: 342,
+    aura: 0,
+    auraCount: 0,
     friends: [],
     enemies: [],
     lastRooms: ['WiFi Room'],
@@ -18,13 +19,64 @@ export const UserProvider = ({ children }) => {
     avatarEmoji: '👤',
     auraColor: '#e91e63'
   });
+  const [loading, setLoading] = useState(!!token);
 
-  const updateAura = (delta) => {
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+        const res = await fetch(`${BACKEND_URL}/api/users/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUser(prev => ({
+            ...prev,
+            name: data.username,
+            aura: data.aura || 0,
+            auraCount: data.auraCount || 0,
+            id: data._id
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUserProfile();
+  }, [token]);
+
+  const updateAura = async (deltaPoints, deltaCounts = 0) => {
+    // Optimistic local update
     setUser(prev => ({ 
       ...prev, 
-      aura: prev.aura + delta,
-      mood: delta > 0 ? 'happy' : 'sad'
+      aura: prev.aura + deltaPoints,
+      auraCount: prev.auraCount + deltaCounts,
+      mood: deltaPoints > 0 || deltaCounts > 0 ? 'happy' : 'sad'
     }));
+
+    // Persist to backend if logged in
+    if (token) {
+      try {
+        const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+        await fetch(`${BACKEND_URL}/api/users/me/aura`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ deltaAura: deltaPoints, deltaCount: deltaCounts })
+        });
+      } catch (err) {
+        console.error("Failed to sync aura with backend:", err);
+      }
+    }
+
     // Reset mood after 3 seconds
     setTimeout(() => {
       setUser(prev => ({ ...prev, mood: 'happy' }));
@@ -84,7 +136,9 @@ export const UserProvider = ({ children }) => {
       setUser(prev => ({
         ...prev,
         name: data.user.username,
-        id: data.user.id
+        id: data.user.id,
+        aura: data.user.aura || 0,
+        auraCount: data.user.auraCount || 0
       }));
 
       return true;
@@ -98,7 +152,7 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem('oyeeeToken');
     setToken(null);
     setUser({
-      name: 'Tasty Strawberry', aura: 342, friends: [], enemies: [], lastRooms: ['WiFi Room'], mood: 'happy', claimedItems: [], id: null, avatarEmoji: '👤', auraColor: '#e91e63'
+      name: 'Tasty Strawberry', aura: 0, auraCount: 0, friends: [], enemies: [], lastRooms: ['WiFi Room'], mood: 'happy', claimedItems: [], id: null, avatarEmoji: '👤', auraColor: '#e91e63'
     });
     window.location.href = '/login';
   };
@@ -120,7 +174,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser, deleteAccount }}>
+    <UserContext.Provider value={{ user, token, loading, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser, deleteAccount }}>
       {children}
     </UserContext.Provider>
   );

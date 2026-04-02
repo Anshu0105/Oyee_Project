@@ -52,7 +52,7 @@ export const UserProvider = ({ children }) => {
       const randomId = Math.floor(Math.random() * 10000);
       const username = `${randomPrefix}${randomSuffix}${randomId}`;
       const password = 'oyeee_default';
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
 
       // Attempt to login
       let res = await fetch(`${BACKEND_URL}/api/auth/login`, {
@@ -105,7 +105,7 @@ export const UserProvider = ({ children }) => {
 
   const deleteAccount = async () => {
     try {
-      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+      const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
       const res = await fetch(`${BACKEND_URL}/api/users/me`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }

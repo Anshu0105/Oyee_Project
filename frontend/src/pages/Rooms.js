@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { Wifi, GraduationCap, MapPin, MessageSquare, Lock, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { BACKEND_URL, safeFetch } from '../config';
+import PrivateRoomModal from '../components/Rooms/PrivateRoomModal';
 
 const RoomCard = ({ icon: Icon, title, desc, badge, badgeColor = 'rgba(255,255,255,0.05)', onClick, isLoading }) => (
   <div className="glass interactive hover-lift" onClick={onClick} style={{
@@ -82,6 +83,7 @@ const Rooms = () => {
   const [loadingRoom, setLoadingRoom] = useState(null);
   const [wifiStep, setWifiStep] = useState('IDLE'); // IDLE, DETECTING, DETECTED
   const [detectedIp, setDetectedIp] = useState('');
+  const [isPrivateModalOpen, setPrivateModalOpen] = useState(false);
 
   const handleWifiRoom = async () => {
     setError('');
@@ -176,7 +178,7 @@ const Rooms = () => {
     { id: 'wifi', title: 'WIFI ROOM', icon: Wifi, desc: 'Connect with everyone on the same local network. Auto-detecting your pulse.', badge: 'AUTO-DETECT', onClick: handleWifiRoom },
     { id: 'uni', title: 'UNIVERSITY', icon: GraduationCap, desc: 'Unified Institutional Hub. A single shared void for all verified CGU members to connect collectively.', badge: 'MAIL VERIFIED', badgeColor: '#48bb78', onClick: handleUniversityRoom },
     { id: 'nearby', title: 'NEARBY', icon: MapPin, desc: 'Physical radius chat. Pulse locked via Snapchat-style map view.', badge: 'GPS BASED', badgeColor: '#ecc94b', onClick: handleNearbyRoom },
-    { id: 'dm', title: 'DM', icon: MessageSquare, desc: 'Private one-on-one connections. Zero logs, 100% anonymous.', badge: 'PRIVATE CHAT', badgeColor: 'rgba(233, 30, 99, 0.15)', onClick: () => navigate('/messages') },
+    { id: 'private', title: 'PRIVATE ROOMS', icon: Lock, desc: 'Create your own collective void or join an invite-only space.', badge: 'ROOM CODE', badgeColor: '#FF0055', onClick: () => setPrivateModalOpen(true) },
   ];
 
   const trendingItems = [
@@ -315,6 +317,11 @@ const Rooms = () => {
           <TrendingCard key={i} {...item} />
         ))}
       </div>
+
+      <PrivateRoomModal 
+        isOpen={isPrivateModalOpen} 
+        onClose={() => setPrivateModalOpen(false)} 
+      />
 
       <style>{`
         .spin { animation: spin 1s linear infinite; } 

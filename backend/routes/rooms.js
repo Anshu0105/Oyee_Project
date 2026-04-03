@@ -3,7 +3,9 @@ const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
 const Message = require('../models/Message');
+const Room = require('../models/Room');
 const aiHelper = require('../utils/aiHelper');
+const { generateRoomCode } = require('../utils/roomGenerator');
 const crypto = require('crypto');
 
 // University Room Validation Endpoint
@@ -138,5 +140,67 @@ router.post('/nearby/summary', verifyToken, async (req, res) => {
       res.status(500).json({ error: err.message });
     }
   });
+
+// Private Room Management
+router.post('/create', verifyToken, async (req, res) => {
+  try {
+    const { name, description, max_users } = req.body;
+    
+    let room_code;
+    let isUnique = false;
+    while (!isUnique) {
+      room_code = generateRoomCode();
+      const existing = await Room.findOne({ room_code });
+      if (!existing) isUnique = true;
+    }
+
+    const newRoom = new Room({
+      room_code,
+      name,
+      description,
+      max_users: parseInt(max_users) || 30,
+      created_by: req.user.id,
+      members: [req.user.id]
+    });
+
+    await newRoom.save();
+    res.status(201).json({ success: true, room: newRoom });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/join', verifyToken, async (req, res) => {
+  try {
+    const { room_code } = req.body;
+    if (!room_code) return res.status(400).json({ error: 'Room code is required' });
+
+    const room = await Room.findOne({ room_code });
+    if (!room) return res.status(404).json({ error: 'Room not found or expired' });
+
+    if (room.members.length >= room.max_users) {
+      return res.status(400).json({ error: 'Room is full' });
+    }
+
+    if (!room.members.includes(req.user.id)) {
+      room.members.push(req.user.id);
+      await room.save();
+    }
+
+    res.json({ success: true, room });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/info/:roomCode', verifyToken, async (req, res) => {
+  try {
+    const room = await Room.findOne({ room_code: req.params.roomCode });
+    if (!room) return res.status(404).json({ error: 'Room not found' });
+    res.json(room);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

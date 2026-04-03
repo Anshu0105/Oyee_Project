@@ -19,11 +19,15 @@ module.exports = (io) => {
     // Group Management
     socket.on('joinRoom', (roomId) => {
       socket.join(roomId);
+      socket.currentRoom = roomId;
       console.log(`Socket ${socket.id} joined isolated room: ${roomId}`);
+      socket.to(roomId).emit('user_joined', { userId: socket.userId });
     });
 
     socket.on('leaveRoom', (roomId) => {
+      socket.to(roomId).emit('user_left', { userId: socket.userId });
       socket.leave(roomId);
+      socket.currentRoom = null;
     });
 
     // Segmented Public Room Communication (Moderated)
@@ -126,6 +130,9 @@ module.exports = (io) => {
 
     socket.on('disconnect', async () => {
       console.log('User severed connection:', socket.id);
+      if (socket.currentRoom) {
+          socket.to(socket.currentRoom).emit('user_left', { userId: socket.userId });
+      }
       if (socket.userId) {
         try {
           await User.findByIdAndUpdate(socket.userId, { 

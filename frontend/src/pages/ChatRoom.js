@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ArrowLeft, Plus, Minus, UserPlus, AlertTriangle } from 'lucide-react';
+import { Send, ArrowLeft, Plus, Minus, UserPlus, AlertTriangle, Copy, Check } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { detectContent } from '../utils/detector';
+import { safeFetch } from '../config';
 import io from 'socket.io-client';
 import '../styles/moderation.css';
 
@@ -29,10 +30,35 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [violationNotice, setViolationNotice] = useState(null);
+  const [roomData, setRoomData] = useState(null);
+  const [copied, setCopied] = useState(false);
   const scrollRef = useRef();
   const socketRef = useRef(null);
 
-  const roomInfo = getRoomInfo(id);
+  useEffect(() => {
+    const fetchInfo = async () => {
+      if (id && id.length === 10 && !id.includes('_')) {
+          try {
+              const data = await safeFetch(`/api/rooms/info/${id}`, {
+                  headers: { 'Authorization': `Bearer ${token}` }
+              });
+              setRoomData(data);
+          } catch(err) { console.error('Room info fetch failed', err); }
+      }
+    };
+    if (token) fetchInfo();
+  }, [id, token]);
+
+  const roomInfo = roomData ? {
+    name: roomData.name,
+    desc: roomData.description.split(' ').slice(0, 4).join(' ') + (roomData.description.split(' ').length > 4 ? '...' : '')
+  } : getRoomInfo(id);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -120,7 +146,19 @@ const ChatRoom = () => {
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', opacity: 0.5, margin: '2px 0 0', letterSpacing: '0.5px' }}>{roomInfo.desc}</p>
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// Connected</span>
+          {roomData && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', opacity: 0.5 }}>ROOM ID:</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>{id}</span>
+                <button 
+                    onClick={copyToClipboard}
+                    style={{ background: 'none', border: 'none', color: copied ? '#48bb78' : '#FF0055', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+            </div>
+          )}
+          {!roomData && <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// Connected</span>}
         </div>
       </div>
 

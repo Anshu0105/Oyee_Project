@@ -59,33 +59,41 @@ const Dashboard = () => {
         }
     };
 
+    const isMobile = window.innerWidth <= 768;
+
     return (
         <div className="scroll-container" style={{
             background: 'var(--bg-main)', color: 'var(--text-main)', fontFamily: 'var(--font-inter)',
-            padding: '40px 20px', display: 'flex', justifyContent: 'center'
+            padding: isMobile ? '20px 16px' : '40px 20px', display: 'flex', justifyContent: 'center'
         }}>
-            <div style={{ maxWidth: '1200px', width: '100%', display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '32px', paddingBottom: '40px' }}>
+            <div style={{ 
+                maxWidth: '1200px', width: '100%', 
+                display: 'grid', 
+                gridTemplateColumns: isMobile ? '1fr' : 'minmax(300px, 1fr) 2fr', 
+                gap: isMobile ? '24px' : '32px', 
+                paddingBottom: '40px' 
+            }}>
                 
                 {/* LEFT PANEL: IDENTITY CARD */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <motion.div 
-                        initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                        initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
                         className="glass"
                         style={{ padding: '32px', borderRadius: '32px', border: '1px solid var(--border-main)', textAlign: 'center', background: 'var(--bg-panel)' }}
                     >
                         <div style={{ 
-                            width: '120px', height: '120px', margin: '0 auto 24px', borderRadius: '50%',
+                            width: isMobile ? '100px' : '120px', height: isMobile ? '100px' : '120px', margin: '0 auto 24px', borderRadius: '50%',
                             background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '4rem', border: '2px solid var(--accent-primary)',
+                            fontSize: isMobile ? '3rem' : '4rem', border: '2px solid var(--accent-primary)',
                             boxShadow: '0 0 30px var(--glass-border)'
                         }}>
                             {user.avatarEmoji || '👤'}
                         </div>
                         
-                        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2.5rem', letterSpacing: '2px', margin: '0 0 8px' }}>
+                        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: isMobile ? '2.2rem' : '2.5rem', letterSpacing: '2px', margin: '0 0 8px' }}>
                            {user.auraName || 'UNIDENTIFIED'}
                         </h2>
-                        <div style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', marginBottom: '32px' }}>
+                        <div style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', marginBottom: '32px' }}>
                             CLEARANCE: AGENT
                         </div>
 
@@ -101,7 +109,7 @@ const Dashboard = () => {
                             <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid var(--border-main)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', opacity: 0.6 }}>
                                     <CreditCard size={16} />
-                                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>SPENDABLE BALANCE</span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>SPENDABLE</span>
                                 </div>
                                 <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--accent-primary)' }}>{user.aura} <span style={{ fontSize: '0.9rem', color: '#fff', opacity: 0.5 }}>A</span></div>
                             </div>

@@ -52,6 +52,14 @@ const Message = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const fetchAvailableUsers = async () => {
     try {
       const data = await safeFetch('/api/dm/available-users', {
@@ -123,30 +131,32 @@ const Message = () => {
 
   return (
     <div style={{ 
-      display: 'grid', 
-      gridTemplateColumns: '380px 1fr', 
-      height: 'calc(100vh - 80px)', // Subtracting navbar height (assuming ~80px)
+      display: 'flex', 
+      height: 'calc(100vh - 80px)',
       background: 'var(--bg-main)',
       overflow: 'hidden',
-      color: 'var(--text-main)'
+      color: 'var(--text-main)',
+      position: 'relative'
     }}>
       
       {/* LEFT PANEL: VOID LINKS (Scrollable) */}
       <div style={{ 
+        width: isMobile ? '100%' : '380px',
         borderRight: '1px solid var(--border-main)', 
-        display: 'flex', 
+        display: (isMobile && selectedUser) ? 'none' : 'flex', 
         flexDirection: 'column',
         background: 'var(--bg-panel)',
         height: '100%',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        flexShrink: 0
       }}>
         <div style={{ padding: '32px 24px 24px' }}>
-          <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '4px' }}>VOID LINKS</h1>
-          <p style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: '1px', marginBottom: '24px' }}>
+          <h1 style={{ fontSize: isMobile ? '1.8rem' : '2.5rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '4px' }}>VOID LINKS</h1>
+          <p style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.3)', fontWeight: '700', letterSpacing: '1px', marginBottom: '24px' }}>
             // ENCRYPTED P2P CHANNELS
           </p>
           
-          <div style={{ position: 'relative', marginBottom: '32px' }}>
+          <div style={{ position: 'relative', marginBottom: '24px' }}>
             <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.3 }} />
             <input 
               type="text"
@@ -154,7 +164,7 @@ const Message = () => {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               style={{
-                width: '100%', padding: '14px 14px 14px 44px', background: 'rgba(255,255,255,0.03)',
+                width: '100%', padding: '12px 12px 12px 40px', background: 'rgba(255,255,255,0.03)',
                 border: '1px solid var(--border-main)', borderRadius: '12px', color: '#fff', fontSize: '0.9rem', outline: 'none'
               }}
             />
@@ -184,15 +194,15 @@ const Message = () => {
                 }}
               >
                 <div style={{ 
-                  width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
+                  width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem',
                   border: '1px solid var(--border-main)'
                 }}>
                   {contact.avatarEmoji || '👤'}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: '800', fontSize: '1.1rem', letterSpacing: '0.5px' }}>{contact.auraName}</div>
-                  <div style={{ fontSize: '0.75rem', opacity: 0.4, fontFamily: 'monospace' }}>@{contact.username.toLowerCase()}</div>
+                  <div style={{ fontWeight: '800', fontSize: '1.05rem', letterSpacing: '0.5px' }}>{contact.auraName}</div>
+                  <div style={{ fontSize: '0.7rem', opacity: 0.4, fontFamily: 'monospace' }}>@{contact.username.toLowerCase()}</div>
                 </div>
                 <div style={{ 
                   width: '8px', height: '8px', borderRadius: '50%', 
@@ -206,44 +216,62 @@ const Message = () => {
       </div>
 
       {/* RIGHT PANEL: CHAT AREA (3 Parts) */}
-      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-main)', height: '100%', overflow: 'hidden' }}>
+      <div style={{ 
+        flex: 1, 
+        display: (isMobile && !selectedUser) ? 'none' : 'flex', 
+        flexDirection: 'column', 
+        background: 'var(--bg-main)', 
+        height: '100%', 
+        overflow: 'hidden' 
+      }}>
         {selectedUser ? (
           <>
             {/* 1. HEADER (Fixed) */}
             <div style={{ 
-              padding: '20px 32px', borderBottom: '1px solid var(--border-main)',
+              padding: isMobile ? '12px 20px' : '20px 32px', 
+              borderBottom: '1px solid var(--border-main)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               background: 'var(--bg-panel)', backdropFilter: 'blur(10px)', zIndex: 10
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {isMobile && (
+                  <button 
+                    onClick={() => setSelectedUser(null)}
+                    style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', padding: '8px' }}
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                )}
                 <div style={{ 
-                  width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
+                  width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
                   border: `1px solid ${selectedUser.auraColor || 'var(--border-main)'}`
                 }}>
                   {selectedUser.avatarEmoji}
                 </div>
                 <div>
-                  <div style={{ fontWeight: '800', fontSize: '1.2rem' }}>{selectedUser.auraName}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px' }}>
-                    <ShieldCheck size={10} style={{ color: 'var(--accent-primary)' }} /> E2E ENCRYPTED • IDLE
+                  <div style={{ fontWeight: '800', fontSize: '1rem' }}>{selectedUser.auraName}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.6rem', opacity: 0.4, letterSpacing: '0.5px' }}>
+                    <ShieldCheck size={10} style={{ color: 'var(--accent-primary)' }} /> E2E SECURE
                   </div>
                 </div>
               </div>
               
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '1px' }}>AURA</div>
-                <div style={{ fontSize: '0.8rem', opacity: 0.4 }}>REPUTATION SCORE</div>
-              </div>
+              {!isMobile && (
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '1px' }}>AURA</div>
+                  <div style={{ fontSize: '0.8rem', opacity: 0.4 }}>REPUTATION SCORE</div>
+                </div>
+              )}
             </div>
 
             {/* 2. MESSAGE LIST (Scrollable) */}
-            <div className="scroll-container" style={{ flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div className="scroll-container" style={{ flex: 1, padding: isMobile ? '20px' : '32px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {messages.length === 0 && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '3rem' }}>🌑</div>
-                    <div style={{ fontWeight: '800', marginTop: '16px', letterSpacing: '2px' }}>BEGINNING OF VOID LINK</div>
+                    <div style={{ fontSize: '2.5rem' }}>🌑</div>
+                    <div style={{ fontWeight: '800', marginTop: '12px', letterSpacing: '2px', fontSize: '0.8rem' }}>VOID LINK INITIALIZED</div>
                   </div>
                 </div>
               )}
@@ -254,17 +282,17 @@ const Message = () => {
             </div>
 
             {/* 3. INPUT SECTION (Fixed) */}
-            <div style={{ padding: '24px 32px', background: 'var(--bg-panel)', borderTop: '1px solid var(--border-main)' }}>
+            <div style={{ padding: isMobile ? '16px' : '24px 32px', background: 'var(--bg-panel)', borderTop: '1px solid var(--border-main)' }}>
               <div style={{ 
-                display: 'flex', gap: '16px', alignItems: 'center', 
-                background: 'rgba(255,255,255,0.03)', padding: '8px 8px 8px 16px',
+                display: 'flex', gap: '8px', alignItems: 'center', 
+                background: 'rgba(255,255,255,0.03)', padding: '6px 6px 6px 14px',
                 borderRadius: '16px', border: '1px solid var(--border-main)'
               }}>
                 <button 
                   onClick={() => fileInputRef.current?.click()}
-                  style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '8px' }}
                 >
-                  <Paperclip size={22} />
+                  <Paperclip size={20} />
                 </button>
                 <input 
                   type="file" ref={fileInputRef} style={{ display: 'none' }} onChange={handleFileUpload}
@@ -274,24 +302,24 @@ const Message = () => {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyPress={e => e.key === 'Enter' && handleSendText()}
-                  placeholder="Transmit a safe payload..."
+                  placeholder="Transmit message..."
                   style={{ 
-                    flex: 1, background: 'transparent', border: 'none', padding: '12px 10px',
-                    color: '#fff', fontSize: '1rem', outline: 'none'
+                    flex: 1, background: 'transparent', border: 'none', padding: '10px 4px',
+                    color: '#fff', fontSize: '0.95rem', outline: 'none'
                   }}
                 />
                 
                 <button 
                   onClick={handleSendText}
-                  style={{ 
-                    background: 'var(--accent-primary)', border: 'none', color: '#fff', padding: '14px 34px',
-                    borderRadius: '12px', fontWeight: '800', fontSize: '1rem', letterSpacing: '1px',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-                    boxShadow: '0 0 20px var(--glass-border)'
-                  }}
                   className="interactive"
+                  style={{ 
+                    background: 'var(--accent-primary)', border: 'none', color: '#fff', padding: isMobile ? '12px' : '12px 28px',
+                    borderRadius: '12px', fontWeight: '800', fontSize: '0.9rem', letterSpacing: '1px',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
+                    boxShadow: '0 0 15px var(--glass-border)'
+                  }}
                 >
-                  {isUploading ? <Loader2 size={18} className="spin" /> : 'SEND'}
+                  {isUploading ? <Loader2 size={18} className="spin" /> : (isMobile ? <Send size={18} /> : 'SEND')}
                 </button>
               </div>
             </div>
@@ -299,8 +327,8 @@ const Message = () => {
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.1 }}>
             <div style={{ textAlign: 'center' }}>
-              <MessageSquare size={100} strokeWidth={1} />
-              <div style={{ fontSize: '2rem', fontWeight: '900', letterSpacing: '8px', marginTop: '24px' }}>VOID LINKS</div>
+              <MessageSquare size={isMobile ? 60 : 100} strokeWidth={1} />
+              <div style={{ fontSize: isMobile ? '1.2rem' : '2rem', fontWeight: '900', letterSpacing: '8px', marginTop: '24px' }}>VOID LINKS</div>
             </div>
           </div>
         )}

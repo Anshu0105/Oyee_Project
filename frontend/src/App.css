@@ -20,3 +20,17 @@
 .interactive:active {
   transform: scale(0.98);
 }
+
+/* Global Mobile Utilities */
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block !important; }
+  
+  /* Prevent zooming on inputs */
+  input, textarea { font-size: 16px !important; }
+  
+  .nav-center { display: none; }
+  .App > * { flex: 1; }
+}
+
+.mobile-only { display: none; }

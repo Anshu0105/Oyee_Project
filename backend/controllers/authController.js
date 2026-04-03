@@ -133,7 +133,7 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'Invalid credentials' }); // intentionally generic error
+    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(400).json({ error: 'Invalid credentials' });
@@ -159,6 +159,69 @@ exports.loginUser = async (req, res) => {
         claimedItems: user.claimedItems || []
       } 
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ error: 'Identity not found in the Void' });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = Date.now() + 5 * 60 * 1000;
+
+    otpStore.set(email, { otp, expiresAt, type: 'reset' });
+
+    const mailOptions = {
+      from: `"OYEEE Security" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Reset Your OYEEE Password',
+      html: `
+        <div style="font-family: sans-serif; padding: 20px; background: #000; color: #fff; border-radius: 12px; border: 1px solid #FF0055;">
+          <h2 style="color: #FF0055;">Password Reset Request</h2>
+          <p>You requested a password reset for your OYEEE account.</p>
+          <p>Your authentication code is: <strong style="font-size: 1.5rem; letter-spacing: 2px;">${otp}</strong></p>
+          <p>This code expires in 5 minutes.</p>
+          <p style="font-size: 0.8rem; opacity: 0.5;">If you didn't request this, you can safely ignore this email.</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: 'Reset code sent successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const storedData = otpStore.get(email);
+
+    if (!storedData || storedData.type !== 'reset') {
+      return res.status(400).json({ error: 'Reset session not found' });
+    }
+
+    if (Date.now() > storedData.expiresAt) {
+      otpStore.delete(email);
+      return res.status(400).json({ error: 'Code expired' });
+    }
+
+    if (storedData.otp !== otp) {
+      return res.status(400).json({ error: 'Invalid reset code' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    await User.findOneAndUpdate({ email }, { password: hashedPassword });
+    otpStore.delete(email);
+
+    res.json({ message: 'Password updated successfully. You can now login.' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

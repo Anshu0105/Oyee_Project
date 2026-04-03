@@ -174,6 +174,8 @@ const Rooms = () => {
     );
   };
 
+  const isMobile = window.innerWidth <= 768;
+
   const rooms = [
     { id: 'wifi', title: 'WIFI ROOM', icon: Wifi, desc: 'Connect with everyone on the same local network. Auto-detecting your pulse.', badge: 'AUTO-DETECT', onClick: handleWifiRoom },
     { id: 'uni', title: 'UNIVERSITY', icon: GraduationCap, desc: 'Unified Institutional Hub. A single shared void for all verified CGU members to connect collectively.', badge: 'MAIL VERIFIED', badgeColor: '#48bb78', onClick: handleUniversityRoom },
@@ -190,7 +192,7 @@ const Rooms = () => {
   ];
 
   return (
-    <div className="scroll-container" style={{ padding: '40px 24px', position: 'relative', color: 'var(--text-main)' }}>
+    <div className="scroll-container" style={{ padding: isMobile ? '24px 16px' : '40px 24px', position: 'relative', color: 'var(--text-main)' }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* WiFi Loading Overlay */}
         <AnimatePresence>
@@ -250,9 +252,9 @@ const Rooms = () => {
           )}
         </AnimatePresence>
 
-        <div style={{ marginBottom: '60px' }}>
-          <h1 style={{ fontWeight: '800', fontSize: '4.5rem', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '16px' }}>LIVE ROOMS</h1>
-          <p style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5, letterSpacing: '1px' }}>// SELECT YOUR ENTRY POINT INTO THE VOID</p>
+        <div style={{ marginBottom: isMobile ? '32px' : '60px' }}>
+          <h1 style={{ fontWeight: '800', fontSize: isMobile ? '2.5rem' : '4.5rem', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '16px' }}>LIVE ROOMS</h1>
+          <p style={{ fontWeight: '500', fontSize: '0.8rem', opacity: 0.5, letterSpacing: '1px' }}>// SELECT ENTRY POINT</p>
         </div>
 
         <AnimatePresence>

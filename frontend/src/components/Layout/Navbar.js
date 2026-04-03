@@ -112,6 +112,8 @@ const Navbar = () => {
   const [aestheticOn, setAestheticOn] = useState(true);
   const dropdownRef = useRef(null);
 
+  const isMobile = window.innerWidth <= 1024;
+
   const fetchActivity = async () => {
     try {
       const data = await safeFetch('/api/users/me/activity', {
@@ -143,73 +145,79 @@ const Navbar = () => {
   return (
     <>
       <nav className="glass" style={{
-        display: 'flex', alignItems: 'center', padding: '0 32px', height: '70px', margin: '20px',
+        display: 'flex', alignItems: 'center', padding: isMobile ? '0 16px' : '0 32px', height: '70px', margin: isMobile ? '10px' : '20px',
         justifyContent: 'space-between', position: 'sticky', top: '10px', zIndex: 900
       }}>
         <div className="nav-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Link to="/rooms" className="brand interactive" style={{
-            fontWeight: 800, fontSize: '2.2rem', letterSpacing: '-0.05em', color: 'var(--accent-primary)',
+            fontWeight: 800, fontSize: isMobile ? '1.8rem' : '2.2rem', letterSpacing: '-0.05em', color: 'var(--accent-primary)',
             textDecoration: 'none', display: 'flex', alignItems: 'center'
           }}>
             OYEEE.
           </Link>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-             <span style={{ fontWeight: '500', fontSize: '0.7rem', color: 'var(--accent-primary)', letterSpacing: '1px' }}>LIVE</span>
-             <div className="live-dot" />
+          {!isMobile && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ fontWeight: '500', fontSize: '0.7rem', color: 'var(--accent-primary)', letterSpacing: '1px' }}>LIVE</span>
+              <div className="live-dot" />
+            </div>
+          )}
+        </div>
+
+        {!isMobile && (
+          <div className="nav-center" style={{ display: 'flex', gap: '8px', position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
+            <NavItem icon={LayoutGrid} label="ROOMS" to="/rooms" />
+            <NavItem icon={MessageSquare} label="MESSAGE" to="/messages" />
+            <NavItem icon={Trophy} label="LEADERBOARD" to="/leaderboard" />
+            <NavItem icon={ShoppingBag} label="AURA STORE" to="/store" />
           </div>
-        </div>
+        )}
 
-        <div className="nav-center" style={{ display: 'flex', gap: '8px', position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
-          <NavItem icon={LayoutGrid} label="ROOMS" to="/rooms" />
-          <NavItem icon={MessageSquare} label="MESSAGE" to="/messages" />
-          <NavItem icon={Trophy} label="LEADERBOARD" to="/leaderboard" />
-          <NavItem icon={ShoppingBag} label="AURA STORE" to="/store" />
-        </div>
-
-        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '20px' }}>
           
           <motion.div 
             animate={{ scale: [1, 1.1, 1] }} 
             transition={{ repeat: Infinity, duration: 2 }}
             onClick={() => setShowBotPanel(true)}
             style={{
-                width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,0,85,0.1)',
+                width: isMobile ? '36px' : '42px', height: isMobile ? '36px' : '42px', borderRadius: '50%', background: 'rgba(255,0,85,0.1)',
                 border: '1px solid var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--accent-primary)', cursor: 'pointer', boxShadow: '0 0 15px rgba(255,0,85,0.2)'
             }}
           >
-            <Bot size={22} />
+            <Bot size={isMobile ? 18 : 22} />
           </motion.div>
 
-          <div 
-            onClick={fetchActivity}
-            className="streak-counter interactive" 
-            title={`${user.streak || 7} day streak`} 
-            style={{
-              display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
-              background: 'rgba(255, 152, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 152, 0, 0.2)',
-              color: 'var(--streak-orange)', fontWeight: '700', fontSize: '1rem', cursor: 'pointer'
-            }}
-          >
-            <Flame size={16} fill="currentColor" />
-            <span>{user.streak || 7}</span>
-          </div>
+          {!isMobile && (
+            <div 
+              onClick={fetchActivity}
+              className="streak-counter interactive" 
+              title={`${user.streak || 7} day streak`} 
+              style={{
+                display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
+                background: 'rgba(255, 152, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 152, 0, 0.2)',
+                color: 'var(--streak-orange)', fontWeight: '700', fontSize: '1rem', cursor: 'pointer'
+              }}
+            >
+              <Flame size={16} fill="currentColor" />
+              <span>{user.streak || 7}</span>
+            </div>
+          )}
 
           <div 
             style={{ position: 'relative' }} 
-            onMouseEnter={() => setShowProfileDropdown(true)}
-            onMouseLeave={() => setShowProfileDropdown(false)}
+            onMouseEnter={() => !isMobile && setShowProfileDropdown(true)}
+            onMouseLeave={() => !isMobile && setShowProfileDropdown(false)}
           >
             <div 
               onClick={() => navigate('/profile')}
               style={{
-                width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
+                width: isMobile ? '36px' : '42px', height: isMobile ? '36px' : '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
                 border: `2px solid ${showProfileDropdown ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                 transition: 'all 0.3s', overflow: 'hidden'
               }}
             >
-              {user.avatarEmoji ? <span style={{ fontSize: '1.2rem' }}>{user.avatarEmoji}</span> : <User size={20} />}
+              {user.avatarEmoji ? <span style={{ fontSize: isMobile ? '1.1rem' : '1.2rem' }}>{user.avatarEmoji}</span> : <User size={isMobile ? 18 : 20} />}
             </div>
 
             <AnimatePresence>

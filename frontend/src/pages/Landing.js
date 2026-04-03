@@ -97,8 +97,8 @@ const FeatureCard = ({ icon: Icon, title, desc }) => (
     <div style={{ color: 'var(--accent-primary)' }}>
       <Icon size={32} />
     </div>
-    <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.8rem', letterSpacing: '1px', color: '#fff' }}>{title}</h3>
-    <p style={{ fontFamily: 'var(--font-inter)', fontSize: '1rem', color: 'var(--text-dim)', lineHeight: '1.6' }}>{desc}</p>
+    <h3 style={{ fontWeight: '700', fontSize: '1.8rem', letterSpacing: '1px', color: '#fff' }}>{title}</h3>
+    <p style={{ fontWeight: '400', fontSize: '1rem', color: 'var(--text-dim)', lineHeight: '1.6' }}>{desc}</p>
   </motion.div>
 );
 
@@ -113,7 +113,7 @@ const Landing = () => {
       {/* Navigation matching user's specific text reqs, overlaying on Void */}
       <div style={{ 
         position: 'absolute', top: '24px', right: '48px', zIndex: 10,
-        display: 'flex', gap: '32px', fontFamily: 'var(--font-inter)', fontSize: '0.9rem', alignItems: 'center'
+        display: 'flex', gap: '32px', fontWeight: '500', fontSize: '0.9rem', alignItems: 'center'
       }}>
         <span style={{ cursor: 'pointer', transition: 'color 0.2s', color: 'var(--text-dim)' }} className="hover-white">Home</span>
         <span style={{ cursor: 'pointer', transition: 'color 0.2s', color: 'var(--text-dim)' }} className="hover-white">Features</span>
@@ -123,7 +123,7 @@ const Landing = () => {
           style={{ 
             background: 'var(--accent-primary)', color: '#fff', border: 'none', padding: '10px 20px', 
             borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-            fontFamily: 'var(--font-inter)', fontWeight: 'bold'
+            fontWeight: 'bold'
           }}
           className="hover-lift"
         >
@@ -140,9 +140,8 @@ const Landing = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             style={{ 
-              fontFamily: 'var(--font-inter)', // Dropbox style clean typography
-              fontWeight: 800,
-              fontSize: 'clamp(3rem, 6vw, 5.5rem)',
+              fontWeight: 700,
+              fontSize: '3.5rem',
               lineHeight: 1.1,
               letterSpacing: '-2px',
               marginBottom: '24px'
@@ -155,7 +154,7 @@ const Landing = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
             style={{
-              fontFamily: 'var(--font-inter)',
+              fontWeight: '500',
               fontSize: '1.2rem',
               color: 'var(--text-dim)',
               marginBottom: '48px',
@@ -179,7 +178,6 @@ const Landing = () => {
                 border: 'none',
                 padding: '20px 40px',
                 borderRadius: '8px',
-                fontFamily: 'var(--font-inter)',
                 fontWeight: 700,
                 fontSize: '1.1rem',
                 cursor: 'pointer',

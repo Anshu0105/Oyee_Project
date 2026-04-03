@@ -138,7 +138,6 @@ const Auth = () => {
       background: 'var(--bg-main)',
       color: 'var(--text-main)',
       padding: '24px',
-      fontFamily: 'var(--font-inter)'
     }}>
       <div style={{
         width: '100%',
@@ -156,25 +155,25 @@ const Auth = () => {
             onClick={() => { setActiveTab('SIGNUP'); setShowOtp(false); setError(''); }}
             style={{
               flex: 1, padding: '20px', background: 'transparent', border: 'none',
-              fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', letterSpacing: '2px',
+              fontWeight: '700', fontSize: '1.2rem', letterSpacing: '2px',
               color: activeTab === 'SIGNUP' ? 'var(--accent-primary)' : 'var(--text-dim)',
               borderBottom: activeTab === 'SIGNUP' ? '3px solid var(--accent-primary)' : '3px solid transparent',
               cursor: 'pointer', transition: 'all 0.3s'
             }}
           >
-            SIGN UP <br/><span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>(FOR FIRST-TIME)</span>
+            SIGN UP <br/><span style={{ fontSize: '0.65rem', fontWeight: '500' }}>(FOR FIRST-TIME)</span>
           </button>
           <button 
             onClick={() => { setActiveTab('LOGIN'); setShowOtp(false); setError(''); }}
             style={{
               flex: 1, padding: '20px', background: 'transparent', border: 'none',
-              fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', letterSpacing: '2px',
+              fontWeight: '700', fontSize: '1.2rem', letterSpacing: '2px',
               color: activeTab === 'LOGIN' ? 'var(--accent-primary)' : 'var(--text-dim)',
               borderBottom: activeTab === 'LOGIN' ? '3px solid var(--accent-primary)' : '3px solid transparent',
               cursor: 'pointer', transition: 'all 0.3s'
             }}
           >
-            LOGIN <br/><span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)' }}>(FOR EXISTING)</span>
+            LOGIN <br/><span style={{ fontSize: '0.65rem', fontWeight: '500' }}>(FOR EXISTING)</span>
           </button>
         </div>
 
@@ -196,7 +195,7 @@ const Auth = () => {
           {!showOtp ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '8px' }}>UNIVERSITY EMAIL</label>
+                <label style={{ display: 'block', fontWeight: '500', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '8px' }}>UNIVERSITY EMAIL</label>
                 <div style={{ position: 'relative' }}>
                   <Mail size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
                   <input 
@@ -213,7 +212,7 @@ const Auth = () => {
               </div>
 
               <div style={{ marginBottom: '8px' }}>
-                <label style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '8px' }}>PASSWORD</label>
+                <label style={{ display: 'block', fontWeight: '500', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '8px' }}>PASSWORD</label>
                 <div style={{ position: 'relative' }}>
                   <Key size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
                   <input 
@@ -231,7 +230,7 @@ const Auth = () => {
 
               {/* Real-time password indicators ONLY on SIGNUP */}
               {activeTab === 'SIGNUP' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', marginTop: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '24px', fontWeight: '500', fontSize: '0.75rem', marginTop: '12px' }}>
                   <div style={{ color: hasMinLength ? 'var(--accent-green)' : 'var(--text-dim)' }}>{hasMinLength ? '✓' : '○'} Min 6 characters</div>
                   <div style={{ color: hasSpecialChar ? 'var(--accent-green)' : 'var(--text-dim)' }}>{hasSpecialChar ? '✓' : '○'} 1 special char (!@#$...)</div>
                   <div style={{ color: hasNumber ? 'var(--accent-green)' : 'var(--text-dim)' }}>{hasNumber ? '✓' : '○'} 1 number</div>
@@ -244,7 +243,7 @@ const Auth = () => {
                 disabled={isLoading}
                 style={{
                   width: '100%', padding: '16px', background: 'var(--accent-primary)', color: '#fff',
-                  border: 'none', borderRadius: '8px', fontFamily: 'var(--font-bebas)', fontSize: '1.2rem',
+                  border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '1.2rem',
                   letterSpacing: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   opacity: isLoading ? 0.7 : 1
                 }}
@@ -257,8 +256,8 @@ const Auth = () => {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div style={{ textAlign: 'center', marginBottom: '24px' }}>
                 <Lock size={32} color="var(--accent-primary)" style={{ marginBottom: '12px' }} />
-                <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.8rem', letterSpacing: '1px' }}>VERIFY OTP</h3>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Sent to {email}</p>
+                <h3 style={{ fontWeight: '700', fontSize: '1.8rem', letterSpacing: '1px' }}>VERIFY OTP</h3>
+                <p style={{ fontWeight: '500', fontSize: '0.8rem', color: 'var(--text-dim)' }}>Sent to {email}</p>
               </div>
 
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between', marginBottom: '24px' }}>
@@ -273,7 +272,7 @@ const Auth = () => {
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     style={{
                       width: '45px', height: '55px', textAlign: 'center', fontSize: '1.5rem',
-                      fontFamily: 'var(--font-bebas)', background: 'rgba(0,0,0,0.2)',
+                      fontWeight: '600', background: 'rgba(0,0,0,0.2)',
                       border: `1px solid ${digit ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
                       borderRadius: '8px', color: '#fff', outline: 'none'
                     }}
@@ -286,7 +285,7 @@ const Auth = () => {
                 disabled={isLoading}
                 style={{
                   width: '100%', padding: '16px', background: 'var(--accent-green)', color: '#000',
-                  border: 'none', borderRadius: '8px', fontFamily: 'var(--font-bebas)', fontSize: '1.2rem',
+                  border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '1.2rem',
                   letterSpacing: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                   opacity: isLoading ? 0.7 : 1, marginBottom: '16px'
                 }}
@@ -300,7 +299,7 @@ const Auth = () => {
                   onClick={() => timer === 0 && handleSendOtp()}
                   disabled={timer > 0 || isLoading}
                   style={{
-                    background: 'transparent', border: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.8rem',
+                    background: 'transparent', border: 'none', fontWeight: '500', fontSize: '0.8rem',
                     color: timer === 0 ? 'var(--accent-primary)' : 'var(--text-dim)',
                     cursor: timer === 0 ? 'pointer' : 'not-allowed'
                   }}

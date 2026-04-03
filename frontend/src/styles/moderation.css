@@ -12,7 +12,7 @@
   border: 1px solid rgba(196, 40, 80, 0.4);
   border-left: 3px solid var(--wine3);
   padding: 12px 18px;
-  font-family: var(--fm);
+
   font-size: 11px;
   color: var(--wine3);
   letter-spacing: 2px;
@@ -97,7 +97,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: var(--fm);
+
   font-weight: 600;
   letter-spacing: 0.5px;
 }
@@ -210,7 +210,7 @@
   border-radius: 3px;
   font-size: 10px;
   color: var(--wine3);
-  font-family: var(--fm);
+
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -321,7 +321,7 @@
 }
 
 .warning-modal-title {
-  font-family: var(--fh);
+
   font-size: 32px;
   color: var(--wine3);
   letter-spacing: 4px;
@@ -354,7 +354,7 @@
 .violation-item-type {
   font-weight: 700;
   color: var(--wine3);
-  font-family: var(--fm);
+
   font-size: 11px;
   letter-spacing: 1px;
 }
@@ -370,7 +370,7 @@
   font-size: 10px;
   color: rgba(250, 245, 239, 0.4);
   margin-top: 4px;
-  font-family: var(--fm);
+
 }
 
 .violation-item-severity strong {
@@ -400,7 +400,7 @@
   flex: 1;
   padding: 14px 20px;
   border: none;
-  font-family: var(--fh);
+
   font-size: 14px;
   letter-spacing: 3px;
   cursor: pointer;
@@ -449,7 +449,7 @@
   z-index: 1001;
   animation: slideInRight 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  font-family: var(--fm);
+
   font-size: 12px;
   letter-spacing: 1px;
   font-weight: 600;
@@ -497,7 +497,7 @@
 .mods-header {
   padding: 16px;
   border-bottom: 1px solid var(--gray2);
-  font-family: var(--fh);
+
   font-size: 18px;
   letter-spacing: 3px;
   color: var(--w);
@@ -517,7 +517,7 @@
   background: var(--bg3);
   border-radius: 3px;
   font-size: 11px;
-  font-family: var(--fm);
+
   color: var(--w3);
   letter-spacing: 0.5px;
 }

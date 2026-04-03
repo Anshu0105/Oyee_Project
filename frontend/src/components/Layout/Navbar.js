@@ -20,9 +20,9 @@ const NavItem = ({ icon: Icon, label, children, to }) => {
         padding: '10px 16px',
         color: 'inherit',
         textDecoration: 'none',
-        fontFamily: 'var(--font-bebas)',
+        fontWeight: '700',
         fontSize: '1.2rem',
-        letterSpacing: '2px',
+        letterSpacing: '1px',
         transition: 'all 0.3s',
         position: 'relative'
       }}>
@@ -80,9 +80,9 @@ const Navbar = () => {
     }}>
       <div className="nav-left" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <Link to="/rooms" className="brand interactive" style={{
-          fontFamily: 'var(--font-bebas)',
+          fontWeight: 800,
           fontSize: '2.2rem',
-          letterSpacing: '4px',
+          letterSpacing: '-0.05em',
           color: 'var(--accent-primary)',
           textDecoration: 'none',
           display: 'flex',
@@ -91,7 +91,7 @@ const Navbar = () => {
           OYEEE<span style={{ color: 'var(--accent-primary)' }}>.</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-           <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--accent-primary)', letterSpacing: '1px' }}>LIVE</span>
+           <span style={{ fontWeight: '500', fontSize: '0.7rem', color: 'var(--accent-primary)', letterSpacing: '1px' }}>LIVE</span>
            <div className="live-dot" />
         </div>
       </div>
@@ -114,7 +114,7 @@ const Navbar = () => {
           borderRadius: '20px',
           border: '1px solid rgba(255, 152, 0, 0.2)',
           color: 'var(--streak-orange)',
-          fontFamily: 'var(--font-bebas)',
+          fontWeight: '700',
           fontSize: '1.1rem',
           boxShadow: '0 0 15px rgba(255, 152, 0, 0.1)',
           animation: 'pulse-streak 2s infinite'

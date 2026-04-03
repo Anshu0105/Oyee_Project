@@ -12,10 +12,13 @@ export const UserProvider = ({ children }) => {
     aura: 0,
     friends: [],
     enemies: [],
-    auraVotesGiven: [], // Tracks votes current user has given
+    auraVotesGiven: [],
+    claimedItems: [],
     id: null,
     avatarEmoji: '👤',
-    auraColor: '#FFFFFF'
+    auraColor: '#FFFFFF',
+    theme: 'wine',
+    streak: 7
   });
 
   const updateAura = async (targetUserId, type) => {

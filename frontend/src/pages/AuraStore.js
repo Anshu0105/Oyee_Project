@@ -53,15 +53,24 @@ const AuraStore = () => {
     }, 3000);
   };
 
-  const handleClaim = (item) => {
-    if (user.claimedItems.some(i => i.id === item.id)) return;
+  const handleClaim = async (item) => {
+    const isClaimed = user.claimedItems?.includes(item.id.toString());
+    if (isClaimed) return;
+    
     if (user.aura < item.price) {
       showToast(`Not enough aura! You need ${item.price - user.aura} more pts.`, 'error');
       return;
     }
-    updateAura(-item.price);
-    addClaimedItem(item);
-    showToast(`✅ ${item.name} claimed! Check your profile.`, 'success');
+
+    try {
+      // Assuming updateAura handles both local state and backend
+      // But we also need to call addClaimedItem
+      await updateAura(-item.price);
+      await addClaimedItem(item.id.toString());
+      showToast(`✅ ${item.name} claimed! Check your profile.`, 'success');
+    } catch (err) {
+      showToast('Error claiming item. Try again.', 'error');
+    }
   };
 
   return (
@@ -201,10 +210,10 @@ const AuraStore = () => {
 
                 <button
                   onClick={() => handleClaim(item)}
-                  disabled={user.claimedItems.some(i => i.id === item.id)}
+                  disabled={user.claimedItems?.includes(item.id.toString())}
                   className="interactive"
                   style={{
-                    background: user.claimedItems.some(i => i.id === item.id) ? 'rgba(255,255,255,0.1)' : 'var(--accent-primary)',
+                    background: user.claimedItems?.includes(item.id.toString()) ? 'rgba(255,255,255,0.1)' : 'var(--accent-primary)',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '10px',
@@ -212,16 +221,16 @@ const AuraStore = () => {
                     fontFamily: 'var(--font-bebas)',
                     fontSize: '1rem',
                     letterSpacing: '1.5px',
-                    cursor: user.claimedItems.some(i => i.id === item.id) ? 'default' : 'pointer',
+                    cursor: user.claimedItems?.includes(item.id.toString()) ? 'default' : 'pointer',
                     transition: 'all 0.3s',
-                    opacity: user.claimedItems.some(i => i.id === item.id) ? 0.5 : 1,
+                    opacity: user.claimedItems?.includes(item.id.toString()) ? 0.5 : 1,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                   }}
                 >
-                  {user.claimedItems.some(i => i.id === item.id) ? <CheckCircle size={14} /> : <ShoppingBag size={14} />}
-                  {user.claimedItems.some(i => i.id === item.id) ? 'CLAIMED' : 'CLAIM'}
+                  {user.claimedItems?.includes(item.id.toString()) ? <CheckCircle size={14} /> : <ShoppingBag size={14} />}
+                  {user.claimedItems?.includes(item.id.toString()) ? 'CLAIMED' : 'CLAIM'}
                 </button>
               </div>
             </div>

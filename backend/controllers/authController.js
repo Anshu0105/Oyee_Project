@@ -26,9 +26,13 @@ exports.sendOtp = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     
-    // Domain restrict
-    if (!email.endsWith('@cgu-odisha.ac.in')) {
-      return res.status(400).json({ error: 'Please use your university email (@cgu-odisha.ac.in)' });
+    // Institutional Domain & Registration Logic (CGU Odisha)
+    const cguRegex = /^(22|23|24|25)\d{4}(0\d{3}|1\d{3}|2000)@cgu-odisha\.ac\.in$/;
+    
+    if (!cguRegex.test(email.toLowerCase())) {
+      return res.status(400).json({ 
+        error: 'Access Denied: Please use a valid CGU Student Email (e.g., 2301020816@cgu-odisha.ac.in) from active batches (2022-2025).' 
+      });
     }
 
     const existingUser = await User.findOne({ email });

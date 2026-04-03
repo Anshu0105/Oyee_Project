@@ -37,8 +37,9 @@ const Auth = () => {
   };
 
   const validateSignup = () => {
-    if (!email.toLowerCase().endsWith('@cgu-odisha.ac.in')) {
-      setError('Please use your university email (@cgu-odisha.ac.in)');
+    const cguRegex = /^(22|23|24|25)\d{4}(0\d{3}|1\d{3}|2000)@cgu-odisha\.ac\.in$/;
+    if (!cguRegex.test(email.toLowerCase())) {
+      setError('CGU Access Only: Use a valid Student Email (e.g., 2301020816@cgu-odisha.ac.in) from batches 2022-2025.');
       return false;
     }
     if (password.length < 6) {

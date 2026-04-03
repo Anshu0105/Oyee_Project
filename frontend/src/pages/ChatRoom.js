@@ -44,6 +44,10 @@ const ChatRoom = () => {
       setMessages(prev => [...prev, messageData]);
     });
 
+    socketRef.current.on('auraUpdate', (payload) => {
+      // Global aura update sync can be handled here if needed in specific components
+    });
+
     return () => {
       socketRef.current.disconnect();
     };
@@ -51,9 +55,20 @@ const ChatRoom = () => {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages]);
+
+  const handleAction = async (actionFn, targetId, successMessage) => {
+    try {
+      await actionFn(targetId);
+      setViolationNotice(`Success: ${successMessage}`);
+      setTimeout(() => setViolationNotice(null), 3000);
+    } catch (err) {
+      setViolationNotice(err.message || 'Action failed');
+      setTimeout(() => setViolationNotice(null), 3000);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -63,30 +78,22 @@ const ChatRoom = () => {
     
     if (!analysis.isSafe) {
       setViolationNotice(analysis.issues[0] || 'your message has been restricted as you are violating messaging rules');
-      
-      // Auto-hide notice after 5 seconds
-      setTimeout(() => {
-        setViolationNotice(null);
-      }, 5000);
-      
-      return; // Block the message
+      setTimeout(() => setViolationNotice(null), 5000);
+      return; 
     }
 
     const senderName = user.name || 'Anonymous';
 
-    // Transmit to global room socket
     const messagePayload = {
       roomId: id,
       text: input,
       user: senderName,
-      senderId: user.id,
+      senderId: user.id || user._id,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
     };
     
     socketRef.current.emit('sendMessage', messagePayload);
-    
     setInput('');
-    setViolationNotice(null);
   };
 
   return (
@@ -119,7 +126,6 @@ const ChatRoom = () => {
 
       {/* Messages */}
       <div 
-        ref={scrollRef}
         style={{ 
           flex: 1, 
           overflowY: 'auto', 
@@ -131,54 +137,91 @@ const ChatRoom = () => {
           minHeight: 0
         }}
       >
+        {messages.length === 0 && (
+           <div style={{ textAlign: 'center', opacity: 0.2, marginTop: '40px', fontFamily: 'var(--font-mono)', fontSize: '0.8rem' }}>
+              // THE VOID IS QUIET. START A CONVERSATION.
+           </div>
+        )}
         {messages.map((msg, i) => {
-          // Match by senderId (reliable) or fall back to name match
-          const isMe = (msg.senderId && msg.senderId === user.id) || msg.user === user.name;
+          const isMe = (msg.senderId && (msg.senderId === user.id || msg.senderId._id === user.id)) || msg.user === user.name;
           const timeFormat = msg.time || (msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
-          
+          const targetId = msg.senderId?._id || msg.senderId;
+
           return (
             <div key={msg._id || msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
               <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', textAlign: isMe ? 'right' : 'left' }}>{isMe ? `${user.name} (You)` : msg.user} • {timeFormat}</div>
-              <div className="glass" style={{ padding: '12px 16px', background: isMe ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', color: 'white' }}>
+              <div className="glass" style={{ padding: '12px 16px', background: isMe ? 'rgba(233, 30, 99, 0.2)' : 'rgba(255,255,255,0.05)', color: 'white', borderRadius: isMe ? '12px 12px 0 12px' : '0 12px 12px 12px', border: isMe ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)' }}>
                 {msg.text}
               </div>
-              {!isMe && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+              
+              {!isMe && targetId && (
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
                   <button 
-                    onClick={() => updateAura(7)}
-                    className="interactive" 
-                    style={{ background: 'none', border: '1px solid #5ec87a', color: '#5ec87a', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
+                    onClick={() => handleAction((t) => updateAura(t, 'up'), targetId, '+1 Aura given')}
+                    className="interactive hover-lift" 
+                    style={{ 
+                      background: 'rgba(94, 200, 122, 0.1)', border: '1px solid #5ec87a', color: '#5ec87a', 
+                      padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', display: 'flex', 
+                      alignItems: 'center', gap: '6px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
+                    }}
                   >
-                    <Plus size={12} /> Aura
+                    <Plus size={14} /> Aura
                   </button>
                   <button 
-                    onClick={() => updateAura(-3)}
-                    className="interactive" 
-                    style={{ background: 'none', border: '1px solid #ff4d4d', color: '#ff4d4d', padding: '2px 8px', borderRadius: '4px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                    disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
+                    onClick={() => handleAction((t) => updateAura(t, 'down'), targetId, '-1 Aura given')}
+                    className="interactive hover-lift" 
+                    style={{ 
+                      background: 'rgba(255, 77, 77, 0.1)', border: '1px solid #ff4d4d', color: '#ff4d4d', 
+                      padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', display: 'flex', 
+                      alignItems: 'center', gap: '6px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
+                    }}
                   >
-                    <Minus size={12} /> Aura
+                    <Minus size={14} /> Aura
                   </button>
-                  <div style={{ position: 'relative', display: 'flex', gap: '4px' }}>
-                     <button onClick={() => addFriend(msg.user)} className="interactive" style={{ fontSize: '0.6rem', opacity: 0.7 }}>Add Friend</button>
-                     <button onClick={() => addEnemy(msg.user)} className="interactive" style={{ fontSize: '0.6rem', opacity: 0.7 }}>Add Enemy</button>
-                  </div>
+                  <button 
+                    disabled={user.friends.includes(targetId) || user.enemies.includes(targetId)}
+                    onClick={() => handleAction(addFriend, targetId, 'Added as friend')}
+                    className="interactive hover-lift" 
+                    style={{ 
+                        background: 'rgba(66, 153, 225, 0.1)', border: '1px solid #4299e1', color: '#4299e1',
+                        padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem',
+                        opacity: (user.friends.includes(targetId) || user.enemies.includes(targetId)) ? 0.3 : 1
+                    }}
+                  >
+                    Add Friend
+                  </button>
+                  <button 
+                    disabled={user.enemies.includes(targetId) || user.friends.includes(targetId)}
+                    onClick={() => handleAction(addEnemy, targetId, 'Added as enemy')}
+                    className="interactive hover-lift" 
+                    style={{ 
+                        background: 'rgba(66, 153, 225, 0.1)', border: '1px solid #4299e1', color: '#4299e1',
+                        padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem',
+                        opacity: (user.enemies.includes(targetId) || user.friends.includes(targetId)) ? 0.3 : 1
+                    }}
+                  >
+                    Add Enemy
+                  </button>
                 </div>
               )}
             </div>
           );
         })}
+        <div ref={scrollRef} />
       </div>
 
-      {/* Violation Notice (System Message) */}
+      {/* Action Notice (System Message / Toast) */}
       {violationNotice && (
         <div style={{ padding: '0 24px', flexShrink: 0 }}>
-          <div className="detection-warning critical" style={{ 
+          <div className="detection-warning toast" style={{ 
             marginBottom: '12px',
-            background: 'rgba(212, 58, 96, 0.15)',
-            border: '1px solid rgba(212, 58, 96, 0.3)',
+            background: violationNotice.startsWith('Success') ? 'rgba(94, 200, 122, 0.15)' : 'rgba(212, 58, 96, 0.15)',
+            border: `1px solid ${violationNotice.startsWith('Success') ? '#5ec87a' : '#d43a60'}`,
             borderRadius: '8px',
             padding: '12px 20px',
-            color: '#d43a60',
+            color: violationNotice.startsWith('Success') ? '#5ec87a' : '#d43a60',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
@@ -187,7 +230,7 @@ const ChatRoom = () => {
             animation: 'slideUp 0.3s ease-out'
           }}>
             <AlertTriangle size={18} />
-            <span><strong>System Notice:</strong> {violationNotice.toLowerCase()}</span>
+            <span><strong>System:</strong> {violationNotice}</span>
           </div>
         </div>
       )}
@@ -198,14 +241,14 @@ const ChatRoom = () => {
           value={input}
           onChange={e => {
             setInput(e.target.value);
-            if (violationNotice) setViolationNotice(null);
+            if (violationNotice && !violationNotice.startsWith('Success')) setViolationNotice(null);
           }}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Speak into the void..."
           style={{ 
             flex: 1, 
             background: 'rgba(0,0,0,0.2)', 
-            border: violationNotice ? '1px solid #d43a60' : '1px solid var(--glass-border)', 
+            border: (violationNotice && !violationNotice.startsWith('Success')) ? '1px solid #d43a60' : '1px solid var(--glass-border)', 
             padding: '12px 20px', 
             color: 'white', 
             borderRadius: '8px',
@@ -215,9 +258,9 @@ const ChatRoom = () => {
         <button 
           onClick={handleSend}
           className="interactive" 
-          style={{ background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '0 24px', borderRadius: '8px' }}
+          style={{ background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '0 24px', borderRadius: '12px', cursor: 'pointer' }}
         >
-          <Send size={20} />
+          <Send size={18} />
         </button>
       </div>
     </div>

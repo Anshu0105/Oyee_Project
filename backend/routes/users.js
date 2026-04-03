@@ -78,7 +78,45 @@ router.get('/:id/profile', verifyToken, async (req, res) => {
   }
 });
 
-// Create/Update Social Relationship (Friend or Enemy)
+// Toggle Aura Upvote/Downvote (+1 or -1)
+router.post('/aura/:id', verifyToken, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const voterId = req.user.id;
+    const { type } = req.body; // 'up' or 'down'
+
+    if (targetId === voterId) return res.status(400).json({ error: "Cannot vote for self" });
+    if (!['up', 'down'].includes(type)) return res.status(400).json({ error: "Invalid vote type" });
+
+    const [targetUser, voterUser] = await Promise.all([
+      User.findById(targetId),
+      User.findById(voterId)
+    ]);
+
+    if (!targetUser) return res.status(404).json({ error: "Identity not found" });
+
+    // Check if voter already cast a vote for this user
+    const existingVote = voterUser.auraVotes.given.find(v => v.userId.toString() === targetId);
+    if (existingVote) return res.status(400).json({ error: "Already cast an aura vote for this user" });
+
+    const increment = type === 'up' ? 1 : -1;
+    
+    // Update target's aura and upvoter's history
+    await Promise.all([
+      User.findByIdAndUpdate(targetId, { $inc: { aura: increment, weeklyAuraGain: increment } }),
+      User.findByIdAndUpdate(voterId, { $push: { 'auraVotes.given': { userId: targetId, type } } })
+    ]);
+
+    const io = req.app.get('io');
+    io.emit('auraUpdate', { userId: targetId, newAura: targetUser.aura + increment });
+
+    res.json({ success: true, newAura: targetUser.aura + increment });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Create/Update Social Relationship (Friend or Enemy) with cleanup logic
 router.post('/relationship/:id', verifyToken, async (req, res) => {
   try {
     const targetId = req.params.id;
@@ -87,14 +125,18 @@ router.post('/relationship/:id', verifyToken, async (req, res) => {
 
     if (targetId === observerId) return res.status(400).json({ error: "Cannot link to self" });
 
+    const observerUser = await User.findById(observerId);
+
     if (type === 'friend') {
-      // Add friend, remove enemy completely
+      if (observerUser.friends.includes(targetId)) return res.status(400).json({ error: "Already friends" });
+      
       await Promise.all([
         User.findByIdAndUpdate(observerId, { $addToSet: { friends: targetId }, $pull: { enemies: targetId } }),
         User.findByIdAndUpdate(targetId, { $addToSet: { friends: observerId }, $pull: { enemies: observerId } })
       ]);
     } else if (type === 'enemy') {
-      // Add enemy, remove friend completely (Uni-directional mark, but we can do bi-directional for enemy too)
+       if (observerUser.enemies.includes(targetId)) return res.status(400).json({ error: "Already marked as enemy" });
+
       await Promise.all([
         User.findByIdAndUpdate(observerId, { $addToSet: { enemies: targetId }, $pull: { friends: targetId } }),
         User.findByIdAndUpdate(targetId, { $addToSet: { enemies: observerId }, $pull: { friends: observerId } })

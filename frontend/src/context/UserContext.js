@@ -12,36 +12,75 @@ export const UserProvider = ({ children }) => {
     aura: 0,
     friends: [],
     enemies: [],
-    lastRooms: [],
-    mood: 'happy',
-    claimedItems: [],
+    auraVotesGiven: [], // Tracks votes current user has given
     id: null,
     avatarEmoji: '👤',
     auraColor: '#FFFFFF'
   });
 
-  const updateAura = (delta) => {
-    setUser(prev => ({ 
-      ...prev, 
-      aura: prev.aura + delta,
-      mood: delta > 0 ? 'happy' : 'sad'
-    }));
-    // Reset mood after 3 seconds
-    setTimeout(() => {
-      setUser(prev => ({ ...prev, mood: 'happy' }));
-    }, 3000);
+  const updateAura = async (targetUserId, type) => {
+    try {
+      const data = await safeFetch(`/api/users/aura/${targetUserId}`, {
+        method: 'POST',
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type })
+      });
+      
+      // Update local state history of given votes
+      setUser(prev => ({ 
+        ...prev, 
+        auraVotesGiven: [...prev.auraVotesGiven, { userId: targetUserId, type }]
+      }));
+      return data;
+    } catch(err) {
+      console.error(err);
+      throw err;
+    }
   };
 
-  const addFriend = (name) => {
-    setUser(prev => ({ ...prev, friends: [...prev.friends, name] }));
+  const addFriend = async (targetUserId) => {
+    try {
+      await safeFetch(`/api/users/relationship/${targetUserId}`, {
+        method: 'POST',
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type: 'friend' })
+      });
+      setUser(prev => ({ 
+        ...prev, 
+        friends: [...prev.friends, targetUserId],
+        enemies: prev.enemies.filter(id => id !== targetUserId)
+      }));
+    } catch(err) {
+      console.error(err);
+      throw err;
+    }
   };
 
-  const addEnemy = (name) => {
-    setUser(prev => ({ ...prev, enemies: [...prev.enemies, name] }));
-  };
-
-  const addClaimedItem = (item) => {
-    setUser(prev => ({ ...prev, claimedItems: [...prev.claimedItems, item] }));
+  const addEnemy = async (targetUserId) => {
+    try {
+      await safeFetch(`/api/users/relationship/${targetUserId}`, {
+        method: 'POST',
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ type: 'enemy' })
+      });
+      setUser(prev => ({ 
+        ...prev, 
+        enemies: [...prev.enemies, targetUserId],
+        friends: prev.friends.filter(id => id !== targetUserId)
+      }));
+    } catch(err) {
+      console.error(err);
+      throw err;
+    }
   };
 
   const loginUser = (data) => {
@@ -50,9 +89,13 @@ export const UserProvider = ({ children }) => {
     setUser(prev => ({
       ...prev,
       name: data.user.auraName || data.user.username,
-      id: data.user.id,
+      id: data.user.id || data.user._id,
+      aura: data.user.aura || 0,
       avatarEmoji: data.user.avatarEmoji,
-      auraColor: data.user.auraColor
+      auraColor: data.user.auraColor,
+      friends: data.user.friends || [],
+      enemies: data.user.enemies || [],
+      auraVotesGiven: data.user.auraVotes?.given || []
     }));
   };
 
@@ -60,7 +103,7 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem('oyeeeToken');
     setToken(null);
     setUser({
-      name: 'Tasty Strawberry', aura: 342, friends: [], enemies: [], lastRooms: ['WiFi Room'], mood: 'happy', claimedItems: [], id: null, avatarEmoji: '👤', auraColor: '#e91e63'
+      name: 'Anonymous', aura: 0, friends: [], enemies: [], auraVotesGiven: [], id: null, avatarEmoji: '👤', auraColor: '#FFFFFF'
     });
     window.location.href = '/login';
   };

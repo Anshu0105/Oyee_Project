@@ -18,16 +18,24 @@ const UserSchema = new mongoose.Schema({
   },
   // DM Visual Profile
   auraName: { type: String, default: 'Anonymous Wanderer', unique: true, sparse: true },
-  aura: { type: Number, default: Math.floor(Math.random() * 1000), index: -1 },
+  aura: { type: Number, default: 0, index: -1 },
   avatarEmoji: { type: String, default: '👤' },
   auraColor: { type: String, default: '#FFFFFF' },
   equippedBadge: { type: String, default: '' },
   
   // Leaderboard Stats
   lastActive: { type: Date, default: Date.now },
-  weeklyAuraGain: { type: Number, default: Math.floor(Math.random() * 100) },
+  weeklyAuraGain: { type: Number, default: 0 },
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   enemies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  
+  // Interaction Logic
+  auraVotes: {
+    given: [{ 
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
+      type: { type: String, enum: ['up', 'down'] } 
+    }]
+  },
 
   createdAt: { type: Date, default: Date.now }
 });

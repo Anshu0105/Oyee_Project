@@ -21,6 +21,7 @@ const io = socketIo(server, {
     methods: ["GET", "POST", "PUT", "DELETE"]
   }
 });
+app.set('io', io);
 
 app.use(cors({
   origin: function (origin, callback) {

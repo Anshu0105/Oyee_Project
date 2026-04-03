@@ -96,7 +96,7 @@ const Navbar = () => {
         </div>
       </div>
 
-      <div className="nav-center" style={{ display: 'flex', gap: '12px', position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
+      <div className="nav-center" style={{ display: 'flex', gap: '12px', position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}>
         <NavItem icon={LayoutGrid} label="ROOMS" to="/rooms" />
         <NavItem icon={MessageSquare} label="MESSAGE" to="/messages" />
         <NavItem icon={Trophy} label="LEADERBOARD" to="/leaderboard" />

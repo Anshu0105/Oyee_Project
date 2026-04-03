@@ -1,8 +1,21 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const UserActivity = require('../models/UserActivity');
 const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../middleware/auth');
+
+// Fetch user activity for the Heatmap
+router.get('/me/activity', verifyToken, async (req, res) => {
+  try {
+    const activity = await UserActivity.find({ userId: req.user.id })
+      .sort({ date: 1 })
+      .select('date count -_id');
+    res.json(activity);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // Fetch top 100 users for the Public Leaderboard
 router.get('/leaderboard', async (req, res) => {

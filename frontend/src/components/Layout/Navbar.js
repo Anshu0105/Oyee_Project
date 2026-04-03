@@ -6,6 +6,8 @@ import { useUser } from '../../context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import BotPanel from '../Bot/BotPanel';
+import { StreakModal } from '../Common/StreakModal';
+import { safeFetch } from '../../config';
 
 const LogoutModal = ({ onConfirm, onCancel }) => (
   <motion.div 
@@ -101,12 +103,24 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toggleTheme } = useTheme();
-  const { user, logoutUser } = useUser();
+  const { user, logoutUser, token } = useUser();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showBotPanel, setShowBotPanel] = useState(false);
+  const [showStreakModal, setShowStreakModal] = useState(false);
+  const [activityData, setActivityData] = useState([]);
   const [aestheticOn, setAestheticOn] = useState(true);
   const dropdownRef = useRef(null);
+
+  const fetchActivity = async () => {
+    try {
+      const data = await safeFetch('/api/users/me/activity', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setActivityData(data);
+      setShowStreakModal(true);
+    } catch (err) { console.error(err); }
+  };
 
   const currentRoomId = location.pathname.startsWith('/room/') ? location.pathname.split('/room/')[1] : null;
 
@@ -167,11 +181,16 @@ const Navbar = () => {
             <Bot size={22} />
           </motion.div>
 
-          <div className="streak-counter" title={`${user.streak || 7} day streak`} style={{
-            display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
-            background: 'rgba(255, 152, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 152, 0, 0.2)',
-            color: 'var(--streak-orange)', fontWeight: '700', fontSize: '1rem'
-          }}>
+          <div 
+            onClick={fetchActivity}
+            className="streak-counter interactive" 
+            title={`${user.streak || 7} day streak`} 
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
+              background: 'rgba(255, 152, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 152, 0, 0.2)',
+              color: 'var(--streak-orange)', fontWeight: '700', fontSize: '1rem', cursor: 'pointer'
+            }}
+          >
             <Flame size={16} fill="currentColor" />
             <span>{user.streak || 7}</span>
           </div>
@@ -286,6 +305,7 @@ const Navbar = () => {
       </AnimatePresence>
 
       <BotPanel isOpen={showBotPanel} onClose={() => setShowBotPanel(false)} currentRoomId={currentRoomId} />
+      <StreakModal isOpen={showStreakModal} onClose={() => setShowStreakModal(false)} data={activityData} userStats={user} />
     </>
   );
 };

@@ -17,9 +17,10 @@ const UserSchema = new mongoose.Schema({
     coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
   },
   // DM Visual Profile
-  auraName: { type: String, default: 'Anonymous Wanderer' },
+  auraName: { type: String, default: 'Anonymous Wanderer', unique: true, sparse: true },
   aura: { type: Number, default: Math.floor(Math.random() * 1000), index: -1 },
   avatarEmoji: { type: String, default: '👤' },
+  auraColor: { type: String, default: '#FFFFFF' },
   equippedBadge: { type: String, default: '' },
   
   // Leaderboard Stats

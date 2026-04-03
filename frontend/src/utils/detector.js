@@ -3,27 +3,20 @@
  * Communicates with the backend /api/detect endpoint
  */
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "https://oyeee-backend.onrender.com";
-
+import { BACKEND_URL, safeFetch } from '../config';
 export const detectContent = async (message) => {
   if (!message || message.trim().length === 0) {
     return { isSafe: true, issues: [] };
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/detect`, {
+    const data = await safeFetch('/api/detect', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message }),
     });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
     return data;
   } catch (error) {
     console.error('Content Detection Failed:', error);

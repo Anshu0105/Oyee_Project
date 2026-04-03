@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, UserPlus, Clock, Zap, Network, CalendarDays } from 'lucide-react';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
-
+import { BACKEND_URL, safeFetch } from '../../config';
 const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -12,10 +10,9 @@ const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => 
     if (!isOpen || !userId) return;
     setLoading(true);
     
-    fetch(`${BACKEND_URL}/api/users/${userId}/profile`, {
+    safeFetch(`/api/users/${userId}/profile`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => res.json())
     .then(data => {
       setProfile(data);
       setLoading(false);
@@ -28,7 +25,7 @@ const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => 
 
   const handleRelationship = async (type) => {
     try {
-      await fetch(`${BACKEND_URL}/api/users/relationship/${userId}`, {
+      await safeFetch(`/api/users/relationship/${userId}`, {
         method: 'POST',
         headers: { 
            'Authorization': `Bearer ${token}`,

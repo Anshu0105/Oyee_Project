@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import Navbar from './components/Layout/Navbar';
 import LiveDeclaration from './components/Layout/LiveDeclaration';
 import CustomCursor from './components/Common/CustomCursor';
-import Login from './pages/Login';
+import Landing from './pages/Landing';
+import Auth from './pages/Auth';
 import Rooms from './pages/Rooms';
 import ChatRoom from './pages/ChatRoom';
 import Message from './pages/Message';
@@ -19,7 +20,8 @@ function App() {
       <div className="App">
         <CustomCursor />
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/*" element={
             <>
               <Navbar />
@@ -31,7 +33,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/store" element={<AuraStore />} />
-                <Route path="/" element={<Navigate to="/login" />} />
+                <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </>
           } />

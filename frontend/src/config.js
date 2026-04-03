@@ -1,0 +1,13 @@
+export const BACKEND_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:5002'
+  : (import.meta.env.VITE_BACKEND_URL || 'https://oyeee-backend.onrender.com');
+
+export async function safeFetch(url, options = {}) {
+  const res = await fetch(`${BACKEND_URL}${url}`, options);
+  const contentType = res.headers.get("content-type");
+  if (res.ok && contentType && contentType.includes("application/json")) {
+    return await res.json();
+  } else {
+    throw new Error(`Server Error: ${res.status}. Expected JSON, got ${contentType}`);
+  }
+}

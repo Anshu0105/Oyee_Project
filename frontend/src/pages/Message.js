@@ -3,9 +3,7 @@ import { useUser } from '../context/UserContext';
 import { MessageSquare, ChevronLeft, Paperclip, Loader2 } from 'lucide-react';
 import io from 'socket.io-client';
 import MessageBubble from '../components/UI/MessageBubble';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
-
+import { BACKEND_URL, safeFetch } from '../config';
 const Message = () => {
   const { user, token } = useUser();
   const [contacts, setContacts] = useState([]);
@@ -55,10 +53,9 @@ const Message = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/dm/available-users`, {
+      const data = await safeFetch('/api/dm/available-users', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
       
       if (Array.isArray(data)) {
         setContacts(data);
@@ -74,10 +71,9 @@ const Message = () => {
 
   const fetchChatHistory = async (peerId) => {
     try {
-      const res = await fetch(`${BACKEND_URL}/api/dm/history/${peerId}`, {
+      const data = await safeFetch(`/api/dm/history/${peerId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
       setMessages(data);
     } catch(err) {
       console.error(err);
@@ -113,15 +109,12 @@ const Message = () => {
     formData.append('file', file);
 
     try {
-      const res = await fetch(`${BACKEND_URL}/api/dm/upload-file`, {
+      const data = await safeFetch('/api/dm/upload-file', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
-      const data = await res.json();
       
-      if (!res.ok) throw new Error(data.error);
-
       // Successfully uploaded via Multer, now send via Socket
       const payload = {
         senderId: user.id,

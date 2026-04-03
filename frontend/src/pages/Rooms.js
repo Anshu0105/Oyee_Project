@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
-
+import { BACKEND_URL, safeFetch } from '../config';
 const RoomCard = ({ icon: Icon, title, desc, badge, badgeColor = 'var(--glass-border)', onClick, isLoading }) => (
   <div className="glass interactive hover-lift" onClick={onClick} style={{
     padding: '30px',
@@ -35,8 +35,6 @@ const Rooms = () => {
   const { token } = useUser();
   const [error, setError] = useState('');
   const [loadingRoom, setLoadingRoom] = useState(null);
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
-
   const hashString = (str) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -57,7 +55,7 @@ const Rooms = () => {
       const publicIp = ipData.ip;
 
       // Step 2: Send it to the backend for secure hashing into a room ID
-      const res = await fetch(`${BACKEND_URL}/api/rooms/wifi/discover`, {
+      const data = await safeFetch('/api/rooms/wifi/discover', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -65,8 +63,6 @@ const Rooms = () => {
         },
         body: JSON.stringify({ ip: publicIp })
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to detect network');
       
       navigate(`/room/${data.roomId}`);
     } catch(err) {
@@ -80,11 +76,9 @@ const Rooms = () => {
     setError('');
     setLoadingRoom('uni');
     try {
-      const res = await fetch(`${BACKEND_URL}/api/rooms/university/check-access`, {
+      const data = await safeFetch('/api/rooms/university/check-access', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error + " - " + data.message);
       
       navigate(`/room/${data.roomId}`);
     } catch(err) {
@@ -105,9 +99,9 @@ const Rooms = () => {
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        try {
+          try {
           const { latitude, longitude } = position.coords;
-          const res = await fetch(`${BACKEND_URL}/api/rooms/nearby`, {
+          const data = await safeFetch('/api/rooms/nearby', {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -115,9 +109,6 @@ const Rooms = () => {
             },
             body: JSON.stringify({ lat: latitude, lng: longitude, radiusKm: 5 })
           });
-          
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.message || data.error || 'Failed to find geographic clusters');
           
           navigate(`/room/${data.roomId}`);
         } catch(err) {

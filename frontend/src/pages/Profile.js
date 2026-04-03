@@ -2,9 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
 import { Settings, Shield, Palette, Zap, Users, Megaphone } from 'lucide-react';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
-
+import { BACKEND_URL, safeFetch } from '../config';
 const calculateTier = (aura) => {
   if (aura > 1000) return 'STARBORN';
   if (aura > 500) return 'THUNDER';
@@ -30,10 +28,9 @@ const Profile = () => {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`${BACKEND_URL}/api/users/me/social`, {
+    safeFetch('/api/users/me/social', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
-    .then(res => res.json())
     .then(data => {
       setFriends(data.friends || []);
       setEnemies(data.enemies || []);

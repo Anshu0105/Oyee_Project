@@ -6,7 +6,7 @@ import { useUser } from '../context/UserContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { loginUser } = useUser();
+  const { loginUser, bypassLogin } = useUser();
   const [stars, setStars] = useState([]);
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -294,6 +294,29 @@ const Login = () => {
               >
                 <img src="https://www.gstatic.com/images/branding/product/1x/gsa_512dp.png" alt="Google" style={{ width: '20px' }} />
                 CONTINUE WITH GOOGLE
+              </button>
+               <button
+                type="button"
+                onClick={() => {
+                  if (bypassLogin()) navigate('/rooms');
+                }}
+                className="interactive"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  marginTop: '12px',
+                  background: 'rgba(0,0,0,0.05)',
+                  color: '#666',
+                  border: '1px dashed #ccc',
+                  borderRadius: '8px',
+                  fontSize: '0.7rem',
+                  fontWeight: 'bold',
+                  letterSpacing: '2px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+              >
+                // DEVELOPER BYPASS (SURPASS LOGIN)
               </button>
             </form>
 

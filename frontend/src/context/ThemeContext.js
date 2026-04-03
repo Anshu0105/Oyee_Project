@@ -13,6 +13,8 @@ export const ThemeProvider = ({ children }) => {
     setTheme(prev => {
       if (prev === 'wine') return 'blue';
       if (prev === 'blue') return 'titanium';
+      if (prev === 'titanium') return 'green';
+      if (prev === 'green') return 'egypt';
       return 'wine';
     });
   };

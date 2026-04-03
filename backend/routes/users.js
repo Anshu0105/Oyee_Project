@@ -34,6 +34,45 @@ router.get('/me/social', verifyToken, async (req, res) => {
   }
 });
 
+// Fetch current user's recent notifications (limited to last 50)
+router.get('/me/notifications', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate('notifications.from', 'username avatarEmoji auraName')
+      .select('notifications');
+      
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    
+    // Sort notifications by date (newest first)
+    const sorted = user.notifications.sort((a, b) => b.createdAt - a.createdAt).slice(0, 50);
+    res.json(sorted);
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark all notifications as read or specific one
+router.patch('/me/notifications/read', verifyToken, async (req, res) => {
+  try {
+    const { notificationId } = req.body;
+    
+    if (notificationId) {
+      await User.updateOne(
+        { _id: req.user.id, "notifications._id": notificationId },
+        { $set: { "notifications.$.isRead": true } }
+      );
+    } else {
+      await User.findByIdAndUpdate(req.user.id, {
+        $set: { "notifications.$[].isRead": true }
+      });
+    }
+    
+    res.json({ success: true });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Fetch detailed metadata for a single user, resolving Mutual Friends graph
 router.get('/:id/profile', verifyToken, async (req, res) => {
   try {
@@ -102,6 +141,21 @@ router.post('/relationship/:id', verifyToken, async (req, res) => {
     } else {
       return res.status(400).json({ error: "Invalid relation type" });
     }
+
+    // Trigger Notification for the target user (if it's a new link)
+    const observer = await User.findById(observerId).select('username auraName');
+    await User.findByIdAndUpdate(targetId, {
+      $push: {
+        notifications: {
+          $each: [{
+            type: type, // 'friend' or 'enemy'
+            from: observerId,
+            message: `${observer.auraName} marked you as an ${type}.`,
+          }],
+          $slice: -50 // Keep last 50
+        }
+      }
+    });
     
     res.json({ success: true, message: `Relationship marked as ${type}` });
   } catch(err) {

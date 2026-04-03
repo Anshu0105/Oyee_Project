@@ -6,7 +6,7 @@ const Room = require('../models/Room');
 
 router.get('/:id', verifyToken, async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id);
+    const room = await Room.findById(req.params.id).populate('members', 'username avatarEmoji auraName');
     if (!room) return res.status(404).json({ error: "Room not found" });
     res.json({ success: true, room });
   } catch(err) { res.status(500).json({ error: err.message }); }

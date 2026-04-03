@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2, X, Plus, LogIn } from 'lucide-react';
+import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2, X, Plus, LogIn, Navigation, Radar } from 'lucide-react';
+import NearbyRadar from '../components/Rooms/NearbyRadar';
+import WiFiDiscovery from '../components/Rooms/WiFiDiscovery';
 import { BACKEND_URL } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
@@ -316,7 +318,7 @@ const Rooms = () => {
 
 
   return (
-    <div style={{ padding: '40px 0', width: '100%', color: 'var(--text-main)' }}>
+    <div style={{ padding: '100px 0 40px', width: '100%', color: 'var(--text-main)' }}>
       <div style={{ padding: '0 40px', marginBottom: '40px' }}>
 
         <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: '3rem', letterSpacing: '4px' }}>JOIN A ROOM</h1>
@@ -352,48 +354,10 @@ const Rooms = () => {
         ))}
       </div>
 
-      {/* WiFi Scanning Radar Overlay */}
+      {/* Professional WiFi Discovery Scanner */}
       <AnimatePresence>
         {isScanning && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-              background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)',
-              zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            <div style={{ position: 'relative', width: '200px', height: '200px' }}>
-              <motion.div
-                animate={{ scale: [1, 1.5, 2], opacity: [0.5, 0.2, 0] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                style={{
-                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                  border: '2px solid var(--accent-primary)', borderRadius: '50%'
-                }}
-              />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                style={{
-                  position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-                  border: '2px solid transparent', borderTopColor: 'var(--accent-primary)', borderRadius: '50%'
-                }}
-              />
-              <div style={{
-                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                color: 'var(--accent-primary)'
-              }}>
-                <Wifi size={48} />
-              </div>
-            </div>
-            <p style={{ 
-              marginTop: '32px', fontFamily: 'var(--font-mono)', fontSize: '1.2rem', 
-              letterSpacing: '2px', color: 'var(--accent-primary)', textTransform: 'uppercase' 
-            }}>
-              {scanningStatus}
-            </p>
-          </motion.div>
+          <WiFiDiscovery status={scanningStatus} />
         )}
       </AnimatePresence>
 
@@ -555,7 +519,30 @@ const Rooms = () => {
                 )}
 
 
-                {activeModalType !== 'wifi-entry' && activeModalType !== 'private-entry' && modalData.length === 0 ? (
+                {activeModalType === 'nearby' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                       <p style={{ opacity: 0.6, fontSize: '0.85rem', marginBottom: '20px', fontFamily: 'var(--font-mono)' }}>
+                         // PULSING ACTIVE PEER HUBS DETECTED IN YOUR RADIUS
+                       </p>
+                       <NearbyRadar 
+                         userCoords={modalContext} 
+                         rooms={modalData} 
+                         onJoin={(id) => navigate(`/room/${id}`)} 
+                       />
+                    </div>
+                    
+                    <div style={{ width: '100%' }}>
+                      <div style={{ padding: '0 8px 12px', opacity: 0.4, fontSize: '0.7rem', fontFamily: 'var(--font-mono)', borderBottom: '1px solid var(--glass-border)', marginBottom: '16px' }}>
+                        LIVE ROOM INFORMATION
+                      </div>
+                      <NearbyInfoBar 
+                        rooms={modalData} 
+                        onJoin={(id) => navigate(`/room/${id}`)} 
+                      />
+                    </div>
+                  </div>
+                ) : activeModalType !== 'wifi-entry' && activeModalType !== 'private-entry' && modalData.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '40px 0', opacity: 0.6 }}>
                     <AlertCircle size={48} style={{ margin: '0 auto 16px', color: 'var(--text-dim)' }} />
                     <p style={{ fontFamily: 'var(--font-mono)' }}>No active peers found on this network.</p>

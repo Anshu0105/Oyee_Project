@@ -16,7 +16,7 @@ const LiveDeclaration = () => {
       marginLeft: 'calc(-50vw + 50%)',
       marginRight: 'calc(-50vw + 50%)',
       position: 'relative',
-      zIndex: 800,
+      zIndex: 900,
       background: 'var(--bg-panel)',
       borderTop: '1px solid var(--glass-border)',
       borderBottom: '1px solid var(--glass-border)',

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Sparkles, MessageSquare, History } from 'lucide-react';
 
-const SummaryModal = ({ isOpen, onClose, summary, isLoading }) => {
+const SummaryModal = ({ isOpen, onClose, summary, isLoading, title = "AI QUICK SUMMARY" }) => {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -18,19 +18,25 @@ const SummaryModal = ({ isOpen, onClose, summary, isLoading }) => {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0, 0, 0, 0.7)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              zIndex: 999
+              background: 'rgba(0, 0, 0, 0.3)',
+              backdropFilter: 'blur(60px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(60px) saturate(180%)',
+              zIndex: 2999
             }}
             onClick={onClose}
           />
           
           {/* Modal Container */}
           <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.8, opacity: 0, y: 50 }}
+            initial={{ scale: 0.95, opacity: 0, y: 20, filter: 'blur(10px)' }}
+            animate={{ scale: 1, opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ scale: 0.95, opacity: 0, y: 20, filter: 'blur(10px)' }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 300, 
+              damping: 30,
+              opacity: { duration: 0.4 }
+            }}
             style={{
               position: 'fixed',
               top: '50%',
@@ -40,40 +46,62 @@ const SummaryModal = ({ isOpen, onClose, summary, isLoading }) => {
               maxWidth: '500px',
               maxHeight: '80vh',
               overflow: 'hidden',
-              background: '#0a0a0a', /* Deep Dark Theme */
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'linear-gradient(135deg, rgba(10, 10, 10, 0.95) 0%, rgba(20, 20, 20, 0.98) 100%)',
+              border: '1px solid var(--glass-border)',
               borderRadius: '24px',
               padding: '32px',
-              zIndex: 1000,
-              boxShadow: '0 30px 60px rgba(0,0,0,0.8)',
+              zIndex: 3000,
+              boxShadow: '0 30px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05)',
               display: 'flex',
               flexDirection: 'column',
               gap: '24px'
             }}
           >
+            {/* High-end Shine Sweep */}
+            <motion.div 
+              initial={{ x: '-100%' }}
+              animate={{ x: '100%' }}
+              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 3 }}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '50%',
+                height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)',
+                transform: 'skewX(-25deg)',
+                pointerEvents: 'none'
+              }}
+            />
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <Sparkles size={24} color="var(--accent-primary)" />
-                <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2rem', letterSpacing: '2px', color: 'var(--text-main)' }}>AI QUICK SUMMARY</h2>
+                <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2rem', letterSpacing: '2px', color: 'var(--text-main)' }}>{title}</h2>
               </div>
               <button 
                 onClick={onClose}
-                className="interactive hover-lift"
+                className="interactive"
                 style={{ 
-                  background: 'rgba(255,255,255,0.05)', 
-                  border: 'none', 
-                  color: 'white', 
-                  width: '36px', 
-                  height: '36px', 
-                  borderRadius: '50%', 
+                  background: 'rgba(var(--accent-rgb), 0.1)', 
+                  border: '1px solid var(--accent-primary)', 
+                  color: 'var(--accent-primary)', 
+                  padding: '6px 16px',
+                  borderRadius: '20px', 
                   display: 'flex', 
                   alignItems: 'center', 
-                  justifyContent: 'center',
-                  cursor: 'pointer' 
+                  gap: '8px',
+                  cursor: 'pointer',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem',
+                  fontWeight: 'bold',
+                  letterSpacing: '1px',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 0 10px rgba(var(--accent-rgb), 0.2)'
                 }}
               >
-                <X size={20} />
+                <X size={14} />
+                CANCEL
               </button>
             </div>
             
@@ -122,6 +150,26 @@ const SummaryModal = ({ isOpen, onClose, summary, isLoading }) => {
                 </div>
               )}
             </div>
+
+            {/* AI Growth Footer */}
+            {!isLoading && (
+              <div style={{ 
+                marginTop: 'auto', 
+                padding: '12px', 
+                background: 'rgba(var(--accent-rgb), 0.05)', 
+                borderRadius: '12px', 
+                border: '1px solid rgba(var(--accent-rgb), 0.1)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#00ff00', boxShadow: '0 0 5px #00ff00' }} />
+                <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', opacity: 0.6, letterSpacing: '1px' }}>
+                  VOID INTELLIGENCE INDEXED: {(summary?.match(/\d+/g) || [0])[0]} PULSES
+                </span>
+              </div>
+            )}
           </motion.div>
         </>
       )}

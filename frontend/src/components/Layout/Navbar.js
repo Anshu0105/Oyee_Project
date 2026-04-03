@@ -11,6 +11,7 @@ import { useUser } from '../../context/UserContext';
 import AIBotIcon from '../UI/AIBotIcon';
 import RippleEffect from '../UI/RippleEffect';
 import SummaryModal from '../UI/SummaryModal';
+import InboxIcon from '../UI/InboxIcon';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const DropdownLink = ({ to, icon: Icon, label }) => (
@@ -134,8 +135,11 @@ const Navbar = () => {
 
     setRipple({ active: true, x, y });
     
-    // Summary logic
-    fetchSummary();
+    // Open modal after a premium stagger delay to let the ripple breathe
+    setTimeout(() => {
+      setIsSummaryModalOpen(true);
+      fetchSummary();
+    }, 300);
   };
 
   const fetchSummary = async () => {
@@ -143,15 +147,20 @@ const Navbar = () => {
     try {
       // Extract room ID from URL if applicable
       const match = location.pathname.match(/\/room\/([a-f\d]+)/i);
-      const roomId = match ? match[1] : 'global';
+      const roomId = match ? match[1] : null;
 
-      const res = await fetch(`${BACKEND_URL}/api/ai/summarize/${roomId}`, {
+      let endpoint = `${BACKEND_URL}/api/ai/recommendations`;
+      if (roomId) {
+        endpoint = `${BACKEND_URL}/api/ai/summarize/${roomId}`;
+      }
+
+      const res = await fetch(endpoint, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       const data = await res.json();
       setSummary(data.summary);
     } catch (err) {
-      setSummary('Failed to generate summary. Our AI ghost is sleeping.');
+      setSummary('Failed to connect to the digital consciousness. Our AI ghost is sleeping.');
     } finally {
       setIsAiLoading(false);
     }
@@ -176,18 +185,20 @@ const Navbar = () => {
       margin: '20px',
       justifyContent: 'space-between',
       position: 'sticky',
-      top: '10px',
-      zIndex: 900
+      top: '0px',
+      zIndex: 1000,
+      overflow: 'visible'
     }}>
-      <div className="nav-left" style={{ display: 'flex', alignItems: 'center', flex: '1' }}>
+      <div className="nav-left" style={{ display: 'flex', alignItems: 'center', minWidth: '180px' }}>
         <Link to="/rooms" className="brand interactive" style={{
           fontFamily: 'var(--font-bebas)',
-          fontSize: '2.2rem',
+          fontSize: '2.4rem',
           letterSpacing: '4px',
           color: 'var(--accent-primary)',
           textDecoration: 'none',
           display: 'flex',
-          alignItems: 'center'
+          alignItems: 'center',
+          lineHeight: '1'
         }}>
           OYEEE<span style={{ color: 'var(--accent-primary)' }}>.</span>
         </Link>
@@ -195,21 +206,39 @@ const Navbar = () => {
 
       <div className="nav-navigation" style={{ 
         display: 'flex', 
-        gap: '24px', 
+        gap: 'min(24px, 2vw)', 
         alignItems: 'center',
-        flex: '2',
+        flex: '1',
         justifyContent: 'center',
-        marginRight: '80px' // Nudging to the left as requested
+        flexWrap: 'nowrap'
       }}>
         <NavItem icon={LayoutGrid} label="ROOMS" to="/rooms" />
         <NavItem icon={MessageSquare} label="MESSAGE" to="/messages" />
         <NavItem icon={Trophy} label="LEADERBOARD" to="/leaderboard" />
         <NavItem icon={ShoppingBag} label="AURA STORE" to="/store" />
         <div style={{ margin: '0 8px', height: '24px', width: '1px', background: 'var(--glass-border)', opacity: 0.5 }} />
-        <AIBotIcon onClick={handleBotClick} />
       </div>
 
-      <div className="nav-right" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', flex: '1' }}>
+      <SummaryModal 
+        isOpen={isSummaryModalOpen} 
+        onClose={() => setIsSummaryModalOpen(false)}
+        summary={summary}
+        isLoading={isAiLoading}
+        title={location.pathname.startsWith('/room/') ? "VOICE OF THE VOID" : "TRENDING DIMENSIONS"}
+      />
+
+      <div className="nav-right" style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'flex-end', 
+        flex: '1', 
+        gap: '24px' 
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', height: '100%', gap: '20px' }}>
+          <AIBotIcon onClick={handleBotClick} />
+          <InboxIcon />
+        </div>
+        <div style={{ width: '1px', height: '24px', background: 'var(--glass-border)', opacity: 0.3 }} />
         {/* New Profile Identity Bar Container */}
         <div className="profile-container" ref={profileDropdownRef} style={{ position: 'relative' }}>
             <div 
@@ -241,7 +270,7 @@ const Navbar = () => {
                 overflow: 'hidden',
                 flexShrink: 0
               }}>
-                {user.profilePic ? (
+                {user?.profilePic ? (
                   <img 
                     src={user.profilePic} 
                     alt="Profile" 
@@ -262,7 +291,7 @@ const Navbar = () => {
                   textOverflow: 'ellipsis',
                   overflow: 'hidden'
                 }}>
-                  {user.name.toUpperCase()}
+                  {(user?.auraName || user?.username || 'ANONYMOUS').toUpperCase()}
                 </span>
                 <span style={{ 
                   fontFamily: 'var(--font-mono)', 
@@ -290,7 +319,7 @@ const Navbar = () => {
                   style={{
                     position: 'absolute',
                     top: 'calc(100% + 8px)',
-                    right: 0,
+                    left: '6px',
                     width: '210px',
                     padding: '12px',
                     zIndex: 2000,
@@ -304,8 +333,8 @@ const Navbar = () => {
                 >
                   {/* Header Section */}
                   <div style={{ marginBottom: '12px', padding: '0 4px' }}>
-                    <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', letterSpacing: '1px' }}>{user.name}</div>
-                    <div style={{ fontSize: '0.65rem', opacity: 0.5, fontFamily: 'var(--font-mono)' }}>{user.email || 'OYEEE_PILOT_MODE'}</div>
+                    <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', letterSpacing: '1px' }}>{user?.auraName || user?.username || 'Anonymous'}</div>
+                    <div style={{ fontSize: '0.65rem', opacity: 0.5, fontFamily: 'var(--font-mono)' }}>{user?.email || 'OYEEE_PILOT_MODE'}</div>
                   </div>
 
                   {/* Stat Ribbon (Condensed) */}
@@ -326,7 +355,7 @@ const Navbar = () => {
                     <div style={{ width: '1px', background: 'var(--glass-border)' }} />
                     <div style={{ flex: 1, textAlign: 'center' }}>
                       <div style={{ color: 'var(--accent-primary)', fontSize: '0.8rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2px' }}>
-                        <Zap size={12} fill="currentColor" /> {user.aura}
+                        <Zap size={12} fill="currentColor" /> {user?.aura || 0}
                       </div>
                     </div>
                   </div>

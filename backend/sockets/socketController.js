@@ -41,6 +41,42 @@ module.exports = (io) => {
       const roomId = messageData.roomId || 'global';
       try {
         const saved = await Message.create(messageData);
+        
+        // --- REAL-TIME MENTION LOGIC ---
+        const mentionRegex = /@(\w+)/g;
+        const matches = [...messageData.content.matchAll(mentionRegex)];
+        
+        if (matches.length > 0) {
+          const mentionedUsernames = [...new Set(matches.map(m => m[1]))];
+          
+          for (const username of mentionedUsernames) {
+            const targetUser = await User.findOne({ username }).select('_id socketId auraName');
+            if (targetUser && targetUser._id.toString() !== messageData.userId) {
+              const notification = {
+                type: 'mention',
+                from: messageData.userId,
+                message: `${messageData.auraName} tagged you in a room.`,
+                roomId: roomId,
+                isRead: false
+              };
+              
+              // Persist Notification
+              await User.findByIdAndUpdate(targetUser._id, {
+                $push: { notifications: { $each: [notification], $slice: -50 } }
+              });
+
+              // Push via Socket
+              if (targetUser.socketId) {
+                io.to(targetUser.socketId).emit('notificationReceived', {
+                  ...notification,
+                  from: { _id: messageData.userId, auraName: messageData.auraName }
+                });
+              }
+            }
+          }
+        }
+        // ------------------------------
+
         // Only emit to users connected to this exact WiFi/Domain/GPS hash
         io.to(roomId).emit('receiveMessage', saved);
       } catch (err) {
@@ -60,7 +96,32 @@ module.exports = (io) => {
         const dmChannel = `dm_${peers[0]}_${peers[1]}`;
         
         io.to(dmChannel).emit('receiveDirectMessage', populated);
+
+        // --- NEW: PUSH NOTIFICATION FOR DM ---
+        const notification = {
+          type: 'dm',
+          from: dmData.senderId,
+          message: `${populated.senderId.username} sent you a private message.`,
+          roomId: `dm_${dmData.senderId}`, // Reference for navigation
+          isRead: false
+        };
+
+        await User.findByIdAndUpdate(dmData.receiverId, {
+          $push: { notifications: { $each: [notification], $slice: -50 } }
+        });
+
+        // Push real-time if receiver is online
+        const receiver = await User.findById(dmData.receiverId).select('socketId');
+        if (receiver && receiver.socketId) {
+          io.to(receiver.socketId).emit('notificationReceived', {
+            ...notification,
+            from: { _id: dmData.senderId, username: populated.senderId.username }
+          });
+        }
+        // --------------------------------------
+
       } catch(err) {
+        console.error('DM emission error:', err);
         socket.emit('dmError', 'Delivery failed to peer');
       }
     });

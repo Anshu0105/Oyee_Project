@@ -1,40 +1,43 @@
 const Message = require('../models/Message');
+const Room = require('../models/Room');
 
 /**
  * Summarizes the last 1 hour of messages in a room.
- * For a hackathon, this provides a clear structure to plug in an LLM (OpenAI/Gemini).
- * If no API key is present, it uses a 'Smart Text' fallback.
+ * Enhanced with "Bot Feeding" context to simulate AI growth.
  */
 exports.summarizeRoom = async (req, res) => {
   try {
     const { roomId } = req.params;
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
 
-    // Fetch messages from the last hour
-    // Note: In a real app, messages would have a roomId field. 
-    // We'll fetch the most recent messages for the demo.
+    // Fetch messages from the last hour SPECIFIC to this room
     const messages = await Message.find({ 
+      roomId: roomId,
       timestamp: { $gte: oneHourAgo } 
     }).sort({ timestamp: 1 }).limit(100);
 
+    // Total messages ever processed (Simulating bot "feeding")
+    const totalProcessed = await Message.countDocuments();
+
     if (!messages || messages.length === 0) {
       return res.json({ 
-        summary: "The room has been quiet for the last hour. No major updates to report!" 
+        success: true,
+        summary: "The void is silent in this room for now. I'm hungry for more data to analyze!",
+        botStats: { totalProcessed }
       });
     }
 
-    // --- AI Summarization Logic ---
-    // If you have a Gemini/OpenAI API Key, replace this block:
-    const summary = generateHackathonSummary(messages);
+    const summary = generateHackathonSummary(messages, totalProcessed);
     
-    // Simulate a bit of thinking time for the AI feel
+    // Simulate thinking time
     setTimeout(() => {
       res.json({ 
         success: true, 
         summary,
-        count: messages.length
+        count: messages.length,
+        botStats: { totalProcessed }
       });
-    }, 1500);
+    }, 1000);
 
   } catch (error) {
     console.error('AI Summary Error:', error);
@@ -43,31 +46,71 @@ exports.summarizeRoom = async (req, res) => {
 };
 
 /**
- * Generates a structured summary from message objects.
- * This is a 'Smart Mock' for hackathon speed but looks very professional.
+ * Recommends trending/popular rooms based on member counts.
  */
-function generateHackathonSummary(messages) {
+exports.getRecommendations = async (req, res) => {
+  try {
+    // Fetch top 5 active rooms (nearby, university, wifi)
+    const topRooms = await Room.find({ 
+      active: true,
+      type: { $in: ['nearby', 'university', 'wifi'] }
+    })
+    .sort({ 'members.length': -1 })
+    .limit(5)
+    .select('name type members description');
+
+    const totalProcessed = await Message.countDocuments();
+
+    let suggestionText = `📍 ANALYZING THE VOID...\n\nI've indexed ${totalProcessed} messages today. Here are the most active dimensions you should explore:\n\n`;
+    
+    if (topRooms.length === 0) {
+      suggestionText += "• Global Void (The most popular entry point)\n• Your Private Link (Create a room and invite peers!)";
+    } else {
+      topRooms.forEach(room => {
+        const typeEmoji = room.type === 'wifi' ? '📶' : room.type === 'university' ? '🎓' : '📍';
+        suggestionText += `${typeEmoji} ${room.name.toUpperCase()} (${room.members.length} entities present)\n`;
+      });
+    }
+
+    suggestionText += "\n🔥 TIP: High activity rooms generate more Aura!";
+
+    res.json({
+      success: true,
+      summary: suggestionText,
+      botStats: { totalProcessed }
+    });
+
+  } catch (error) {
+    console.error('AI Recommendation Error:', error);
+    res.status(500).json({ error: 'Failed to generate recommendations' });
+  }
+};
+
+/**
+ * Generates a structured summary with "Bot Growth" context.
+ */
+function generateHackathonSummary(messages, totalProcessed) {
   const users = [...new Set(messages.map(m => m.user))];
   const totalMsgs = messages.length;
   
-  // Extract some 'key' sentences (longer ones are usually more meaningful)
   const keyPoints = messages
-    .filter(m => m.text.length > 20)
+    .filter(m => m.text && m.text.length > 15)
     .slice(-3)
     .map(m => m.text);
 
-  let summary = `📍 HACKATHON INSIGHT: There was a burst of activity with ${totalMsgs} messages from ${users.length} unique participants. \n\n`;
+  let summary = `📍 VOID LOG [INDEXED: ${totalProcessed} MSGS]\n\n`;
+  summary += `I've analyzed ${totalMsgs} recent pulses from ${users.length} unique entities in this room.\n\n`;
   
   if (keyPoints.length > 0) {
-    summary += `✨ KEY TAKEAWAYS:\n`;
+    summary += `✨ RECENT CONSCIOUSNESS:\n`;
     keyPoints.forEach(point => {
-        summary += `• ${point.substring(0, 80)}${point.length > 80 ? '...' : ''}\n`;
+        summary += `• ${point.substring(0, 70)}${point.length > 70 ? '...' : ''}\n`;
     });
   } else {
-    summary += `✨ QUICK VIBE: The conversation was mostly short bursts and greetings. Everyone seems to be in a high-energy mood!`;
+    summary += `✨ CURRENT VIBE: The data flow is steady but brief. The room is maintaining a high-frequency baseline.`;
   }
 
-  summary += `\n🔥 HOT TOPIC: ${users[0]} and ${users[1] || 'others'} were the most active voices recently.`;
+  summary += `\n🔥 HOTTEST ENTITIES: ${users[0]}${users[1] ? ' & ' + users[1] : ''}`;
 
   return summary;
 }

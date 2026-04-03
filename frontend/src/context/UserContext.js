@@ -1,115 +1,154 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { io } from 'socket.io-client';
 import { BACKEND_URL } from '../config';
 
 const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
 
+// Initialize socket at modular level
+const socket = io(BACKEND_URL, {
+  autoConnect: false,
+  reconnection: true
+});
+
 export const UserProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem('oyeeeToken') || null);
-  const [user, setUser] = useState({
-    name: 'Tasty Strawberry',
-    aura: 342,
-    friends: [],
-    enemies: [],
-    lastRooms: ['WiFi Room'],
-    mood: 'happy',
-    claimedItems: [],
-    id: null,
-    avatarEmoji: '👤',
-    auraColor: '#e91e63'
-  });
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('oyeee-user')) || null);
+  const [token, setToken] = useState(localStorage.getItem('oyeee-token') || null);
+  const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
-  const updateAura = (delta) => {
-    setUser(prev => ({ 
-      ...prev, 
-      aura: prev.aura + delta,
-      mood: delta > 0 ? 'happy' : 'sad'
-    }));
-    // Reset mood after 3 seconds
-    setTimeout(() => {
-      setUser(prev => ({ ...prev, mood: 'happy' }));
-    }, 3000);
-  };
+  // Sync auth state with socket
+  useEffect(() => {
+    if (token && user) {
+      if (!socket.connected) {
+        socket.connect();
+      }
+      socket.emit('authenticate', user._id);
+      
+      const handleNotif = (notif) => {
+        setNotifications(prev => [notif, ...prev]);
+      };
+      
+      socket.on('notificationReceived', handleNotif);
+      return () => {
+        socket.off('notificationReceived', handleNotif);
+      };
+    } else {
+      if (socket.connected) socket.disconnect();
+    }
+  }, [token, user]);
 
-  const addFriend = (name) => {
-    setUser(prev => ({ ...prev, friends: [...prev.friends, name] }));
-  };
+  // Fetch notifications on load
+  useEffect(() => {
+    if (token) {
+      fetchNotifications();
+    }
+  }, [token]);
 
-  const addEnemy = (name) => {
-    setUser(prev => ({ ...prev, enemies: [...prev.enemies, name] }));
-  };
-
-  const addClaimedItem = (item) => {
-    setUser(prev => ({ ...prev, claimedItems: [...prev.claimedItems, item] }));
-  };
-
-  const loginUser = async (email) => {
+  const fetchNotifications = async () => {
     try {
-      const username = email.split('@')[0];
-      const password = 'oyeee_default';
+      const res = await fetch(`${BACKEND_URL}/api/users/me/notifications`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (Array.isArray(data)) setNotifications(data);
+    } catch (err) {
+      console.error('Failed to sync notifications');
+    }
+  };
 
-      // Attempt to login
-      let res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+  const markNotificationsRead = async (id = null) => {
+    try {
+      await fetch(`${BACKEND_URL}/api/users/me/notifications/read`, {
+        method: 'PATCH',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify({ notificationId: id })
+      });
+      
+      if (id) {
+        setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      } else {
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      }
+    } catch (err) {
+      console.error('Failed to mark read');
+    }
+  };
+
+  const loginUser = async (email, password) => {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
-      // If user not found, dynamically register them!
-      if (res.status === 404) {
-        res = await fetch(`${BACKEND_URL}/api/auth/register`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password })
-        });
-        if (!res.ok) throw new Error('Failed to bootstrap new identity');
-        
-        // Auto-login after registration
-        res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-      }
-
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Authentication error');
-
-      setToken(data.token);
-      localStorage.setItem('oyeeeToken', data.token);
-      
-      setUser(prev => ({
-        ...prev,
-        name: data.user.username,
-        id: data.user.id,
-        profilePic: data.user.profilePic
-      }));
-
-      return true;
-    } catch(err) {
-      console.error("Login bypass failed: ", err);
-      return false;
+      if (data.token) {
+        setToken(data.token);
+        setUser(data.user);
+        localStorage.setItem('oyeee-token', data.token);
+        localStorage.setItem('oyeee-user', JSON.stringify(data.user));
+        return { success: true };
+      }
+      return { success: false, error: data.error };
+    } catch (err) {
+      return { success: false, error: 'Network synchronization failed' };
     }
   };
 
   const logoutUser = () => {
-    localStorage.removeItem('oyeeeToken');
+    setUser(null);
     setToken(null);
-    setUser({
-      name: 'Anonymous Wanderer',
-      aura: 0,
-      friends: [],
-      enemies: [],
-      lastRooms: [],
-      mood: 'happy',
-      claimedItems: [],
-      id: null,
-      avatarEmoji: '👤',
-      auraColor: '#e91e63',
-      profilePic: ''
+    setNotifications([]);
+    localStorage.removeItem('oyeee-token');
+    localStorage.removeItem('oyeee-user');
+    socket.disconnect();
+  };
+
+  const updateAura = (amt) => {
+    setUser(prev => {
+      const newUser = { ...prev, aura: (prev?.aura || 0) + amt };
+      localStorage.setItem('oyeee-user', JSON.stringify(newUser));
+      return newUser;
     });
   };
 
+  const addClaimedItem = (item) => {
+    setUser(prev => {
+      const newUser = { ...prev, claimedItems: [...(prev?.claimedItems || []), item] };
+      localStorage.setItem('oyeee-user', JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
+  const bypassLogin = () => {
+    const fakeUser = {
+      _id: 'guest_' + Date.now(),
+      username: 'Guest_User',
+      auraName: 'Mysterious Guest',
+      aura: 500,
+      avatarEmoji: '⚡',
+      friends: [],
+      enemies: [],
+      notifications: []
+    };
+    const fakeToken = 'guest_token_' + Date.now();
+    setUser(fakeUser);
+    setToken(fakeToken);
+    localStorage.setItem('oyeee-user', JSON.stringify(fakeUser));
+    localStorage.setItem('oyeee-token', fakeToken);
+    return true;
+  };
+
   return (
-    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser }}>
+    <UserContext.Provider value={{ 
+      user, token, loginUser, logoutUser, loading, setLoading, 
+      updateAura, addClaimedItem, notifications, markNotificationsRead, socket, bypassLogin
+    }}>
       {children}
     </UserContext.Provider>
   );

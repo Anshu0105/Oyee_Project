@@ -26,6 +26,15 @@ const UserSchema = new mongoose.Schema({
   // Leaderboard Stats
   lastActive: { type: Date, default: Date.now },
   weeklyAuraGain: { type: Number, default: Math.floor(Math.random() * 100) },
+  // Notifications & Social
+  notifications: [{
+    type: { type: String, enum: ['mention', 'friend', 'enemy', 'dm'], required: true },
+    from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    message: String,
+    roomId: String, // Context for mentions
+    isRead: { type: Boolean, default: false },
+    createdAt: { type: Date, default: Date.now }
+  }],
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   enemies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 

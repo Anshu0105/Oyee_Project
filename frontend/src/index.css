@@ -77,6 +77,44 @@
   --font-inter: var(--font-space); 
 }
 
+[data-theme='green'] {
+  /* Phantom Green: Monochrome Emerald & Deep Forest */
+  --bg-main: #040705; /* Deep Forest Black */
+  --bg-panel: #08120a; /* Dark Moss */
+  --bg-chat: #030604;
+  --text-main: #dcfce7; /* Mint White */
+  --text-dim: #10b981; /* Emerald Green */
+  --accent-primary: #00ff41; /* Matrix Neon */
+  --accent-secondary: #059669; /* Deep Emerald */
+  --accent-blue: #064e3b;
+  --accent-green: #00ff41;
+  --streak-orange: #fbbf24;
+  --cursor-color: #00ff41;
+  --accent-rgb: 0, 255, 65;
+  --glass: rgba(0, 255, 65, 0.03); 
+  --glass-border: rgba(0, 255, 65, 0.15);
+  --border-main: rgba(0, 255, 255, 0.05);
+}
+
+[data-theme='egypt'] {
+  /* Ancient Echoes: Midnight Sky & Golden Sands */
+  --bg-main: #0b1a1f; /* Deep Midnight Sky */
+  --bg-panel: #13242c; /* Twilight Navy */
+  --bg-chat: #081216;
+  --text-main: #f5d59a; /* Warm Desert Sky Yellow */
+  --text-dim: #c39d6b; /* Ancient Papyrus Sand */
+  --accent-primary: #e1b382; /* Giza Pyramids Gold */
+  --accent-secondary: #d4a373; /* Sundown Dune */
+  --accent-blue: #2c3e50;
+  --accent-green: #27ae60;
+  --streak-orange: #d35400;
+  --cursor-color: #e1b382;
+  --accent-rgb: 225, 179, 130;
+  --glass: rgba(195, 157, 107, 0.03); 
+  --glass-border: rgba(225, 179, 130, 0.15);
+  --border-main: rgba(225, 179, 130, 0.08);
+}
+
 
 * {
   margin: 0;
@@ -114,14 +152,12 @@ body {
   pointer-events: none;
   z-index: 10000;
   transform: translate(-50%, -50%);
-  transition: transform 0.1s ease, background-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 0 10px var(--accent-primary);
+  transition: transform 0.1s ease, background-color 0.3s ease;
   border: 1px solid rgba(var(--accent-rgb), 0.3);
 }
 
 .custom-cursor.hovering {
   transform: translate(-50%, -50%) scale(1.6);
-  box-shadow: 0 0 20px var(--accent-primary);
   border-color: var(--accent-primary);
 }
 

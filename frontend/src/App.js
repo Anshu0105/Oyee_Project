@@ -29,7 +29,6 @@ function App() {
                 <Routes>
                   <Route path="/rooms" element={<Rooms />} />
                   <Route path="/room/:id" element={<ChatRoom />} />
-                  <Route path="/private-hub" element={<PrivateHub />} />
                   <Route path="/messages" element={<Message />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/leaderboard" element={<Leaderboard />} />
@@ -38,6 +37,7 @@ function App() {
                 </Routes>
               </>
             } />
+            <Route path="/private-hub" element={<PrivateHub />} />
           </Route>
         </Routes>
       </div>

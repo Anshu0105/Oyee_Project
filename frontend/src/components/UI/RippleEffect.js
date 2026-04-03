@@ -33,11 +33,12 @@ const RippleEffect = ({ active, onComplete, originX, originY }) => {
             width: '250vmax',
             height: '250vmax',
             opacity: 0,
-            borderWidth: '0px'
+            borderWidth: '0px',
+            filter: 'blur(40px)'
           }}
           transition={{
-            duration: 1.0,
-            ease: [0.19, 1, 0.22, 1]
+            duration: 1.2,
+            ease: [0.16, 1, 0.3, 1]
           }}
         />
       )}

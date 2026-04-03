@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-// Assuming you have an auth middleware
-const auth = (req, res, next) => next(); 
-
 const aiController = require('../controllers/aiController');
+const { verifyToken } = require('../middleware/auth');
 
-// Summarize chat room by ID
-// Endpoint: GET /api/ai/summarize/:roomId
-router.get('/summarize/:roomId', auth, aiController.summarizeRoom);
+// Summary of the current room (last 1 hour)
+router.get('/summarize/:roomId', verifyToken, aiController.summarizeRoom);
+
+// General room recommendations (trending/nearby/wifi)
+router.get('/recommendations', verifyToken, aiController.getRecommendations);
 
 module.exports = router;

@@ -10,13 +10,14 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
+    origin: true,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: true,
   credentials: true
 }));
 app.use(express.json());
@@ -28,10 +29,11 @@ const adminRoute = require('./routes/admin');
 const roomRoute = require('./routes/rooms');
 const dmRoute = require('./routes/dm');
 const usersRoute = require('./routes/users');
+const roomsRoute = require('./routes/rooms');
 const aiRoute = require('./routes/ai');
 
-app.use('/api', messagesRoute);
-app.use('/api', detectorRoute);
+app.use('/api/messages', messagesRoute);
+app.use('/api/detector', detectorRoute);
 app.use('/api/auth', authRoute);
 app.use('/api/admin', adminRoute);
 app.use('/api/rooms', roomRoute);
@@ -54,16 +56,20 @@ setupSockets(io);
 const PORT = process.env.PORT || 5002;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/oyee';
 
-mongoose.connect(MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Connected to MongoDB');
-  server.listen(PORT, '0.0.0.0', () => {
+// Start the server regardless of MongoDB status to allow for local development
+server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
-  });
-}).catch(err => {
-  console.error('MongoDB connection error:', err);
 });
 
-
+// MongoDB connection with non-blocking error handling
+mongoose.connect(MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+  socketTimeoutMS: 45000,
+}).then(() => {
+  console.log('Connected to MongoDB');
+}).catch(err => {
+  console.error('\nMONGODB CONNECTION FAILED! Features relying on persistence will be disabled.');
+  console.error('Error Details: ', err.message);
+});

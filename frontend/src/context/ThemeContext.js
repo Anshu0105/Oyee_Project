@@ -19,6 +19,7 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.body.className = `theme-${theme}`;
     localStorage.setItem('oyeee-theme', theme);
   }, [theme]);
 

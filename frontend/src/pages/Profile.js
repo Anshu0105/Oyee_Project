@@ -60,24 +60,24 @@ const Dashboard = () => {
     };
 
     return (
-        <div className="dashboard-container" style={{
-            minHeight: '100vh', padding: '40px 20px', display: 'flex', justifyContent: 'center',
-            background: 'var(--bg-main)', color: 'var(--text-main)', fontFamily: 'var(--font-inter)'
+        <div className="scroll-container" style={{
+            background: 'var(--bg-main)', color: 'var(--text-main)', fontFamily: 'var(--font-inter)',
+            padding: '40px 20px', display: 'flex', justifyContent: 'center'
         }}>
-            <div style={{ maxWidth: '1200px', width: '100%', display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '32px' }}>
+            <div style={{ maxWidth: '1200px', width: '100%', display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '32px', paddingBottom: '40px' }}>
                 
                 {/* LEFT PANEL: IDENTITY CARD */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                     <motion.div 
                         initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
                         className="glass"
-                        style={{ padding: '32px', borderRadius: '32px', border: '1px solid var(--glass-border)', textAlign: 'center' }}
+                        style={{ padding: '32px', borderRadius: '32px', border: '1px solid var(--border-main)', textAlign: 'center', background: 'var(--bg-panel)' }}
                     >
                         <div style={{ 
                             width: '120px', height: '120px', margin: '0 auto 24px', borderRadius: '50%',
                             background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '4rem', border: '2px solid var(--accent-primary)',
-                            boxShadow: '0 0 30px var(--accent-glow)'
+                            boxShadow: '0 0 30px var(--glass-border)'
                         }}>
                             {user.avatarEmoji || '👤'}
                         </div>
@@ -90,7 +90,7 @@ const Dashboard = () => {
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid var(--border-main)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', opacity: 0.6 }}>
                                     <Sparkles size={16} />
                                     <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>TOTAL AURA</span>
@@ -98,7 +98,7 @@ const Dashboard = () => {
                                 <div style={{ fontSize: '2rem', fontWeight: '900', color: '#fff' }}>{user.aura} <span style={{ fontSize: '0.9rem', opacity: 0.5 }}>pts</span></div>
                             </div>
 
-                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid var(--border-main)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', opacity: 0.6 }}>
                                     <CreditCard size={16} />
                                     <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>SPENDABLE BALANCE</span>
@@ -109,10 +109,10 @@ const Dashboard = () => {
 
                         <button 
                             onClick={() => setShowDeleteModal(true)}
-                            className="danger-btn interactive"
+                            className="interactive"
                             style={{ 
                                 width: '100%', marginTop: '32px', padding: '16px', background: 'transparent',
-                                border: '1px solid rgba(255,0,85,0.2)', borderRadius: '16px',
+                                border: '1px solid rgba(255, 77, 77, 0.2)', borderRadius: '16px',
                                 color: '#ff4d4d', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
                                 fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s'
                             }}
@@ -123,7 +123,7 @@ const Dashboard = () => {
                     </motion.div>
 
                     {/* SOCIAL STATS MINI PANEL */}
-                    <div className="glass" style={{ padding: '24px', borderRadius: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div className="glass" style={{ padding: '24px', borderRadius: '24px', border: '1px solid var(--border-main)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', background: 'var(--bg-panel)' }}>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px' }}>FRIENDS</div>
                             <div style={{ fontWeight: '800' }}>{socialData.friends.length}</div>
@@ -140,10 +140,10 @@ const Dashboard = () => {
                     <motion.div 
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                         className="glass"
-                        style={{ padding: '40px', borderRadius: '40px', border: '1px solid var(--glass-border)' }}
+                        style={{ padding: '40px', borderRadius: '40px', border: '1px solid var(--border-main)', background: 'var(--bg-panel)' }}
                     >
                         <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2rem', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <Palette size={24} color="var(--accent-primary)" />
+                            <Palette size={24} style={{ color: 'var(--accent-primary)' }} />
                             Identity customization
                         </h3>
 
@@ -157,7 +157,7 @@ const Dashboard = () => {
                                         onClick={() => handleThemeChange(t.id)}
                                         style={{
                                             padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)',
-                                            border: currentTheme === t.id ? `2px solid ${t.color}` : '1px solid rgba(255,255,255,0.05)',
+                                            border: currentTheme === t.id ? `2px solid ${t.color}` : '1px solid var(--border-main)',
                                             color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
                                             transition: 'all 0.3s'
                                         }}
@@ -180,8 +180,8 @@ const Dashboard = () => {
                                         onClick={() => handleAvatarChange(e)}
                                         style={{
                                             width: '60px', height: '60px', fontSize: '2rem', borderRadius: '16px',
-                                            background: user.avatarEmoji === e ? 'rgba(255,0,85,0.1)' : 'rgba(255,255,255,0.02)',
-                                            border: user.avatarEmoji === e ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.05)',
+                                            background: user.avatarEmoji === e ? 'var(--glass)' : 'rgba(255,255,255,0.02)',
+                                            border: user.avatarEmoji === e ? '2px solid var(--accent-primary)' : '1px solid var(--border-main)',
                                             cursor: 'pointer', transition: 'all 0.2s'
                                         }}
                                     >
@@ -193,8 +193,8 @@ const Dashboard = () => {
                     </motion.div>
 
                     {/* SOCIAL LIST PANEL */}
-                    <div className="glass" style={{ padding: '40px', borderRadius: '40px', flex: 1 }}>
-                        <div style={{ display: 'flex', gap: '32px', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="glass" style={{ padding: '40px', borderRadius: '40px', border: '1px solid var(--border-main)', background: 'var(--bg-panel)', flex: 1 }}>
+                        <div style={{ display: 'flex', gap: '32px', marginBottom: '32px', borderBottom: '1px solid var(--border-main)' }}>
                              <button onClick={() => setActiveTab('friends')} style={{ 
                                  padding: '0 0 16px', background: 'none', border: 'none', cursor: 'pointer',
                                  color: activeTab === 'friends' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
@@ -218,14 +218,14 @@ const Dashboard = () => {
                             ) : socialData[activeTab].map(peer => (
                                 <div key={peer._id} style={{
                                     display: 'flex', alignItems: 'center', gap: '16px', padding: '16px',
-                                    background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)'
+                                    background: 'rgba(255,255,255,0.01)', borderRadius: '16px', border: '1px solid var(--border-main)'
                                 }}>
                                     <div style={{ fontSize: '1.5rem' }}>{peer.avatarEmoji}</div>
                                     <div style={{ flex: 1 }}>
                                         <div style={{ fontWeight: '800' }}>{peer.auraName}</div>
                                         <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '700' }}>{peer.aura} pts</div>
                                     </div>
-                                    {peer.equippedBadge && <div style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)' }}>{peer.equippedBadge}</div>}
+                                    {peer.equippedBadge && <div style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-main)' }}>{peer.equippedBadge}</div>}
                                 </div>
                             ))}
                         </div>
@@ -244,9 +244,9 @@ const Dashboard = () => {
                         <motion.div 
                             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                             style={{ 
-                                maxWidth: '400px', width: '100%', background: '#121212', 
-                                border: '1px solid rgba(255,0,85,0.2)', borderRadius: '32px', padding: '40px',
-                                textAlign: 'center'
+                                maxWidth: '400px', width: '100%', background: 'var(--bg-panel)', 
+                                border: '1px solid rgba(255, 77, 77, 0.2)', borderRadius: '32px', padding: '40px',
+                                textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
                             }}
                         >
                             <div style={{ color: '#ff4d4d', marginBottom: '24px' }}>
@@ -264,7 +264,7 @@ const Dashboard = () => {
                                 onChange={(e) => setDeletePassword(e.target.value)}
                                 style={{
                                     width: '100%', padding: '16px', marginBottom: '12px',
-                                    background: 'rgba(255,255,255,0.05)', border: error ? '1px solid #ff4d4d' : '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(255,255,255,0.05)', border: error ? '1px solid #ff4d4d' : '1px solid var(--border-main)',
                                     borderRadius: '12px', color: '#fff', fontSize: '1rem', outline: 'none'
                                 }}
                             />

@@ -125,21 +125,20 @@ const Message = () => {
     <div style={{ 
       display: 'grid', 
       gridTemplateColumns: '380px 1fr', 
-      height: 'calc(100vh - 100px)', 
-      margin: '0 20px 20px',
-      background: '#000000',
-      borderRadius: '24px',
-      border: '1px solid rgba(255,255,255,0.05)',
+      height: 'calc(100vh - 80px)', // Subtracting navbar height (assuming ~80px)
+      background: 'var(--bg-main)',
       overflow: 'hidden',
-      color: '#fff'
+      color: 'var(--text-main)'
     }}>
       
-      {/* LEFT PANEL: VOID LINKS */}
+      {/* LEFT PANEL: VOID LINKS (Scrollable) */}
       <div style={{ 
-        borderRight: '1px solid rgba(255,255,255,0.05)', 
+        borderRight: '1px solid var(--border-main)', 
         display: 'flex', 
         flexDirection: 'column',
-        background: 'rgba(255, 255, 255, 0.01)'
+        background: 'var(--bg-panel)',
+        height: '100%',
+        overflow: 'hidden'
       }}>
         <div style={{ padding: '32px 24px 24px' }}>
           <h1 style={{ fontSize: '2.5rem', fontWeight: '900', letterSpacing: '-1px', marginBottom: '4px' }}>VOID LINKS</h1>
@@ -156,13 +155,13 @@ const Message = () => {
               onChange={e => setSearchQuery(e.target.value)}
               style={{
                 width: '100%', padding: '14px 14px 14px 44px', background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', color: '#fff', fontSize: '0.9rem', outline: 'none'
+                border: '1px solid var(--border-main)', borderRadius: '12px', color: '#fff', fontSize: '0.9rem', outline: 'none'
               }}
             />
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 24px' }} className="custom-scrollbar">
+        <div className="scroll-container" style={{ flex: 1, padding: '0 12px 24px' }}>
           {filteredContacts.map(contact => {
             const isSelected = selectedUser?._id === contact._id;
             return (
@@ -175,8 +174,8 @@ const Message = () => {
                   borderRadius: '16px',
                   marginBottom: '8px',
                   cursor: 'pointer',
-                  background: isSelected ? 'rgba(255, 0, 85, 0.08)' : 'transparent',
-                  borderLeft: isSelected ? '4px solid #FF0055' : '4px solid transparent',
+                  background: isSelected ? 'var(--glass)' : 'transparent',
+                  borderLeft: isSelected ? `4px solid var(--accent-primary)` : '4px solid transparent',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '16px',
@@ -187,7 +186,7 @@ const Message = () => {
                 <div style={{ 
                   width: '52px', height: '52px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
-                  border: '1px solid rgba(255,255,255,0.1)'
+                  border: '1px solid var(--border-main)'
                 }}>
                   {contact.avatarEmoji || '👤'}
                 </div>
@@ -195,47 +194,51 @@ const Message = () => {
                   <div style={{ fontWeight: '800', fontSize: '1.1rem', letterSpacing: '0.5px' }}>{contact.auraName}</div>
                   <div style={{ fontSize: '0.75rem', opacity: 0.4, fontFamily: 'monospace' }}>@{contact.username.toLowerCase()}</div>
                 </div>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#48bb78', boxShadow: '0 0 10px #48bb78' }} />
+                <div style={{ 
+                  width: '8px', height: '8px', borderRadius: '50%', 
+                  background: isSelected ? 'var(--accent-primary)' : '#48bb78',
+                  boxShadow: isSelected ? `0 0 10px var(--accent-primary)` : '0 0 10px #48bb78'
+                }} />
               </motion.div>
             );
           })}
         </div>
       </div>
 
-      {/* RIGHT PANEL: CHAT AREA */}
-      <div style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.2)' }}>
+      {/* RIGHT PANEL: CHAT AREA (3 Parts) */}
+      <div style={{ display: 'flex', flexDirection: 'column', background: 'var(--bg-main)', height: '100%', overflow: 'hidden' }}>
         {selectedUser ? (
           <>
-            {/* HEADER */}
+            {/* 1. HEADER (Fixed) */}
             <div style={{ 
-              padding: '20px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)',
+              padding: '20px 32px', borderBottom: '1px solid var(--border-main)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.01)', backdropFilter: 'blur(10px)'
+              background: 'var(--bg-panel)', backdropFilter: 'blur(10px)', zIndex: 10
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ 
                   width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem',
-                  border: `1px solid ${selectedUser.auraColor || 'rgba(255,255,255,0.1)'}`
+                  border: `1px solid ${selectedUser.auraColor || 'var(--border-main)'}`
                 }}>
                   {selectedUser.avatarEmoji}
                 </div>
                 <div>
                   <div style={{ fontWeight: '800', fontSize: '1.2rem' }}>{selectedUser.auraName}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.65rem', opacity: 0.4, letterSpacing: '1px' }}>
-                    <ShieldCheck size={10} color="#FF0055" /> E2E ENCRYPTED • IDLE
+                    <ShieldCheck size={10} style={{ color: 'var(--accent-primary)' }} /> E2E ENCRYPTED • IDLE
                   </div>
                 </div>
               </div>
               
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: '#FF0055', letterSpacing: '1px' }}>AURA</div>
+                <div style={{ fontSize: '0.65rem', fontWeight: '800', color: 'var(--accent-primary)', letterSpacing: '1px' }}>AURA</div>
                 <div style={{ fontSize: '0.8rem', opacity: 0.4 }}>REPUTATION SCORE</div>
               </div>
             </div>
 
-            {/* MESSAGE LIST */}
-            <div style={{ flex: 1, padding: '32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '20px' }} className="custom-scrollbar">
+            {/* 2. MESSAGE LIST (Scrollable) */}
+            <div className="scroll-container" style={{ flex: 1, padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {messages.length === 0 && (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.2 }}>
                   <div style={{ textAlign: 'center' }}>
@@ -250,12 +253,12 @@ const Message = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* INPUT SECTION */}
-            <div style={{ padding: '32px', background: 'rgba(255,255,255,0.01)' }}>
+            {/* 3. INPUT SECTION (Fixed) */}
+            <div style={{ padding: '24px 32px', background: 'var(--bg-panel)', borderTop: '1px solid var(--border-main)' }}>
               <div style={{ 
                 display: 'flex', gap: '16px', alignItems: 'center', 
                 background: 'rgba(255,255,255,0.03)', padding: '8px 8px 8px 16px',
-                borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)'
+                borderRadius: '16px', border: '1px solid var(--border-main)'
               }}>
                 <button 
                   onClick={() => fileInputRef.current?.click()}
@@ -281,12 +284,12 @@ const Message = () => {
                 <button 
                   onClick={handleSendText}
                   style={{ 
-                    background: '#FF0055', border: 'none', color: '#fff', padding: '14px 34px',
+                    background: 'var(--accent-primary)', border: 'none', color: '#fff', padding: '14px 34px',
                     borderRadius: '12px', fontWeight: '800', fontSize: '1rem', letterSpacing: '1px',
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
-                    boxShadow: '0 0 20px rgba(255, 0, 85, 0.2)'
+                    boxShadow: '0 0 20px var(--glass-border)'
                   }}
-                  className="hover-lift"
+                  className="interactive"
                 >
                   {isUploading ? <Loader2 size={18} className="spin" /> : 'SEND'}
                 </button>
@@ -306,9 +309,6 @@ const Message = () => {
       <style>{`
         .spin { animation: spin 1s linear infinite; } 
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); borderRadius: 10px; }
-        .hover-lift:hover { transform: translateY(-2px); filter: brightness(1.1); }
       `}</style>
     </div>
   );

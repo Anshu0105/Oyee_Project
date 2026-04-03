@@ -21,15 +21,15 @@ const LogoutModal = ({ onConfirm, onCancel }) => (
     <motion.div 
       initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
       style={{
-        background: '#121212', border: '1px solid rgba(255,0,85,0.2)', padding: '32px',
+        background: 'var(--bg-panel)', border: '1px solid var(--border-main)', padding: '32px',
         borderRadius: '24px', width: '100%', maxWidth: '360px', textAlign: 'center',
         boxShadow: '0 20px 40px rgba(0,0,0,0.5)'
       }}
     >
       <div style={{ 
-        width: '60px', height: '60px', background: 'rgba(255,0,85,0.1)', borderRadius: '50%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FF0055',
-        margin: '0 auto 20px'
+        width: '60px', height: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-primary)',
+        margin: '0 auto 20px', border: '1px solid var(--border-main)'
       }}>
         <LogOut size={28} />
       </div>
@@ -49,9 +49,9 @@ const LogoutModal = ({ onConfirm, onCancel }) => (
         <button 
           onClick={onConfirm}
           style={{ 
-            flex: 1, padding: '14px', background: '#FF0055', border: 'none', 
+            flex: 1, padding: '14px', background: 'var(--accent-primary)', border: 'none', 
             borderRadius: '12px', color: '#fff', fontWeight: '800', cursor: 'pointer',
-            boxShadow: '0 0 20px rgba(255,0,85,0.3)'
+            boxShadow: '0 0 20px var(--glass-border)'
           }}
         >
           Logout
@@ -204,7 +204,7 @@ const Navbar = () => {
               onClick={() => navigate('/profile')}
               style={{
                 width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
-                border: `2px solid ${showProfileDropdown ? '#FF0055' : 'rgba(255,255,255,0.1)'}`,
+                border: `2px solid ${showProfileDropdown ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)'}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                 transition: 'all 0.3s', overflow: 'hidden'
               }}
@@ -220,18 +220,18 @@ const Navbar = () => {
                   exit={{ opacity: 0, y: 10, scale: 0.95 }}
                   style={{
                     position: 'absolute', top: 'calc(100% + 12px)', right: 0, width: '260px',
-                    background: '#121212', border: '1px solid rgba(255,0,85,0.2)', borderRadius: '20px',
-                    padding: '24px', zIndex: 1000, boxShadow: '0 20px 40px rgba(0,0,0,0.8), 0 0 30px rgba(255,0,85,0.05)',
-                    overflow: 'visible' // Fix for glow/shadow
+                    background: 'var(--bg-panel)', border: '1px solid var(--border-main)', borderRadius: '20px',
+                    padding: '24px', zIndex: 1000, boxShadow: '0 20px 40px rgba(0,0,0,0.8)',
+                    overflow: 'visible'
                   }}
                 >
                   {/* HEADER */}
                   <div style={{ marginBottom: '24px' }}>
                     <div style={{ fontWeight: '900', fontSize: '1.2rem', color: '#fff', marginBottom: '2px' }}>{user.auraName}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#FF0055', fontWeight: '700' }}>{user.aura} pts</div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--accent-primary)', fontWeight: '700' }}>{user.aura} pts</div>
                   </div>
 
-                  <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '0 -24px 16px' }} />
+                  <div style={{ height: '1px', background: 'var(--border-main)', margin: '0 -24px 16px' }} />
 
                   {/* MENU ITEMS */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -252,7 +252,7 @@ const Navbar = () => {
                         <span style={{ fontWeight: '600', fontSize: '0.95rem' }}>Aesthetic</span>
                       </div>
                       <div style={{ 
-                        width: '36px', height: '18px', background: aestheticOn ? '#FF0055' : 'rgba(255,255,255,0.1)',
+                        width: '36px', height: '18px', background: aestheticOn ? 'var(--accent-primary)' : 'rgba(255,255,255,0.1)',
                         borderRadius: '20px', position: 'relative', transition: 'all 0.3s'
                       }}>
                         <motion.div 
@@ -266,7 +266,7 @@ const Navbar = () => {
                       </div>
                     </div>
 
-                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '8px -24px' }} />
+                    <div style={{ height: '1px', background: 'var(--border-main)', margin: '8px -24px' }} />
 
                     <div 
                       onClick={() => setShowLogoutConfirm(true)}

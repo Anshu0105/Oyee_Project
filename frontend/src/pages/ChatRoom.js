@@ -126,18 +126,19 @@ const ChatRoom = () => {
     <div style={{ 
       display: 'flex', 
       flexDirection: 'column', 
-      height: 'calc(100vh - 110px)', 
-      margin: '0 12px 12px',
-      position: 'relative',
-      overflow: 'hidden'
-    }} className="glass">
-      {/* Header */}
+      height: 'calc(100vh - 80px)', // Consistent with Message.js
+      background: 'var(--bg-main)',
+      overflow: 'hidden',
+      color: 'var(--text-main)'
+    }}>
+      {/* Header (Fixed) */}
       <div style={{ 
         padding: '14px 24px', 
-        borderBottom: '1px solid var(--glass-border)', 
+        borderBottom: '1px solid var(--border-main)', 
         display: 'flex', 
         alignItems: 'center',
-        background: 'rgba(0,0,0,0.1)',
+        background: 'var(--bg-panel)',
+        zIndex: 10,
         flexShrink: 0
       }}>
         <button onClick={() => navigate('/rooms')} className="interactive" style={{ background: 'none', border: 'none', color: 'inherit', marginRight: '16px' }}><ArrowLeft /></button>
@@ -147,12 +148,12 @@ const ChatRoom = () => {
         </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
           {roomData && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--border-main)' }}>
                 <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', opacity: 0.5 }}>ROOM ID:</span>
                 <span style={{ fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>{id}</span>
                 <button 
                     onClick={copyToClipboard}
-                    style={{ background: 'none', border: 'none', color: copied ? '#48bb78' : '#FF0055', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
+                    style={{ background: 'none', border: 'none', color: copied ? '#48bb78' : 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}
                 >
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>
@@ -162,17 +163,16 @@ const ChatRoom = () => {
         </div>
       </div>
 
-      {/* Messages */}
+      {/* Messages (Scrollable) */}
       <div 
+        className="scroll-container"
         style={{ 
           flex: 1, 
-          overflowY: 'auto', 
-          padding: '24px', 
+          padding: '32px', 
           display: 'flex', 
           flexDirection: 'column', 
-          gap: '16px',
-          background: 'var(--bg-chat)',
-          minHeight: 0
+          gap: '20px',
+          background: 'var(--bg-main)'
         }}
       >
         {messages.length === 0 && (
@@ -193,7 +193,7 @@ const ChatRoom = () => {
               <div style={{ 
                   width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', 
                   display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                  border: isMe ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
+                  border: isMe ? '1px solid var(--accent-primary)' : '1px solid var(--border-main)',
                   fontSize: '1.2rem'
               }}>
                 {displayEmoji}
@@ -204,10 +204,10 @@ const ChatRoom = () => {
                     <span style={{ color: isMe ? 'var(--accent-primary)' : '#fff', fontWeight: '800' }}>{displayName}</span> • {timeFormat}
                 </div>
                 <div className="glass" style={{ 
-                    padding: '12px 16px', background: isMe ? 'rgba(233, 30, 99, 0.15)' : 'rgba(255,255,255,0.05)', 
+                    padding: '12px 16px', background: isMe ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255,255,255,0.02)', 
                     color: 'white', borderRadius: isMe ? '16px 0 16px 16px' : '0 16px 16px 16px', 
                     border: isMe ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
-                    boxShadow: isMe ? '0 0 15px rgba(255, 0, 85, 0.1)' : 'none'
+                    boxShadow: isMe ? '0 0 15px var(--glass-border)' : 'none'
                 }}>
                     {msg.text}
                 </div>
@@ -271,56 +271,73 @@ const ChatRoom = () => {
         <div ref={scrollRef} />
       </div>
 
-      {/* Action Notice (System Message / Toast) */}
+      {/* Action Notice */}
       {violationNotice && (
-        <div style={{ padding: '0 24px', flexShrink: 0 }}>
+        <div style={{ padding: '0 24px', flexShrink: 0, position: 'absolute', bottom: '100px', left: '24px', right: '24px', zIndex: 100 }}>
           <div className="detection-warning toast" style={{ 
-            marginBottom: '12px',
-            background: violationNotice.startsWith('Success') ? 'rgba(94, 200, 122, 0.15)' : 'rgba(212, 58, 96, 0.15)',
+            background: violationNotice.startsWith('Success') ? 'rgba(94, 200, 122, 0.9)' : 'rgba(212, 58, 96, 0.9)',
+            backdropFilter: 'blur(10px)',
             border: `1px solid ${violationNotice.startsWith('Success') ? '#5ec87a' : '#d43a60'}`,
-            borderRadius: '8px',
-            padding: '12px 20px',
-            color: violationNotice.startsWith('Success') ? '#5ec87a' : '#d43a60',
+            borderRadius: '12px',
+            padding: '16px 24px',
+            color: 'white',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            fontSize: '0.85rem',
-            fontFamily: 'var(--font-mono)',
+            fontSize: '0.9rem',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
             animation: 'slideUp 0.3s ease-out'
           }}>
-            <AlertTriangle size={18} />
+            <AlertTriangle size={20} />
             <span><strong>System:</strong> {violationNotice}</span>
           </div>
         </div>
       )}
 
-      {/* Input */}
-      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '12px', flexShrink: 0 }}>
-        <input 
-          value={input}
-          onChange={e => {
-            setInput(e.target.value);
-            if (violationNotice && !violationNotice.startsWith('Success')) setViolationNotice(null);
-          }}
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="Speak into the void..."
-          style={{ 
-            flex: 1, 
-            background: 'rgba(0,0,0,0.2)', 
-            border: (violationNotice && !violationNotice.startsWith('Success')) ? '1px solid #d43a60' : '1px solid var(--glass-border)', 
-            padding: '12px 20px', 
-            color: 'white', 
-            borderRadius: '8px',
-            transition: 'border-color 0.3s ease'
-          }}
-        />
-        <button 
-          onClick={handleSend}
-          className="interactive" 
-          style={{ background: 'var(--accent-primary)', border: 'none', color: 'white', padding: '0 24px', borderRadius: '12px', cursor: 'pointer' }}
-        >
-          <Send size={18} />
-        </button>
+      {/* Input (Fixed Bottom) */}
+      <div style={{ padding: '24px 32px', background: 'var(--bg-panel)', borderTop: '1px solid var(--border-main)', flexShrink: 0 }}>
+        <div style={{ 
+          display: 'flex', gap: '16px', alignItems: 'center', 
+          background: 'rgba(255,255,255,0.03)', padding: '8px 8px 8px 16px',
+          borderRadius: '16px', border: '1px solid var(--border-main)'
+        }}>
+          <input 
+            value={input}
+            onChange={e => {
+              setInput(e.target.value);
+              if (violationNotice && !violationNotice.startsWith('Success')) setViolationNotice(null);
+            }}
+            onKeyDown={e => e.key === 'Enter' && handleSend()}
+            placeholder="Speak into the void..."
+            style={{ 
+              flex: 1, 
+              background: 'transparent', 
+              border: 'none', 
+              padding: '12px 10px', 
+              color: 'white', 
+              fontSize: '1rem',
+              outline: 'none'
+            }}
+          />
+          <button 
+            onClick={handleSend}
+            className="interactive" 
+            style={{ 
+              background: 'var(--accent-primary)', 
+              border: 'none', 
+              color: 'white', 
+              padding: '14px 34px', 
+              borderRadius: '12px', 
+              fontWeight: '800',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              boxShadow: '0 0 20px var(--glass-border)'
+            }}
+          >
+            <Send size={18} />
+          </button>
+        </div>
       </div>
     </div>
   );

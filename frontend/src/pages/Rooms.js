@@ -190,138 +190,140 @@ const Rooms = () => {
   ];
 
   return (
-    <div style={{ padding: '40px 24px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
-      {/* WiFi Loading Overlay */}
-      <AnimatePresence>
-        {loadingRoom === 'wifi' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            style={{
-              position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-              background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(15px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 2000, flexDirection: 'column', gap: '32px'
-            }}
-          >
-            <div style={{ position: 'relative', width: '120px', height: '120px' }}>
-              {wifiStep === 'DETECTING' ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  style={{
-                    width: '100%', height: '100%', border: '4px solid rgba(255,0,85,0.1)',
-                    borderTop: '4px solid #FF0055', borderRadius: '50%'
-                  }}
-                />
-              ) : (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1, rotate: [0, -10, 0] }}
-                  style={{ color: '#48bb78', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+    <div className="scroll-container" style={{ padding: '40px 24px', position: 'relative', color: 'var(--text-main)' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        {/* WiFi Loading Overlay */}
+        <AnimatePresence>
+          {loadingRoom === 'wifi' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              style={{
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(15px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                zIndex: 2000, flexDirection: 'column', gap: '32px'
+              }}
+            >
+              <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                {wifiStep === 'DETECTING' ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    style={{
+                      width: '100%', height: '100%', border: `4px solid var(--glass-border)`,
+                      borderTop: `4px solid var(--accent-primary)`, borderRadius: '50%'
+                    }}
+                  />
+                ) : (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1, rotate: [0, -10, 0] }}
+                    style={{ color: '#48bb78', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                  >
+                    <CheckCircle size={100} />
+                  </motion.div>
+                )}
+              </div>
+              
+              <div style={{ textAlign: 'center' }}>
+                <motion.h3 
+                  key={wifiStep}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '8px', letterSpacing: '1px' }}
                 >
-                  <CheckCircle size={100} />
-                </motion.div>
-              )}
-            </div>
-            
-            <div style={{ textAlign: 'center' }}>
-              <motion.h3 
-                key={wifiStep}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '8px', letterSpacing: '1px' }}
-              >
-                {wifiStep === 'DETECTING' ? 'Detecting IP address...' : 'Detected IP address'}
-              </motion.h3>
-              {wifiStep === 'DETECTED' && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  style={{ color: '#FF0055', fontFamily: 'var(--font-mono)', fontWeight: '700', fontSize: '1.4rem', letterSpacing: '2px' }}
-                >
-                  {detectedIp}
-                </motion.p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  {wifiStep === 'DETECTING' ? 'Detecting IP address...' : 'Detected IP address'}
+                </motion.h3>
+                {wifiStep === 'DETECTED' && (
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontWeight: '700', fontSize: '1.4rem', letterSpacing: '2px' }}
+                  >
+                    {detectedIp}
+                  </motion.p>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div style={{ marginBottom: '60px' }}>
-        <h1 style={{ fontWeight: '800', fontSize: '4.5rem', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '16px' }}>LIVE ROOMS</h1>
-        <p style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5, letterSpacing: '1px' }}>// SELECT YOUR ENTRY POINT INTO THE VOID</p>
-      </div>
+        <div style={{ marginBottom: '60px' }}>
+          <h1 style={{ fontWeight: '800', fontSize: '4.5rem', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '16px' }}>LIVE ROOMS</h1>
+          <p style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5, letterSpacing: '1px' }}>// SELECT YOUR ENTRY POINT INTO THE VOID</p>
+        </div>
 
-      <AnimatePresence>
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20, height: 0 }} 
-            animate={{ opacity: 1, y: 0, height: 'auto' }} 
-            exit={{ opacity: 0, y: -20, height: 0 }}
-            style={{ marginBottom: '32px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', padding: '16px', background: 'rgba(233, 30, 99, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: '12px', fontSize: '0.9rem' }}>
-              <AlertCircle size={20} />
-              {error}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20, height: 0 }} 
+              animate={{ opacity: 1, y: 0, height: 'auto' }} 
+              exit={{ opacity: 0, y: -20, height: 0 }}
+              style={{ marginBottom: '32px' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', padding: '16px', background: 'var(--glass)', border: '1px solid var(--accent-primary)', borderRadius: '12px', fontSize: '0.9rem' }}>
+                <AlertCircle size={20} />
+                {error}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '24px',
-        marginBottom: '100px'
-      }}>
-        {rooms.map(room => (
-          <div key={room.id} style={{ height: '100%' }}>
-            <RoomCard {...room} isLoading={loadingRoom === room.id} />
-          </div>
-        ))}
-      </div>
-
-      {/* Trending Section */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '24px', 
-        marginBottom: '40px' 
-      }}>
-        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(270deg, rgba(233, 30, 99, 0.4) 0%, rgba(233, 30, 99, 0) 100%)' }} />
-        <h2 style={{ 
-          fontFamily: 'var(--font-main)', 
-          fontWeight: '800', 
-          fontSize: '2.5rem', 
-          letterSpacing: '2px', 
-          margin: 0,
-          whiteSpace: 'nowrap'
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+          gap: '24px',
+          marginBottom: '100px'
         }}>
-          WHAT'S <span style={{ color: 'var(--accent-primary)' }}>TRENDING</span>
-        </h2>
-        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(233, 30, 99, 0.4) 0%, rgba(233, 30, 99, 0) 100%)' }} />
-      </div>
+          {rooms.map(room => (
+            <div key={room.id} style={{ height: '100%' }}>
+              <RoomCard {...room} isLoading={loadingRoom === room.id} />
+            </div>
+          ))}
+        </div>
 
-      <div style={{ 
-        display: 'flex', 
-        gap: '24px', 
-        overflowX: 'auto', 
-        paddingBottom: '24px',
-        msOverflowStyle: 'none',
-        scrollbarWidth: 'none',
-        WebkitOverflowScrolling: 'touch'
-      }} className="hide-scrollbar">
-        {trendingItems.map((item, i) => (
-          <TrendingCard key={i} {...item} />
-        ))}
-      </div>
+        {/* Trending Section */}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '24px', 
+          marginBottom: '40px' 
+        }}>
+          <div style={{ flex: 1, height: '1px', background: `linear-gradient(270deg, var(--glass-border) 0%, rgba(255,255,255,0) 100%)` }} />
+          <h2 style={{ 
+            fontFamily: 'var(--font-main)', 
+            fontWeight: '800', 
+            fontSize: '2.5rem', 
+            letterSpacing: '2px', 
+            margin: 0,
+            whiteSpace: 'nowrap'
+          }}>
+            WHAT'S <span style={{ color: 'var(--accent-primary)' }}>TRENDING</span>
+          </h2>
+          <div style={{ flex: 1, height: '1px', background: `linear-gradient(90deg, var(--glass-border) 0%, rgba(255,255,255,0) 100%)` }} />
+        </div>
 
-      <PrivateRoomModal 
-        isOpen={isPrivateModalOpen} 
-        onClose={() => setPrivateModalOpen(false)} 
-      />
+        <div style={{ 
+          display: 'flex', 
+          gap: '24px', 
+          overflowX: 'auto', 
+          paddingBottom: '40px',
+          msOverflowStyle: 'none',
+          scrollbarWidth: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }} className="hide-scrollbar">
+          {trendingItems.map((item, i) => (
+            <TrendingCard key={i} {...item} />
+          ))}
+        </div>
+
+        <PrivateRoomModal 
+          isOpen={isPrivateModalOpen} 
+          onClose={() => setPrivateModalOpen(false)} 
+        />
+      </div>
 
       <style>{`
         .spin { animation: spin 1s linear infinite; } 

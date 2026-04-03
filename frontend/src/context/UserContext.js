@@ -120,6 +120,13 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const addClaimedItem = (item) => {
+    setUser(prev => ({ 
+      ...prev, 
+      claimedItems: [...(prev.claimedItems || []), item] 
+    }));
+  };
+
   return (
     <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser, deleteAccount }}>
       {children}

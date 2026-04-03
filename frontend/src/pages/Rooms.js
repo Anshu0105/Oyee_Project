@@ -53,6 +53,27 @@ const RoomCard = ({ icon: Icon, title, desc, badge, badgeColor = 'rgba(255,255,2
   </div>
 );
 
+const TrendingCard = ({ category, icon: Icon, title, stats, source }) => (
+  <div className="glass" style={{
+    padding: '24px',
+    background: 'rgba(255, 255, 255, 0.01)',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '16px',
+    width: '300px',
+    flexShrink: 0
+  }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontSize: '0.65rem', fontWeight: '800', fontFamily: 'var(--font-mono)' }}>
+        <Icon size={12} />
+        {category}
+      </div>
+      <div style={{ fontSize: '0.65rem', opacity: 0.4, fontFamily: 'var(--font-mono)' }}>{stats}</div>
+    </div>
+    <h4 style={{ fontWeight: '700', fontSize: '1.2rem', color: '#fff', marginBottom: '16px', lineHeight: 1.3 }}>{title}</h4>
+    <div style={{ fontSize: '0.7rem', opacity: 0.3, fontWeight: '500' }}>{source}</div>
+  </div>
+);
+
 const Rooms = () => {
   const navigate = useNavigate();
   const { token } = useUser();
@@ -143,6 +164,14 @@ const Rooms = () => {
     { id: 'dm', title: 'DM', icon: MessageSquare, desc: 'Private one-on-one connections. Zero logs, 100% anonymous.', badge: 'PRIVATE CHAT', badgeColor: 'rgba(233, 30, 99, 0.15)', onClick: () => navigate('/messages') },
   ];
 
+  const trendingItems = [
+    { category: 'TRENDING', icon: Wifi, title: 'Iran-Israel Conflict Escalates', stats: '45k tweets', source: 'Trending on Twitter' },
+    { category: 'TECH', icon: GraduationCap, title: 'Apple Vision Pro 2 Announced', stats: '5k post', source: 'Trending on Tech Forums' },
+    { category: 'MEMES', icon: AlertCircle, title: 'KitKat Truck Robbery Goes Viral', stats: '12k upvotes', source: 'Trending on Reddit' },
+    { category: 'PARTIES', icon: MapPin, title: 'Coachella 2026 Lineup Leaked', stats: '230k share', source: 'Trending on Instagram' },
+    { category: 'GOSSIP', icon: MessageSquare, title: 'New Void Star Discovered', stats: 'Just now', source: 'Trending on OYEEE' },
+  ];
+
   return (
     <div style={{ padding: '40px 24px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
       <div style={{ marginBottom: '60px' }}>
@@ -169,7 +198,8 @@ const Rooms = () => {
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(4, 1fr)', 
-        gap: '24px' 
+        gap: '24px',
+        marginBottom: '100px'
       }}>
         {rooms.map(room => (
           <div key={room.id} style={{ height: '100%' }}>
@@ -177,7 +207,47 @@ const Rooms = () => {
           </div>
         ))}
       </div>
-      <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+
+      {/* Trending Section */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '24px', 
+        marginBottom: '40px' 
+      }}>
+        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(270deg, rgba(233, 30, 99, 0.4) 0%, rgba(233, 30, 99, 0) 100%)' }} />
+        <h2 style={{ 
+          fontFamily: 'var(--font-main)', 
+          fontWeight: '800', 
+          fontSize: '2.5rem', 
+          letterSpacing: '2px', 
+          margin: 0,
+          whiteSpace: 'nowrap'
+        }}>
+          WHAT'S <span style={{ color: 'var(--accent-primary)' }}>TRENDING</span>
+        </h2>
+        <div style={{ flex: 1, height: '1px', background: 'linear-gradient(90deg, rgba(233, 30, 99, 0.4) 0%, rgba(233, 30, 99, 0) 100%)' }} />
+      </div>
+
+      <div style={{ 
+        display: 'flex', 
+        gap: '24px', 
+        overflowX: 'auto', 
+        paddingBottom: '24px',
+        msOverflowStyle: 'none',
+        scrollbarWidth: 'none',
+        WebkitOverflowScrolling: 'touch'
+      }} className="hide-scrollbar">
+        {trendingItems.map((item, i) => (
+          <TrendingCard key={i} {...item} />
+        ))}
+      </div>
+
+      <style>{`
+        .spin { animation: spin 1s linear infinite; } 
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   );
 };

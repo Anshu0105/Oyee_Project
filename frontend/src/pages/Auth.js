@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
 
 const validateEmail = (email) => email.endsWith('@cgu-odisha.ac.in');
 const validatePassword = (pw) => ({

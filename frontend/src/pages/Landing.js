@@ -220,7 +220,7 @@ const Landing = () => {
       </section>
 
       {/* SECTION 2: FEATURES */}
-      <section ref={featuresRef} style={{ padding: '160px 24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <section ref={featuresRef} style={{ padding: '160px 24px', maxWidth: '1000px', margin: '0 auto' }}>
         <SlideUp>
           <div style={{ textAlign: 'center', marginBottom: '80px' }}>
             <p style={{ color: '#FF0055', fontWeight: '800', fontSize: '0.85rem', letterSpacing: '4px', marginBottom: '16px' }}>WHAT YOU GET</p>
@@ -228,7 +228,7 @@ const Landing = () => {
           </div>
         </SlideUp>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '32px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '32px' }}>
           <FeatureItem icon={Shield} title="Anonymous Chat Rooms" desc="Connect with your campus completely anonymously. No real names, no traces." delay={0.1} />
           <FeatureItem icon={Zap} title="Aura System" desc="Earn points with every interaction. Unlock rewards, climb the leaderboard." delay={0.2} />
           <FeatureItem icon={MapPin} title="Location-Based Rooms" desc="Find people physically nearby using GPS clustering — like magic." delay={0.3} />

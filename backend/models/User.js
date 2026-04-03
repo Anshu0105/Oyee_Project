@@ -41,6 +41,10 @@ const UserSchema = new mongoose.Schema({
   theme: { type: String, default: 'wine' },
   claimedItems: [{ type: String }],
 
+  // Moderation
+  violationCount: { type: Number, default: 0 },
+  isReported: { type: Boolean, default: false },
+
   createdAt: { type: Date, default: Date.now }
 });
 

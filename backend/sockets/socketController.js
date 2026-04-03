@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const Message = require('../models/Message');
 const DirectMessage = require('../models/DirectMessage');
+const moderation = require('../utils/contentDetector');
 
 module.exports = (io) => {
   io.on('connection', (socket) => {
@@ -27,13 +28,57 @@ module.exports = (io) => {
     // Segmented Public Room Communication (Moderated)
     socket.on('sendMessage', async (messageData) => {
       const roomId = messageData.roomId || 'global';
+      const isDM = roomId.startsWith('dm_'); // DM check if any mixed usage
+      
+      if (isDM) {
+          try {
+            const saved = await Message.create(messageData);
+            io.to(roomId).emit('receiveMessage', saved);
+          } catch(err) {}
+          return;
+      }
+
+      // Moderation Engine for Rooms
       try {
+        const moderationResult = await moderation.analyze(messageData.text);
+
+        if (moderationResult.blocked) {
+          // Track Violations
+          if (socket.userId) {
+            const user = await User.findByIdAndUpdate(socket.userId, { $inc: { violationCount: 1 } }, { new: true });
+            if (user.violationCount >= 3) {
+              await User.findByIdAndUpdate(socket.userId, { isReported: true });
+              socket.emit('moderationNotice', { 
+                  type: 'CRITICAL', 
+                  message: 'Your identity has been reported due to repeated rule violations.' 
+              });
+            } else {
+              socket.emit('moderationNotice', { 
+                  type: 'BLOCKED', 
+                  message: moderationResult.reason 
+              });
+            }
+          }
+          return; // Kill the message
+        }
+
+        if (moderationResult.flagged) {
+          messageData.flagged = true;
+          messageData.flagReason = moderationResult.reason;
+          messageData.flaggedAt = new Date();
+          socket.emit('moderationNotice', { type: 'WARNING', message: moderationResult.reason });
+        }
+
         const saved = await Message.create(messageData);
-        // Only emit to users connected to this exact WiFi/Domain/GPS hash
         io.to(roomId).emit('receiveMessage', saved);
+        
+        // Notify admins if flagged
+        if (messageData.flagged) {
+            io.emit('adminAlert', { type: 'FLAGGED_MESSAGE', roomId });
+        }
       } catch (err) {
-        console.error('Socket partitioned message error:', err);
-        socket.emit('receiveMessage', { ...messageData, error: 'Database integrity failed' });
+        console.error('Socket moderation error:', err);
+        socket.emit('receiveMessage', { ...messageData, error: 'Moderation engine timeout' });
       }
     });
 

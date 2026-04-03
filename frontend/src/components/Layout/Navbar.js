@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, MessageSquare, LayoutGrid, Trophy, ShoppingBag, ChevronDown, Flame, Settings, Gift, Palette, LogOut, Check, X } from 'lucide-react';
+import { User, MessageSquare, LayoutGrid, Trophy, ShoppingBag, ChevronDown, Flame, Settings, Gift, Palette, LogOut, Check, X, Bot } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+import BotPanel from '../Bot/BotPanel';
 
 const LogoutModal = ({ onConfirm, onCancel }) => (
   <motion.div 
@@ -97,12 +99,16 @@ const NavItem = ({ icon: Icon, label, children, to }) => {
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toggleTheme } = useTheme();
   const { user, logoutUser } = useUser();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showBotPanel, setShowBotPanel] = useState(false);
   const [aestheticOn, setAestheticOn] = useState(true);
   const dropdownRef = useRef(null);
+
+  const currentRoomId = location.pathname.startsWith('/room/') ? location.pathname.split('/room/')[1] : null;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -147,6 +153,20 @@ const Navbar = () => {
         </div>
 
         <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          
+          <motion.div 
+            animate={{ scale: [1, 1.1, 1] }} 
+            transition={{ repeat: Infinity, duration: 2 }}
+            onClick={() => setShowBotPanel(true)}
+            style={{
+                width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,0,85,0.1)',
+                border: '1px solid var(--accent-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: 'var(--accent-primary)', cursor: 'pointer', boxShadow: '0 0 15px rgba(255,0,85,0.2)'
+            }}
+          >
+            <Bot size={22} />
+          </motion.div>
+
           <div className="streak-counter" title={`${user.streak || 7} day streak`} style={{
             display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
             background: 'rgba(255, 152, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 152, 0, 0.2)',
@@ -264,6 +284,8 @@ const Navbar = () => {
           <LogoutModal onConfirm={logoutUser} onCancel={() => setShowLogoutConfirm(false)} />
         )}
       </AnimatePresence>
+
+      <BotPanel isOpen={showBotPanel} onClose={() => setShowBotPanel(false)} currentRoomId={currentRoomId} />
     </>
   );
 };

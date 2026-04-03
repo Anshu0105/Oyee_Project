@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
+const Message = require('../models/Message');
+const aiHelper = require('../utils/aiHelper');
 const crypto = require('crypto');
 
 // University Room Validation Endpoint
@@ -75,5 +77,66 @@ router.post('/wifi/discover', verifyToken, async (req, res) => {
     res.json({ success: true, roomId: `wifi_${hash}` });
   } catch(err) { res.status(500).json({ error: err.message }); }
 });
+
+// AI Chat Unread Summary (max 4 bullets)
+router.get('/summarize/:roomId', verifyToken, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const { limit = 20 } = req.query;
+  
+      // Get last unread/recent messages from room (anonymized)
+      const messages = await Message.find({ roomId, flagged: false })
+          .sort({ timestamp: -1 })
+          .limit(parseInt(limit))
+          .select('user text');
+      
+      if (messages.length < 5) return res.json({ summary: "The void is quiet. No recent conversations to summarize." });
+  
+      const summary = await aiHelper.summarizeMessages(messages.reverse());
+      res.json({ summary, count: messages.length });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+// Nearby AI Activity Analysis (15km radius)
+router.post('/nearby/summary', verifyToken, async (req, res) => {
+    try {
+      const { lat, lng } = req.body;
+      const radiusKm = 15; // As per requirement
+      const radiusInRadians = radiusKm / 6371;
+  
+      // Find online users within 15km
+      const nearbyUsers = await User.find({
+        isOnline: true,
+        location: {
+          $geoWithin: { $centerSphere: [[lng, lat], radiusInRadians] }
+        }
+      });
+  
+      // Extract unique cluster IDs for active nearby rooms
+      const clusterIds = [...new Set(nearbyUsers.map(u => `nearby_${Math.floor(u.location.coordinates[1] * 10)}_${Math.floor(u.location.coordinates[0] * 10)}`))];
+  
+      // Get last 20 messages for each affected room cluster
+      const roomsData = await Promise.all(clusterIds.slice(0, 3).map(async (roomId) => {
+          const messages = await Message.find({ roomId, flagged: false })
+              .sort({ timestamp: -1 })
+              .limit(20)
+              .select('text');
+          return { name: roomId, messages: messages.map(m => m.text) };
+      }));
+  
+      const filteredRooms = roomsData.filter(r => r.messages.length > 0);
+      
+      if (filteredRooms.length === 0) {
+          return res.json({ summary: "No recent activity discovered in your immediate void frequency." });
+      }
+  
+      const summary = await aiHelper.summarizeNearbyRooms(filteredRooms);
+      res.json({ summary, radius: radiusKm, activeClusters: filteredRooms.length });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 
 module.exports = router;

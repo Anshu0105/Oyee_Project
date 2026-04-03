@@ -28,7 +28,9 @@ export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(DEFAULT_USER);
   const [socket, setSocket] = useState(null);
 
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+  const BACKEND_URL = window.location.hostname === 'localhost' 
+    ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002')
+    : 'https://oyeee-backend.onrender.com';
 
   useEffect(() => {
     if (token) {

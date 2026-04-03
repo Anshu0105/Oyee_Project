@@ -8,17 +8,29 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
-  cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
-    methods: ["GET", "POST"]
-  }
-});
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://oyeee-frontend.pages.dev',
+  'https://oyeee.chat'
+];
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.pages.dev')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
-}));
+};
+
+app.use(cors(corsOptions));
+
+const io = socketIo(server, {
+  cors: corsOptions
+});
 app.use(express.json());
 
 const messagesRoute = require('./routes/messages');

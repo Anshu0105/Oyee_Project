@@ -15,7 +15,9 @@ const NearbyMap = ({ token, onClose, onJoinRoom }) => {
   const [zoom, setZoom] = useState(13);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [rooms, setRooms] = useState([]);
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+  const BACKEND_URL = window.location.hostname === 'localhost' 
+    ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002')
+    : 'https://oyeee-backend.onrender.com';
 
   useEffect(() => {
     if (!navigator.geolocation) {

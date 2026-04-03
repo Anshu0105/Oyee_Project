@@ -3,7 +3,9 @@ import { useUser } from '../context/UserContext';
 import { motion } from 'framer-motion';
 import UserProfileModal from '../components/UI/UserProfileModal';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+const BACKEND_URL = window.location.hostname === 'localhost' 
+  ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000')
+  : 'https://oyeee-backend.onrender.com';
 
 const getRankColor = (rank, isCurrentUser) => {
   if (isCurrentUser) return 'var(--accent-primary)'; 

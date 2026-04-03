@@ -4,7 +4,9 @@ import { useTheme } from '../context/ThemeContext';
 import { Settings, Shield, Palette, Zap, Users, Megaphone, Smile, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+const BACKEND_URL = window.location.hostname === 'localhost' 
+  ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000')
+  : 'https://oyeee-backend.onrender.com';
 
 const avatars = ['👤', '👽', '🤖', '👻', '🐱', '🎭'];
 const themePalettes = [

@@ -5,8 +5,7 @@ const MessageSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
   user: String,
   senderId: String,
-  roomId: String,
-  time: String
+  roomId: String
 });
 
 module.exports = mongoose.model('Message', MessageSchema);

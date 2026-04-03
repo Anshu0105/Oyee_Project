@@ -2,32 +2,29 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { safeFetch } from '../config';
-import { Lock, Mail, Key, Shield, AlertTriangle, ArrowRight, Loader2, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, Loader2, Apple } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Auth = () => {
-  const [activeTab, setActiveTab] = useState('LOGIN');
+  const [activeTab, setActiveTab] = useState('SIGNUP'); // SIGNUP or LOGIN
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // OTP Flow
   const [showOtp, setShowOtp] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(0);
   const otpRefs = useRef([...Array(6)].map(() => React.createRef()));
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
-  
+
   const navigate = useNavigate();
   const { loginUser } = useUser();
 
-  const hasMinLength = password.length >= 6;
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  const hasNumber = /\d/.test(password);
-
   useEffect(() => {
     let interval;
-    if (timer > 0) {
-      interval = setInterval(() => setTimer(t => t - 1), 1000);
-    }
+    if (timer > 0) interval = setInterval(() => setTimer(t => t - 1), 1000);
     return () => clearInterval(interval);
   }, [timer]);
 
@@ -36,33 +33,25 @@ const Auth = () => {
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
-    if (value !== '' && index < 5) {
-      otpRefs.current[index + 1].current.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1].current.focus();
-    }
+    if (value !== '' && index < 5) otpRefs.current[index + 1].current.focus();
   };
 
   const validateSignup = () => {
-    setError('');
     if (!email.toLowerCase().endsWith('@cgu-odisha.ac.in')) {
       setError('Please use your university email (@cgu-odisha.ac.in)');
       return false;
     }
-    if (!hasMinLength || !hasSpecialChar || !hasNumber) {
-      setError('Password does not meet minimum requirements');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
       return false;
     }
     return true;
   };
 
-  const handleSendOtp = async () => {
+  const handleGetOtp = async () => {
     if (!validateSignup()) return;
     setIsLoading(true);
+    setError('');
     try {
       await safeFetch('/api/auth/send-otp', {
         method: 'POST',
@@ -71,39 +60,34 @@ const Auth = () => {
       });
       setShowOtp(true);
       setTimer(30);
-      setError('');
     } catch(err) {
-      setError(err.message || 'Failed to send OTP');
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleVerifyOtp = async () => {
-    const fullOtp = otp.join('');
-    if (fullOtp.length < 6) return setError('Invalid OTP');
     setIsLoading(true);
     try {
       const data = await safeFetch('/api/auth/verify-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp: fullOtp })
+        body: JSON.stringify({ email, otp: otp.join('') })
       });
       loginUser({ token: data.token, user: data.user });
       navigate('/rooms');
     } catch(err) {
-      setError(err.message || 'Verification failed');
-      setOtp(['', '', '', '', '', '']);
-      otpRefs.current[0].current.focus();
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleLogin = async () => {
-    setError('');
     if (!email || !password) return setError('Please fill all fields');
     setIsLoading(true);
+    setError('');
     try {
       const data = await safeFetch('/api/auth/login', {
         method: 'POST',
@@ -113,103 +97,87 @@ const Auth = () => {
       loginUser({ token: data.token, user: data.user });
       navigate('/rooms');
     } catch(err) {
-      setError(err.message || 'Login failed');
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const TabButton = ({ type, active, label, sublabel, onClick }) => (
+    <div 
+      onClick={onClick}
+      style={{
+        flex: 1, textAlign: 'center', cursor: 'pointer', padding: '16px 8px',
+        background: active ? '#FF0055' : 'rgba(255,255,255,0.02)',
+        borderRadius: '12px', transition: 'all 0.3s',
+        boxShadow: active ? '0 0 20px rgba(255, 0, 85, 0.4)' : 'none',
+        zIndex: active ? 2 : 1
+      }}
+    >
+      <div style={{ fontWeight: '800', fontSize: '1rem', color: active ? '#fff' : 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>{label}</div>
+      <div style={{ fontSize: '0.7rem', color: active ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.2)', marginTop: '4px' }}>{sublabel}</div>
+    </div>
+  );
+
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: '#000000', color: '#ffffff', padding: '24px', fontFamily: 'var(--font-main)'
+      background: '#0a0a0a', color: '#fff', padding: '24px'
     }}>
-      {/* Background Glow */}
-      <div style={{
-        position: 'absolute', width: '400px', height: '400px', background: '#FF0055',
-        filter: 'blur(150px)', opacity: 0.08, pointerEvents: 'none'
-      }} />
-
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{
-          width: '100%', maxWidth: '440px', background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '24px',
-          overflow: 'hidden', backdropFilter: 'blur(20px)', position: 'relative', zIndex: 1
-        }}
-      >
-        <div style={{ display: 'flex', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <button 
-            onClick={() => { setActiveTab('LOGIN'); setShowOtp(false); setError(''); }}
-            style={{
-              flex: 1, padding: '24px', background: 'transparent', border: 'none',
-              fontWeight: '800', fontSize: '1rem', letterSpacing: '1px',
-              color: activeTab === 'LOGIN' ? '#FF0055' : 'rgba(255,255,255,0.3)',
-              borderBottom: activeTab === 'LOGIN' ? '2px solid #FF0055' : '2px solid transparent',
-              cursor: 'pointer', transition: 'all 0.3s'
-            }}
-          >
-            LOGIN
-          </button>
-          <button 
+      <div style={{ width: '100%', maxWidth: '440px' }}>
+        
+        {/* TAB SELECTOR */}
+        <div style={{ 
+          display: 'flex', gap: '12px', background: 'rgba(255,255,255,0.03)', 
+          padding: '8px', borderRadius: '16px', marginBottom: '32px', border: '1px solid rgba(255,255,255,0.05)' 
+        }}>
+          <TabButton 
+            active={activeTab === 'SIGNUP'} 
+            label="SIGN UP" 
+            sublabel="For first-time users"
             onClick={() => { setActiveTab('SIGNUP'); setShowOtp(false); setError(''); }}
-            style={{
-              flex: 1, padding: '24px', background: 'transparent', border: 'none',
-              fontWeight: '800', fontSize: '1rem', letterSpacing: '1px',
-              color: activeTab === 'SIGNUP' ? '#FF0055' : 'rgba(255,255,255,0.3)',
-              borderBottom: activeTab === 'SIGNUP' ? '2px solid #FF0055' : '2px solid transparent',
-              cursor: 'pointer', transition: 'all 0.3s'
-            }}
-          >
-            SIGN UP
-          </button>
+          />
+          <TabButton 
+            active={activeTab === 'LOGIN'} 
+            label="LOGIN" 
+            sublabel="For existing users"
+            onClick={() => { setActiveTab('LOGIN'); setShowOtp(false); setError(''); }}
+          />
         </div>
 
-        <div style={{ padding: '40px' }}>
+        {/* AUTH CARD */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)',
+          borderRadius: '24px', padding: '40px', position: 'relative'
+        }}>
           <AnimatePresence mode="wait">
             {error && (
               <motion.div 
-                initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
                 style={{ 
                   background: 'rgba(255, 0, 85, 0.1)', border: '1px solid rgba(255, 0, 85, 0.2)', color: '#FF0055',
-                  padding: '14px', borderRadius: '12px', marginBottom: '24px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '10px'
+                  padding: '14px', borderRadius: '12px', marginBottom: '24px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '10px'
                 }}
               >
-                <AlertTriangle size={16} /> {error}
+                <AlertCircle size={18} /> {error}
               </motion.div>
             )}
           </AnimatePresence>
 
           {!showOtp ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <motion.div 
+              key={activeTab} 
+              initial={{ opacity: 0, x: activeTab === 'SIGNUP' ? -10 : 10 }}
+              animate={{ opacity: 1, x: 0 }}
+            >
+              {/* EMAIL FIELD */}
               <div style={{ marginBottom: '24px' }}>
-                <label style={{ display: 'block', fontWeight: '600', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '10px', letterSpacing: '1px' }}>UNIVERSITY EMAIL</label>
+                <label style={{ display: 'block', fontWeight: '800', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: '10px', letterSpacing: '1px' }}>UNIVERSITY EMAIL</label>
                 <div style={{ position: 'relative' }}>
                   <Mail size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                   <input 
-                    type="email" 
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    type="email" value={email} onChange={e => setEmail(e.target.value)}
                     placeholder="student@cgu-odisha.ac.in"
-                    style={{
-                      width: '100%', padding: '16px 16px 16px 48px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                      borderRadius: '12px', color: '#fff', fontSize: '1rem', outline: 'none', transition: 'all 0.3s'
-                    }}
-                    className="auth-input"
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: activeTab === 'SIGNUP' ? '12px' : '32px' }}>
-                <label style={{ display: 'block', fontWeight: '600', fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '10px', letterSpacing: '1px' }}>PASSWORD</label>
-                <div style={{ position: 'relative' }}>
-                  <Key size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                  <input 
-                    type="password" 
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
                     style={{
                       width: '100%', padding: '16px 16px 16px 48px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
                       borderRadius: '12px', color: '#fff', fontSize: '1rem', outline: 'none'
@@ -219,99 +187,121 @@ const Auth = () => {
                 </div>
               </div>
 
-              {activeTab === 'SIGNUP' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '32px', fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)' }}>
-                  <div style={{ color: hasMinLength ? '#48bb78' : 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: hasMinLength ? '#48bb78' : 'currentColor' }} />
-                    Minimum 6 characters
-                  </div>
-                  <div style={{ color: hasSpecialChar ? '#48bb78' : 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: hasSpecialChar ? '#48bb78' : 'currentColor' }} />
-                    One special character
-                  </div>
-                  <div style={{ color: hasNumber ? '#48bb78' : 'inherit', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: hasNumber ? '#48bb78' : 'currentColor' }} />
-                    One numerical digit
+              {/* PASSWORD FIELD */}
+              <div style={{ marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <label style={{ fontWeight: '800', fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>PASSWORD</label>
+                  {activeTab === 'LOGIN' && (
+                    <span style={{ fontSize: '0.75rem', color: '#FF0055', fontWeight: '700', cursor: 'pointer' }}>Forgot Password?</span>
+                  )}
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                  <input 
+                    type={showPassword ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+                    placeholder={activeTab === 'SIGNUP' ? "Min 6 chars, 1 special, 1 number" : "Your password"}
+                    style={{
+                      width: '100%', padding: '16px 48px 16px 48px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '12px', color: '#fff', fontSize: '1rem', outline: 'none'
+                    }}
+                    className="auth-input"
+                  />
+                  <div 
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', color: 'rgba(255,255,255,0.4)' }}
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </div>
                 </div>
-              )}
+              </div>
 
+              {/* ACTION BUTTON */}
               <button 
-                onClick={activeTab === 'SIGNUP' ? handleSendOtp : handleLogin}
+                onClick={activeTab === 'SIGNUP' ? handleGetOtp : handleLogin}
                 disabled={isLoading}
                 style={{
-                  width: '100%', padding: '18px', background: '#FF0055', color: '#fff',
-                  border: 'none', borderRadius: '14px', fontWeight: '800', fontSize: '1.1rem',
+                  width: '100%', padding: '18px', 
+                  background: activeTab === 'LOGIN' ? '#FF0055' : 'rgba(255, 0, 85, 0.1)', 
+                  color: activeTab === 'LOGIN' ? '#fff' : '#FF0055',
+                  border: activeTab === 'LOGIN' ? 'none' : '1px solid rgba(255, 0, 85, 0.2)', 
+                  borderRadius: '14px', fontWeight: '800', fontSize: '1.1rem',
                   letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                  boxShadow: '0 0 30px rgba(255, 0, 85, 0.2)', transition: 'all 0.3s'
+                  boxShadow: activeTab === 'LOGIN' ? '0 0 30px rgba(255, 0, 85, 0.3)' : 'none', transition: 'all 0.3s'
                 }}
                 className="hover-lift"
               >
-                {isLoading ? <Loader2 size={20} className="spin" /> : <Shield size={20} />}
-                {activeTab === 'SIGNUP' ? 'SECURE ACCESS' : 'ENTER THE VOID'}
+                {isLoading ? <Loader2 size={20} className="spin" /> : (activeTab === 'SIGNUP' ? 'Get OTP' : 'ENTER THE VOID')}
+                <ArrowRight size={20} />
               </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', margin: '32px 0' }}>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+                <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.05)' }} />
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <button style={socialButtonStyle} className="hover-lift">
+                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#4285F4' }} />
+                  Continue with Google
+                </button>
+                <button style={socialButtonStyle} className="hover-lift">
+                  <Apple size={18} fill="currentColor" />
+                  Continue with Apple
+                </button>
+              </div>
             </motion.div>
           ) : (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
               <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-                <div style={{ width: '56px', height: '56px', background: 'rgba(255, 0, 85, 0.1)', borderRadius: '16px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#FF0055', marginBottom: '20px' }}>
-                  <Lock size={28} />
-                </div>
-                <h3 style={{ fontWeight: '800', fontSize: '1.75rem', letterSpacing: '-0.5px', marginBottom: '8px' }}>Security Check</h3>
-                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)' }}>Sent code to your university email.</p>
+                <h3 style={{ fontWeight: '800', fontSize: '1.75rem', letterSpacing: '-0.5px' }}>Check your email</h3>
+                <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>We sent an OTP to {email}</p>
               </div>
-
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '32px' }}>
                 {otp.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={otpRefs.current[index]}
-                    type="text"
-                    maxLength={1}
-                    value={digit}
+                  <input key={index} ref={otpRefs.current[index]} type="text" maxLength={1} value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
-                    onKeyDown={(e) => handleOtpKeyDown(index, e)}
                     style={{
                       width: '48px', height: '60px', textAlign: 'center', fontSize: '1.5rem',
                       fontWeight: '700', background: 'rgba(255,255,255,0.03)',
                       border: `1px solid ${digit ? '#FF0055' : 'rgba(255,255,255,0.08)'}`,
-                      borderRadius: '12px', color: '#fff', outline: 'none', transition: 'all 0.2s'
+                      borderRadius: '12px', color: '#fff', outline: 'none'
                     }}
                   />
                 ))}
               </div>
-
               <button 
-                onClick={handleVerifyOtp}
-                disabled={isLoading}
+                onClick={handleVerifyOtp} disabled={isLoading}
                 style={{
-                  width: '100%', padding: '18px', background: '#ffffff', color: '#000',
-                  border: 'none', borderRadius: '14px', fontWeight: '800', fontSize: '1.1rem',
-                  letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                  marginBottom: '20px'
+                  width: '100%', padding: '18px', background: '#fff', color: '#000',
+                  border: 'none', borderRadius: '14px', fontWeight: '800', fontSize: '1.1rem', cursor: 'pointer'
                 }}
               >
-                {isLoading ? <Loader2 size={20} className="spin" /> : <Sparkles size={20} />}
-                VALIDATE
+                {isLoading ? <Loader2 size={20} className="spin" /> : 'VALIDATE'}
               </button>
-
-              <div style={{ textAlign: 'center' }}>
-                <button 
-                  onClick={() => timer === 0 && handleSendOtp()}
-                  disabled={timer > 0 || isLoading}
-                  style={{
-                    background: 'transparent', border: 'none', fontWeight: '700', fontSize: '0.8rem',
-                    color: timer === 0 ? '#FF0055' : 'rgba(255,255,255,0.2)',
-                    cursor: timer === 0 ? 'pointer' : 'not-allowed', letterSpacing: '1px'
-                  }}
-                >
-                  {timer > 0 ? `RESEND IN ${timer}S` : 'RESEND CODE'}
-                </button>
+              <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                 <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
+                   {timer > 0 ? `Resend code in ${timer}s` : <span onClick={handleGetOtp} style={{ color: '#FF0055', cursor: 'pointer' }}>Resend Code</span>}
+                 </p>
               </div>
             </motion.div>
           )}
+
+          <div style={{ marginTop: '40px', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', lineHeight: 1.6 }}>
+              No phone numbers · No real names · No links<br />
+              <strong style={{ color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>OYEEE is zero-identity by design.</strong>
+            </p>
+          </div>
+
         </div>
-      </motion.div>
+
+        {/* PAGE INDICATOR DOT */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
+          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#FF0055', boxShadow: '0 0 10px #FF0055' }} />
+        </div>
+
+      </div>
 
       <style>{`
         .spin { animation: spin 1s linear infinite; } 
@@ -327,6 +317,12 @@ const Auth = () => {
       `}</style>
     </div>
   );
+};
+
+const socialButtonStyle = {
+  width: '100%', padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: '14px', color: '#fff', fontWeight: '700', fontSize: '1rem', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: 'all 0.3s'
 };
 
 export default Auth;

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, UserPlus, Clock, Zap, Network, CalendarDays } from 'lucide-react';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002';
+const BACKEND_URL = window.location.hostname === 'localhost' 
+  ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002')
+  : 'https://oyeee-backend.onrender.com';
 
 const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => {
   const [profile, setProfile] = useState(null);

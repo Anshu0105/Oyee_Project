@@ -4,7 +4,9 @@ import { MessageSquare, ChevronLeft, Paperclip, Loader2, Search, Send, MapPin, U
 import { motion, AnimatePresence } from 'framer-motion';
 import MessageBubble from '../components/UI/MessageBubble';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
+const BACKEND_URL = window.location.hostname === 'localhost' 
+  ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000')
+  : 'https://oyeee-backend.onrender.com';
 
 const Message = () => {
   const { user, token, socket } = useUser();

@@ -89,7 +89,9 @@ const Rooms = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [loadingRoom, setLoadingRoom] = useState(null);
   
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
+  const BACKEND_URL = window.location.hostname === 'localhost' 
+    ? (process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002')
+    : 'https://oyeee-backend.onrender.com';
 
   const handleCardClick = (id) => {
     setSelectedRoomId(id);

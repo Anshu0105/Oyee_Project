@@ -2,31 +2,30 @@ const express = require('express');
 const ContentDetector = require('../utils/contentDetector');
 const router = express.Router();
 
-const detector = new ContentDetector();
+const detector = ContentDetector;
 
 /**
  * @route POST /api/detect
  * @desc Detect violations in a message
  * @access Public
  */
-router.post('/detect', (req, res) => {
+router.post('/detect', async (req, res) => {
   const { message } = req.body;
 
   if (!message) {
     return res.status(400).json({ isSafe: true, issues: [] });
   }
 
-  const result = detector.analyzeContent(message);
+  const result = await detector.analyze(message);
 
-  // LOGGING (Bonus Requirement)
-  if (!result.isSafe) {
-    console.warn(`[VIOLATION] [${new Date().toISOString()}] Flagged message: "${message}"`);
-    console.warn(`[REASON] ${result.issues.join(', ')}`);
+  // LOGGING (Migration)
+  if (result.blocked || result.flagged) {
+    console.warn(`[VIOLATION] [${new Date().toISOString()}] Flagged: "${message}" REASON: ${result.reason}`);
   }
 
   res.json({
-    isSafe: result.isSafe,
-    issues: result.issues
+    isSafe: !result.blocked,
+    issues: result.reason ? [result.reason] : []
   });
 });
 

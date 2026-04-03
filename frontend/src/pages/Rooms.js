@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2 } from 'lucide-react';
+import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { BACKEND_URL, safeFetch } from '../config';
+
 const RoomCard = ({ icon: Icon, title, desc, badge, badgeColor = 'rgba(255,255,255,0.05)', onClick, isLoading }) => (
   <div className="glass interactive hover-lift" onClick={onClick} style={{
     padding: '40px 30px',
@@ -79,15 +80,28 @@ const Rooms = () => {
   const { token } = useUser();
   const [error, setError] = useState('');
   const [loadingRoom, setLoadingRoom] = useState(null);
+  const [wifiStep, setWifiStep] = useState('IDLE'); // IDLE, DETECTING, DETECTED
+  const [detectedIp, setDetectedIp] = useState('');
 
   const handleWifiRoom = async () => {
     setError('');
     setLoadingRoom('wifi');
+    setWifiStep('DETECTING');
+    
     try {
+      // Step 1: Detect IP
       const ipRes = await fetch('https://api.ipify.org?format=json');
       const ipData = await ipRes.json();
       const publicIp = ipData.ip;
-
+      
+      setDetectedIp(publicIp);
+      await new Promise(r => setTimeout(r, 1500)); // Dramatic pause for detection
+      
+      // Step 2: Transition to success
+      setWifiStep('DETECTED');
+      await new Promise(r => setTimeout(r, 1500)); // Show IP to user
+      
+      // Step 3: Discover room
       const data = await safeFetch('/api/rooms/wifi/discover', {
         method: 'POST',
         headers: { 
@@ -100,6 +114,7 @@ const Rooms = () => {
       navigate(`/room/${data.roomId}`);
     } catch(err) {
       setError(err.message || 'Network detection failed. Please try again.');
+      setWifiStep('IDLE');
     } finally {
       setLoadingRoom(null);
     }
@@ -174,6 +189,64 @@ const Rooms = () => {
 
   return (
     <div style={{ padding: '40px 24px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
+      {/* WiFi Loading Overlay */}
+      <AnimatePresence>
+        {loadingRoom === 'wifi' && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            style={{
+              position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+              background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(15px)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              zIndex: 2000, flexDirection: 'column', gap: '32px'
+            }}
+          >
+            <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+              {wifiStep === 'DETECTING' ? (
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  style={{
+                    width: '100%', height: '100%', border: '4px solid rgba(255,0,85,0.1)',
+                    borderTop: '4px solid #FF0055', borderRadius: '50%'
+                  }}
+                />
+              ) : (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1, rotate: [0, -10, 0] }}
+                  style={{ color: '#48bb78', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+                >
+                  <CheckCircle size={100} />
+                </motion.div>
+              )}
+            </div>
+            
+            <div style={{ textAlign: 'center' }}>
+              <motion.h3 
+                key={wifiStep}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '8px', letterSpacing: '1px' }}
+              >
+                {wifiStep === 'DETECTING' ? 'Detecting IP address...' : 'Detected IP address'}
+              </motion.h3>
+              {wifiStep === 'DETECTED' && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={{ color: '#FF0055', fontFamily: 'var(--font-mono)', fontWeight: '700', fontSize: '1.4rem', letterSpacing: '2px' }}
+                >
+                  {detectedIp}
+                </motion.p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div style={{ marginBottom: '60px' }}>
         <h1 style={{ fontWeight: '800', fontSize: '4.5rem', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '16px' }}>LIVE ROOMS</h1>
         <p style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5, letterSpacing: '1px' }}>// SELECT YOUR ENTRY POINT INTO THE VOID</p>

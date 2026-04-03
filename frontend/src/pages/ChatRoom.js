@@ -8,6 +8,20 @@ import '../styles/moderation.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com';
 
+// Helper to get a friendly room name and description from the raw room ID
+const getRoomInfo = (roomId) => {
+  if (roomId.startsWith('wifi_')) {
+    return { name: 'WiFi Room', desc: 'connected via common IP gateway...' };
+  }
+  if (roomId.startsWith('uni_')) {
+    return { name: 'University Room', desc: 'verified institutional network...' };
+  }
+  if (roomId.startsWith('nearby_')) {
+    return { name: 'Nearby Room', desc: 'connected via GPS proximity...' };
+  }
+  return { name: roomId.toUpperCase(), desc: 'live anonymous chat...' };
+};
+
 const ChatRoom = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,6 +31,8 @@ const ChatRoom = () => {
   const [violationNotice, setViolationNotice] = useState(null);
   const scrollRef = useRef();
   const socketRef = useRef(null);
+
+  const roomInfo = getRoomInfo(id);
 
   useEffect(() => {
     if (!token) return;
@@ -46,7 +62,7 @@ const ChatRoom = () => {
     const analysis = await detectContent(input);
     
     if (!analysis.isSafe) {
-      setViolationNotice(analysis.issues[0] || 'your message has been restricted as you are violating messeaging rules');
+      setViolationNotice(analysis.issues[0] || 'your message has been restricted as you are violating messaging rules');
       
       // Auto-hide notice after 5 seconds
       setTimeout(() => {
@@ -56,11 +72,14 @@ const ChatRoom = () => {
       return; // Block the message
     }
 
+    const senderName = user.name || 'Anonymous';
+
     // Transmit to global room socket
     const messagePayload = {
       roomId: id,
       text: input,
-      user: user.name || 'Anonymous',
+      user: senderName,
+      senderId: user.id,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
     };
     
@@ -76,18 +95,23 @@ const ChatRoom = () => {
       flexDirection: 'column', 
       height: 'calc(100vh - 110px)', 
       margin: '0 12px 12px',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'hidden'
     }} className="glass">
       {/* Header */}
       <div style={{ 
-        padding: '16px 24px', 
+        padding: '14px 24px', 
         borderBottom: '1px solid var(--glass-border)', 
         display: 'flex', 
         alignItems: 'center',
-        background: 'rgba(0,0,0,0.1)'
+        background: 'rgba(0,0,0,0.1)',
+        flexShrink: 0
       }}>
         <button onClick={() => navigate('/rooms')} className="interactive" style={{ background: 'none', border: 'none', color: 'inherit', marginRight: '16px' }}><ArrowLeft /></button>
-        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px' }}>{id.toUpperCase()} ROOM</h2>
+        <div>
+          <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.5rem', letterSpacing: '2px', margin: 0 }}>{roomInfo.name.toUpperCase()}</h2>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', opacity: 0.5, margin: '2px 0 0', letterSpacing: '0.5px' }}>{roomInfo.desc}</p>
+        </div>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '12px', alignItems: 'center' }}>
           <span style={{ fontSize: '0.8rem', opacity: 0.6 }}>// Connected</span>
         </div>
@@ -103,16 +127,18 @@ const ChatRoom = () => {
           display: 'flex', 
           flexDirection: 'column', 
           gap: '16px',
-          background: 'var(--bg-chat)'
+          background: 'var(--bg-chat)',
+          minHeight: 0
         }}
       >
         {messages.map((msg, i) => {
-          const isMe = msg.user === user.name;
+          // Match by senderId (reliable) or fall back to name match
+          const isMe = (msg.senderId && msg.senderId === user.id) || msg.user === user.name;
           const timeFormat = msg.time || (msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
           
           return (
             <div key={msg._id || msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
-              <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', textAlign: isMe ? 'right' : 'left' }}>{isMe ? 'Anonymous (You)' : msg.user} • {timeFormat}</div>
+              <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', textAlign: isMe ? 'right' : 'left' }}>{isMe ? `${user.name} (You)` : msg.user} • {timeFormat}</div>
               <div className="glass" style={{ padding: '12px 16px', background: isMe ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)', color: 'white' }}>
                 {msg.text}
               </div>
@@ -145,7 +171,7 @@ const ChatRoom = () => {
 
       {/* Violation Notice (System Message) */}
       {violationNotice && (
-        <div style={{ padding: '0 24px' }}>
+        <div style={{ padding: '0 24px', flexShrink: 0 }}>
           <div className="detection-warning critical" style={{ 
             marginBottom: '12px',
             background: 'rgba(212, 58, 96, 0.15)',
@@ -167,7 +193,7 @@ const ChatRoom = () => {
       )}
 
       {/* Input */}
-      <div style={{ padding: '24px', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '12px' }}>
+      <div style={{ padding: '16px 24px', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '12px', flexShrink: 0 }}>
         <input 
           value={input}
           onChange={e => {

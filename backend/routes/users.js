@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const bcrypt = require('bcryptjs');
 const { verifyToken } = require('../middleware/auth');
 
 // Fetch top 100 users for the Public Leaderboard
@@ -165,16 +166,33 @@ router.put('/me/profile', verifyToken, async (req, res) => {
       { new: true }
     ).select('-password');
 
-    res.json(updatedUser);
+    res.json({
+        id: updatedUser._id,
+        username: updatedUser.username,
+        auraName: updatedUser.auraName,
+        auraPoints: updatedUser.aura,
+        avatarEmoji: updatedUser.avatarEmoji,
+        auraColor: updatedUser.auraColor,
+        theme: updatedUser.theme,
+        claimedItems: updatedUser.claimedItems
+    });
   } catch(err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// Delete user identity and clean up cross-links
-router.delete('/me', verifyToken, async (req, res) => {
+// Delete user identity and clean up cross-links (requires password)
+router.delete('/delete', verifyToken, async (req, res) => {
   try {
+    const { password } = req.body;
     const userId = req.user.id;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: 'Identity not found' });
+
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: 'Invalid password. Clearance denied.' });
 
     // 1. Remove from all other users' social graphs
     await User.updateMany(

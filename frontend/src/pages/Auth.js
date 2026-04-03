@@ -257,6 +257,22 @@ const Auth = () => {
                 <h3 style={{ fontWeight: '800', fontSize: '1.75rem', letterSpacing: '-0.5px' }}>Check your email</h3>
                 <p style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.4)', marginTop: '8px' }}>We sent an OTP to {email}</p>
               </div>
+
+              {isLoading && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    style={{ 
+                        position: 'absolute', inset: 0, background: 'rgba(10,10,10,0.9)', 
+                        zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', 
+                        justifyContent: 'center', borderRadius: '24px', backdropFilter: 'blur(10px)'
+                    }}
+                  >
+                        <Loader2 size={40} className="spin" style={{ color: '#FF0055', marginBottom: '24px' }} />
+                        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2rem', letterSpacing: '2px' }}>Cooking your identity...</h2>
+                        <p style={{ fontSize: '0.8rem', opacity: 0.5, marginTop: '8px', fontFamily: 'var(--font-mono)' }}>GENERATING AURA PROFILE_</p>
+                  </motion.div>
+              )}
+
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '32px' }}>
                 {otp.map((digit, index) => (
                   <input key={index} ref={otpRefs.current[index]} type="text" maxLength={1} value={digit}
@@ -277,11 +293,11 @@ const Auth = () => {
                   border: 'none', borderRadius: '14px', fontWeight: '800', fontSize: '1.1rem', cursor: 'pointer'
                 }}
               >
-                {isLoading ? <Loader2 size={20} className="spin" /> : 'VALIDATE'}
+                VALIDATE
               </button>
               <div style={{ textAlign: 'center', marginTop: '20px' }}>
                  <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)' }}>
-                   {timer > 0 ? `Resend code in ${timer}s` : <span onClick={handleGetOtp} style={{ color: '#FF0055', cursor: 'pointer' }}>Resend Code</span>}
+                    {timer > 0 ? `Resend code in ${timer}s` : <span onClick={handleGetOtp} style={{ color: '#FF0055', cursor: 'pointer' }}>Resend Code</span>}
                  </p>
               </div>
             </motion.div>

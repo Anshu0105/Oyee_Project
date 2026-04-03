@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema({
     coordinates: { type: [Number], default: [0, 0] } // [longitude, latitude]
   },
   // DM Visual Profile
-  auraName: { type: String, default: 'Anonymous Wanderer', unique: true, sparse: true },
+  auraName: { type: String, required: true, unique: true },
   aura: { type: Number, default: 0, index: -1 },
   avatarEmoji: { type: String, default: '👤' },
   auraColor: { type: String, default: '#FFFFFF' },
@@ -26,8 +26,8 @@ const UserSchema = new mongoose.Schema({
   // Leaderboard Stats
   lastActive: { type: Date, default: Date.now },
   weeklyAuraGain: { type: Number, default: 0 },
-  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-  enemies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
+  enemies: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', default: [] }],
   
   // Interaction Logic
   auraVotes: {
@@ -39,7 +39,7 @@ const UserSchema = new mongoose.Schema({
 
   // Customization
   theme: { type: String, default: 'wine' },
-  claimedItems: [{ type: String }],
+  claimedItems: [{ type: String, default: [] }],
 
   // Moderation
   violationCount: { type: Number, default: 0 },

@@ -3,21 +3,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
 const nodemailer = require('nodemailer');
+const { generateAuraName } = require('../utils/nameGenerator');
 
-const adjectives = ['Crunchy', 'Spicy', 'Sweet', 'Salty', 'Zesty', 'Tangy', 'Savory', 'Crispy', 'Roasted', 'Fried'];
-const foods = ['Mango', 'Noodle', 'Taco', 'Burger', 'Pizza', 'Sushi', 'Donut', 'Bacon', 'Waffle', 'Pancake'];
-const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞'];
-
-function generateAura() {
-  const adIdx = Math.floor(Math.random() * adjectives.length);
-  const fdIdx = Math.floor(Math.random() * foods.length);
-  const color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
-  return {
-    auraName: `${adjectives[adIdx]} ${foods[fdIdx]}`,
-    avatarEmoji: emojis[fdIdx],
-    auraColor: color
-  };
-}
+const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🌮', '🥑', '🍔', '🥟', '🥨'];
 
 // Nodemailer transport
 const transporter = nodemailer.createTransport({
@@ -90,35 +78,24 @@ exports.verifySignup = async (req, res) => {
     }
 
     const { username, password } = storedData.userData;
-    
-    // Clear OTP
     otpStore.delete(email);
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Ensure unique aura name
-    let auraData = generateAura();
-    let isUnique = false;
-    let attempts = 0;
-    while (!isUnique && attempts < 10) {
-      const exists = await User.findOne({ auraName: auraData.auraName });
-      if (!exists) {
-        isUnique = true;
-      } else {
-        auraData = generateAura();
-        // Append a random number to guarantee uniqueness if collisions happen
-        auraData.auraName += ` ${Math.floor(Math.random() * 99)}`;
-        attempts++;
-      }
-    }
+    // Generate unique identity
+    const auraName = await generateAuraName();
+    const avatarEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    const auraColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
-      role: 'user',
-      ...auraData
+      auraName,
+      avatarEmoji,
+      auraColor,
+      role: 'user'
     });
 
     const savedUser = await newUser.save();
@@ -130,9 +107,18 @@ exports.verifySignup = async (req, res) => {
     );
 
     res.status(201).json({ 
-      message: 'User created successfully', 
+      message: `Welcome, ${auraName}!`,
       token,
-      user: { id: savedUser._id, username: savedUser.username, role: savedUser.role, email: savedUser.email, auraName: savedUser.auraName, avatarEmoji: savedUser.avatarEmoji, auraColor: savedUser.auraColor } 
+      user: {
+          id: savedUser._id,
+          username: savedUser.username,
+          auraName,
+          auraPoints: 0,
+          avatarEmoji,
+          auraColor,
+          role: savedUser.role,
+          theme: 'wine'
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -154,7 +140,21 @@ exports.loginUser = async (req, res) => {
       { expiresIn: '3d' }
     );
 
-    res.status(200).json({ token, user: { id: user._id, username: user.username, role: user.role, email: user.email, auraName: user.auraName, avatarEmoji: user.avatarEmoji, auraColor: user.auraColor } });
+    res.status(200).json({ 
+      token, 
+      user: { 
+        id: user._id, 
+        username: user.username, 
+        role: user.role, 
+        email: user.email, 
+        auraName: user.auraName, 
+        auraPoints: user.aura,
+        avatarEmoji: user.avatarEmoji, 
+        auraColor: user.auraColor,
+        theme: user.theme || 'wine',
+        claimedItems: user.claimedItems || []
+      } 
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

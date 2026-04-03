@@ -208,15 +208,15 @@ const Navbar = () => {
                 >
                   {/* HEADER */}
                   <div style={{ marginBottom: '24px' }}>
-                    <div style={{ fontWeight: '900', fontSize: '1.2rem', color: '#fff', marginBottom: '2px' }}>{user.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#FF0055', fontWeight: '700' }}>Aura: {user.aura} pts</div>
+                    <div style={{ fontWeight: '900', fontSize: '1.2rem', color: '#fff', marginBottom: '2px' }}>{user.auraName}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#FF0055', fontWeight: '700' }}>{user.aura} pts</div>
                   </div>
 
                   <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '0 -24px 16px' }} />
 
                   {/* MENU ITEMS */}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <MenuLink icon={Settings} label="Settings" to="/profile/settings" />
+                    <MenuLink icon={Settings} label="Dashboard" to="/profile" />
                     <MenuLink icon={Gift} label="Promotions" to="/profile/promotions" />
                     
                     <div 

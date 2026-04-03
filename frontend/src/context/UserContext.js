@@ -96,7 +96,13 @@ export const UserProvider = ({ children }) => {
         },
         body: JSON.stringify(updates)
       });
-      setUser(prev => ({ ...prev, ...updates }));
+      setUser(prev => ({ 
+          ...prev, 
+          ...updates, 
+          avatarEmoji: data.avatarEmoji || prev.avatarEmoji,
+          theme: data.theme || prev.theme,
+          auraColor: data.auraColor || prev.auraColor
+      }));
       return data;
     } catch(err) {
       console.error(err);
@@ -107,38 +113,44 @@ export const UserProvider = ({ children }) => {
   const loginUser = (data) => {
     setToken(data.token);
     localStorage.setItem('oyeeeToken', data.token);
-    setUser(prev => ({
-      ...prev,
-      name: data.user.auraName || data.user.username,
+    setUser({
+      name: data.user.auraName,
+      auraName: data.user.auraName,
       id: data.user.id || data.user._id,
-      aura: data.user.aura || 0,
+      aura: data.user.auraPoints || data.user.aura || 0,
       avatarEmoji: data.user.avatarEmoji,
       auraColor: data.user.auraColor,
       theme: data.user.theme || 'wine',
       friends: data.user.friends || [],
       enemies: data.user.enemies || [],
-      auraVotesGiven: data.user.auraVotes?.given || []
-    }));
+      auraVotesGiven: data.user.auraVotes?.given || [],
+      claimedItems: data.user.claimedItems || []
+    });
   };
 
   const logoutUser = () => {
     localStorage.removeItem('oyeeeToken');
     setToken(null);
     setUser({
-      name: 'Anonymous', aura: 0, friends: [], enemies: [], auraVotesGiven: [], id: null, avatarEmoji: '👤', auraColor: '#FFFFFF', theme: 'wine'
+      name: 'Anonymous', aura: 0, friends: [], enemies: [], auraVotesGiven: [], id: null, avatarEmoji: '👤', auraColor: '#FFFFFF', theme: 'wine', claimedItems: []
     });
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
-  const deleteAccount = async () => {
+  const deleteAccount = async (password) => {
     try {
-      await safeFetch('/api/users/me', {
+      await safeFetch('/api/users/delete', {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password })
       });
       logoutUser();
     } catch(err) {
       console.error(err);
+      throw err;
     }
   };
 

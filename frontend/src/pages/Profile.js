@@ -1,337 +1,312 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Trash2, Shield, Palette, Zap, Users, LogOut, Check, X, AlertTriangle, Settings } from 'lucide-react';
-import { safeFetch } from '../config';
+import { User, Shield, Info, Trash2, Palette, Sparkles, LogOut, Check, X, CreditCard, Users, Ghost } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { safeFetch } from '../config';
 
-const themes = [
-  { id: 'wine', name: 'WINE PURPLE', color: '#FF0055' },
-  { id: 'blue', name: 'CROWN BLUE', color: '#4299e1' },
-  { id: 'green', name: 'NEON GREEN', color: '#48bb78' },
-  { id: 'gold', name: 'DAZZLING GOLD', color: '#ecc94b' },
-  { id: 'orange', name: 'CYBER ORANGE', color: '#ed8936' }
-];
+const Dashboard = () => {
+    const { user, token, updateProfile, deleteAccount, logoutUser } = useUser();
+    const { theme: currentTheme, setTheme } = useTheme();
+    
+    const [socialData, setSocialData] = useState({ friends: [], enemies: [] });
+    const [activeTab, setActiveTab] = useState('friends');
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [error, setError] = useState('');
 
-const emojis = ['👤', '👽', '🤖', '👻', '🐱', '🎭'];
+    const themes = [
+        { id: 'wine', name: 'Wine Purple', color: '#FF0055' },
+        { id: 'blue', name: 'Crown Blue', color: '#00D4FF' },
+        { id: 'green', name: 'Neon Green', color: '#39FF14' },
+        { id: 'gold', name: 'Dazzling Gold', color: '#FFD700' },
+        { id: 'orange', name: 'Cyber Orange', color: '#FF8C00' }
+    ];
 
-const DeleteModal = ({ onConfirm, onCancel }) => (
-  <motion.div 
-    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    style={{
-      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-      background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(12px)', zIndex: 3000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center'
-    }}
-  >
-    <motion.div 
-      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-      style={{
-        background: '#121212', border: '1px solid rgba(255,0,0,0.3)', padding: '40px',
-        borderRadius: '32px', width: '100%', maxWidth: '450px', textAlign: 'center',
-        boxShadow: '0 0 50px rgba(255,0,0,0.1)'
-      }}
-    >
-      <div style={{ 
-        width: '80px', height: '80px', background: 'rgba(255,0,0,0.1)', borderRadius: '50%',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff4d4d',
-        margin: '0 auto 24px'
-      }}>
-        <AlertTriangle size={40} />
-      </div>
-      <h3 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '16px', fontFamily: 'var(--font-bebas)', letterSpacing: '1px' }}>ERASE IDENTITY?</h3>
-      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '32px' }}>
-        This will permanently delete your aura, friends, enemies, and all data from the void. <strong>This action cannot be undone.</strong>
-      </p>
-      
-      <div style={{ display: 'flex', gap: '16px' }}>
-        <button 
-          onClick={onCancel}
-          style={{ 
-            flex: 1, padding: '16px', background: 'rgba(255,255,255,0.05)', border: 'none', 
-            borderRadius: '16px', color: '#fff', fontWeight: '700', cursor: 'pointer',
-            fontFamily: 'var(--font-mono)', fontSize: '0.8rem'
-          }}
-        >
-          CANCEL
-        </button>
-        <button 
-          onClick={onConfirm}
-          style={{ 
-            flex: 1, padding: '16px', background: '#ff4d4d', border: 'none', 
-            borderRadius: '16px', color: '#fff', fontWeight: '900', cursor: 'pointer',
-            boxShadow: '0 10px 20px rgba(255,77,77,0.2)', fontFamily: 'var(--font-bebas)',
-            fontSize: '1.1rem', letterSpacing: '1px'
-          }}
-        >
-          CONFIRM DELETE
-        </button>
-      </div>
-    </motion.div>
-  </motion.div>
-);
+    const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🥑', '🥟', '🥪', '🥘', '🍲'];
 
-const Profile = () => {
-  const { user, token, logoutUser, deleteAccount, updateProfile } = useUser();
-  const [activeTab, setActiveTab] = useState('friends');
-  const [friends, setFriends] = useState([]);
-  const [enemies, setEnemies] = useState([]);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [loadingSocial, setLoadingSocial] = useState(true);
+    useEffect(() => {
+        fetchSocial();
+    }, []);
 
-  useEffect(() => {
-    if (!token) return;
-    setLoadingSocial(true);
-    safeFetch('/api/users/me/social', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
-    .then(data => {
-      setFriends(data.friends || []);
-      setEnemies(data.enemies || []);
-    })
-    .catch(err => console.error("Social graph failed:", err))
-    .finally(() => setLoadingSocial(false));
-  }, [token]);
+    const fetchSocial = async () => {
+        try {
+            const data = await safeFetch('/api/users/me/social', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            setSocialData(data);
+        } catch (err) { console.error(err); }
+    };
 
-  const handleUpdate = async (updates) => {
-    try {
-      await updateProfile(updates);
-    } catch(err) {
-      console.error("Update failed:", err);
-    }
-  };
+    const handleAvatarChange = async (emoji) => {
+        await updateProfile({ avatarEmoji: emoji });
+    };
 
-  const displayedConnections = activeTab === 'friends' ? friends : enemies;
+    const handleThemeChange = async (themeId) => {
+        setTheme(themeId);
+        await updateProfile({ theme: themeId });
+    };
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#000000',
-      color: '#ffffff',
-      padding: '40px 64px',
-      fontFamily: 'var(--font-inter)',
-    }}>
-      {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px' }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: '4rem', letterSpacing: '4px', margin: 0, lineHeight: 0.9 }}>
-            IDENTITY PANEL
-          </h1>
-          <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontSize: '0.8rem', marginTop: '12px', letterSpacing: '2px', opacity: 0.8 }}>
-            // CUSTOMIZE YOUR ANONYMOUS MANIFESTATION
-          </p>
-          <div style={{ width: '60px', height: '3px', background: 'var(--accent-primary)', marginTop: '8px' }} />
-        </div>
-        <button 
-          onClick={logoutUser}
-          className="interactive hover-lift"
-          style={{ 
-            background: 'none', border: '1px solid rgba(255,0,85,0.4)', color: 'var(--accent-primary)',
-            padding: '10px 24px', borderRadius: '8px', fontFamily: 'var(--font-bebas)', fontSize: '1.1rem',
-            letterSpacing: '1px', opacity: 0.8
-          }}
-        >
-          LOG OUT
-        </button>
-      </div>
+    const handleDelete = async () => {
+        setIsDeleting(true);
+        setError('');
+        try {
+            await deleteAccount(deletePassword);
+        } catch (err) {
+            setError(err.message || 'Verification failed');
+            setIsDeleting(false);
+        }
+    };
 
-      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '48px', alignItems: 'start' }}>
-        
-        {/* LEFT COLUMN: IDENTITY & STATS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-          
-          {/* Identity Box */}
-          <div className="glass" style={{ padding: '40px 32px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>
-            <div style={{
-                width: '100px', height: '100px', background: 'rgba(255,0,85,0.05)', border: '2px solid var(--accent-primary)',
-                borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '3rem', marginBottom: '24px', boxShadow: '0 0 30px rgba(255,0,85,0.1)'
-            }}>
-                {user.avatarEmoji}
-            </div>
-            <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '3rem', letterSpacing: '2px', margin: 0 }}>
-                {user.name}
-            </h2>
-            <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontSize: '0.8rem', opacity: 0.5 }}>//</p>
-          </div>
+    return (
+        <div className="dashboard-container" style={{
+            minHeight: '100vh', padding: '40px 20px', display: 'flex', justifyContent: 'center',
+            background: 'var(--bg-main)', color: 'var(--text-main)', fontFamily: 'var(--font-inter)'
+        }}>
+            <div style={{ maxWidth: '1200px', width: '100%', display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 2fr', gap: '32px' }}>
+                
+                {/* LEFT PANEL: IDENTITY CARD */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                    <motion.div 
+                        initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
+                        className="glass"
+                        style={{ padding: '32px', borderRadius: '32px', border: '1px solid var(--glass-border)', textAlign: 'center' }}
+                    >
+                        <div style={{ 
+                            width: '120px', height: '120px', margin: '0 auto 24px', borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '4rem', border: '2px solid var(--accent-primary)',
+                            boxShadow: '0 0 30px var(--accent-glow)'
+                        }}>
+                            {user.avatarEmoji || '👤'}
+                        </div>
+                        
+                        <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2.5rem', letterSpacing: '2px', margin: '0 0 8px' }}>
+                           {user.auraName || 'UNIDENTIFIED'}
+                        </h2>
+                        <div style={{ color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', marginBottom: '32px' }}>
+                            CLEARANCE: AGENT
+                        </div>
 
-          {/* Balance/Stats Box */}
-          <div className="glass" style={{ 
-            padding: '40px 32px', borderRadius: '24px', position: 'relative', overflow: 'hidden',
-            border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ position: 'absolute', right: '-20px', top: '20px', fontSize: '12rem', fontWeight: '900', opacity: 0.03, color: 'white', pointerEvents: 'none', fontFamily: 'var(--font-bebas)' }}>
-                VOID
-            </div>
-            
-            <div style={{ marginBottom: '32px' }}>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '8px' }}>SPENDABLE BALANCE (LIQUID)</p>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
-                    <span style={{ fontSize: '5rem', fontWeight: '900', fontFamily: 'var(--font-bebas)', lineHeight: 1 }}>{user.aura}</span>
-                    <Zap size={24} fill="var(--accent-primary)" color="var(--accent-primary)" />
-                </div>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>LIFETIME EARNED (FIXED)</span>
-                    <span style={{ fontWeight: '700', fontSize: '1.2rem' }}>{user.aura}</span>
-                </div>
-            </div>
-
-            <div style={{ marginTop: '40px', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>FLOOR PROTECTION:</span>
-                    <span style={{ fontSize: '0.65rem', color: '#48bb78', fontWeight: '800' }}>10% OF PEAK</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontWeight: '900', fontSize: '0.9rem' }}>0</span>
-                    <Zap size={10} fill="#ffffff" color="transparent" />
-                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>(RESTRICTED WITHDRAWAL)</span>
-                </div>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN: CUSTOMIZATION & CONNECTIONS */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
-          
-          {/* Customization Section */}
-          <div className="glass" style={{ padding: '48px', borderRadius: '32px', border: '1px solid var(--glass-border)' }}>
-            <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2.2rem', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
-                <Settings size={28} /> CUSTOMIZATION
-            </h3>
-
-            {/* Avatar Emojis */}
-            <div style={{ marginBottom: '48px' }}>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Users size={14} /> SELECT AVATAR EMOJI
-                </p>
-                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-                    {emojis.map(e => (
-                        <button 
-                            key={e}
-                            onClick={() => handleUpdate({ avatarEmoji: e })}
-                            className="interactive"
-                            style={{
-                                width: '60px', height: '60px', background: user.avatarEmoji === e ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '1.8rem',
-                                transition: 'all 0.3s', boxShadow: user.avatarEmoji === e ? '0 0 20px rgba(255,0,85,0.2)' : 'none'
-                            }}
-                        >
-                            {e}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
-            {/* Theme Palette */}
-            <div>
-                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Palette size={14} /> SELECT THEME PALETTE
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-                    {themes.map(t => (
-                        <button 
-                            key={t.id}
-                            onClick={() => handleUpdate({ theme: t.id })}
-                            className="interactive hover-lift"
-                            style={{
-                                padding: '16px 20px', background: user.theme === t.id ? t.color : 'rgba(255,255,255,0.03)',
-                                border: `1px solid ${user.theme === t.id ? t.color : 'rgba(255,255,255,0.1)'}`,
-                                borderRadius: '12px', color: user.theme === t.id ? '#ffffff' : t.color,
-                                fontFamily: 'var(--font-bebas)', fontSize: '1.1rem', letterSpacing: '1px',
-                                textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                boxShadow: user.theme === t.id ? `0 0 20px ${t.color}33` : 'none'
-                            }}
-                        >
-                            {t.name}
-                            {user.theme === t.id && <Check size={16} />}
-                        </button>
-                    ))}
-                </div>
-            </div>
-          </div>
-
-          {/* Connections Section */}
-          <div className="glass" style={{ padding: '48px', borderRadius: '32px', border: '1px solid var(--glass-border)' }}>
-             <div style={{ display: 'flex', gap: '40px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '32px' }}>
-                <button 
-                   onClick={() => setActiveTab('friends')}
-                   style={{
-                       background: 'none', border: 'none', padding: '0 0 16px', fontFamily: 'var(--font-bebas)', 
-                       fontSize: '1.8rem', letterSpacing: '2px', color: activeTab === 'friends' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
-                       borderBottom: activeTab === 'friends' ? '3px solid var(--accent-primary)' : '3px solid transparent',
-                       transition: 'all 0.3s', cursor: 'pointer'
-                   }}
-                >
-                    FRIENDS ({friends.length})
-                </button>
-                <button 
-                   onClick={() => setActiveTab('enemies')}
-                   style={{
-                       background: 'none', border: 'none', padding: '0 0 16px', fontFamily: 'var(--font-bebas)', 
-                       fontSize: '1.8rem', letterSpacing: '2px', color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
-                       borderBottom: activeTab === 'enemies' ? '3px solid var(--accent-primary)' : '3px solid transparent',
-                       transition: 'all 0.3s', cursor: 'pointer'
-                   }}
-                >
-                    ENEMIES ({enemies.length})
-                </button>
-             </div>
-
-             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {loadingSocial ? (
-                    <div style={{ opacity: 0.3, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center', padding: '24px' }}>// LOADING PEERS...</div>
-                ) : displayedConnections.length === 0 ? (
-                    <div style={{ opacity: 0.3, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center', padding: '24px' }}>// NO PEERS DISCOVERED</div>
-                ) : (
-                    displayedConnections.map(peer => (
-                        <div key={peer._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <span style={{ fontSize: '1.5rem' }}>{peer.avatarEmoji || '👤'}</span>
-                                <span style={{ fontWeight: '700', fontSize: '1.1rem' }}>{peer.auraName || peer.username}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', opacity: 0.6 }}>
+                                    <Sparkles size={16} />
+                                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>TOTAL AURA</span>
+                                </div>
+                                <div style={{ fontSize: '2rem', fontWeight: '900', color: '#fff' }}>{user.aura} <span style={{ fontSize: '0.9rem', opacity: 0.5 }}>pts</span></div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontWeight: '800' }}>
-                                <span>{peer.aura}</span>
-                                <Zap size={14} fill="currentColor" />
+
+                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', textAlign: 'left', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px', opacity: 0.6 }}>
+                                    <CreditCard size={16} />
+                                    <span style={{ fontSize: '0.8rem', fontWeight: '700' }}>SPENDABLE BALANCE</span>
+                                </div>
+                                <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--accent-primary)' }}>{user.aura} <span style={{ fontSize: '0.9rem', color: '#fff', opacity: 0.5 }}>A</span></div>
                             </div>
                         </div>
-                    ))
+
+                        <button 
+                            onClick={() => setShowDeleteModal(true)}
+                            className="danger-btn interactive"
+                            style={{ 
+                                width: '100%', marginTop: '32px', padding: '16px', background: 'transparent',
+                                border: '1px solid rgba(255,0,85,0.2)', borderRadius: '16px',
+                                color: '#ff4d4d', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                                fontWeight: '700', cursor: 'pointer', transition: 'all 0.3s'
+                            }}
+                        >
+                            <Trash2 size={18} />
+                            Delete Identity
+                        </button>
+                    </motion.div>
+
+                    {/* SOCIAL STATS MINI PANEL */}
+                    <div className="glass" style={{ padding: '24px', borderRadius: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px' }}>FRIENDS</div>
+                            <div style={{ fontWeight: '800' }}>{socialData.friends.length}</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px' }}>ENEMIES</div>
+                            <div style={{ fontWeight: '800' }}>{socialData.enemies.length}</div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* RIGHT PANEL: CUSTOMIZATION */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+                    <motion.div 
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                        className="glass"
+                        style={{ padding: '40px', borderRadius: '40px', border: '1px solid var(--glass-border)' }}
+                    >
+                        <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2rem', marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                            <Palette size={24} color="var(--accent-primary)" />
+                            Identity customization
+                        </h3>
+
+                        {/* Theme Selection */}
+                        <div style={{ marginBottom: '48px' }}>
+                            <p style={{ opacity: 0.5, fontSize: '0.9rem', fontWeight: '700', marginBottom: '20px', letterSpacing: '1px' }}>ENVIRONMENT THEME</p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '16px' }}>
+                                {themes.map(t => (
+                                    <button 
+                                        key={t.id}
+                                        onClick={() => handleThemeChange(t.id)}
+                                        style={{
+                                            padding: '16px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)',
+                                            border: currentTheme === t.id ? `2px solid ${t.color}` : '1px solid rgba(255,255,255,0.05)',
+                                            color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px',
+                                            transition: 'all 0.3s'
+                                        }}
+                                    >
+                                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: t.color }} />
+                                        <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>{t.name}</span>
+                                        {currentTheme === t.id && <Check size={14} style={{ marginLeft: 'auto', color: t.color }} />}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Avatar Selection */}
+                        <div>
+                            <p style={{ opacity: 0.5, fontSize: '0.9rem', fontWeight: '700', marginBottom: '20px', letterSpacing: '1px' }}>AVATAR FREQUENCY</p>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                                {emojis.map(e => (
+                                    <button 
+                                        key={e}
+                                        onClick={() => handleAvatarChange(e)}
+                                        style={{
+                                            width: '60px', height: '60px', fontSize: '2rem', borderRadius: '16px',
+                                            background: user.avatarEmoji === e ? 'rgba(255,0,85,0.1)' : 'rgba(255,255,255,0.02)',
+                                            border: user.avatarEmoji === e ? '2px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.05)',
+                                            cursor: 'pointer', transition: 'all 0.2s'
+                                        }}
+                                    >
+                                        {e}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* SOCIAL LIST PANEL */}
+                    <div className="glass" style={{ padding: '40px', borderRadius: '40px', flex: 1 }}>
+                        <div style={{ display: 'flex', gap: '32px', marginBottom: '32px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                             <button onClick={() => setActiveTab('friends')} style={{ 
+                                 padding: '0 0 16px', background: 'none', border: 'none', cursor: 'pointer',
+                                 color: activeTab === 'friends' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
+                                 fontFamily: 'var(--font-bebas)', fontSize: '1.4rem', letterSpacing: '1px',
+                                 borderBottom: activeTab === 'friends' ? '3px solid var(--accent-primary)' : 'none'
+                             }}>FRIENDS</button>
+                             <button onClick={() => setActiveTab('enemies')} style={{ 
+                                 padding: '0 0 16px', background: 'none', border: 'none', cursor: 'pointer',
+                                 color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
+                                 fontFamily: 'var(--font-bebas)', fontSize: '1.4rem', letterSpacing: '1px',
+                                 borderBottom: activeTab === 'enemies' ? '3px solid var(--accent-primary)' : 'none'
+                             }}>ENEMIES</button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {socialData[activeTab].length === 0 ? (
+                                <div style={{ padding: '40px', textAlign: 'center', opacity: 0.3 }}>
+                                    <Ghost size={40} style={{ margin: '0 auto 16px' }} />
+                                    <p>No peers discovered in this frequency.</p>
+                                </div>
+                            ) : socialData[activeTab].map(peer => (
+                                <div key={peer._id} style={{
+                                    display: 'flex', alignItems: 'center', gap: '16px', padding: '16px',
+                                    background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)'
+                                }}>
+                                    <div style={{ fontSize: '1.5rem' }}>{peer.avatarEmoji}</div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: '800' }}>{peer.auraName}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--accent-primary)', fontWeight: '700' }}>{peer.aura} pts</div>
+                                    </div>
+                                    {peer.equippedBadge && <div style={{ fontSize: '0.7rem', padding: '4px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)' }}>{peer.equippedBadge}</div>}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* DELETE IDENTITY MODAL */}
+            <AnimatePresence>
+                {showDeleteModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}
+                    >
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                            style={{ 
+                                maxWidth: '400px', width: '100%', background: '#121212', 
+                                border: '1px solid rgba(255,0,85,0.2)', borderRadius: '32px', padding: '40px',
+                                textAlign: 'center'
+                            }}
+                        >
+                            <div style={{ color: '#ff4d4d', marginBottom: '24px' }}>
+                                <AlertTriangle size={48} style={{ margin: '0 auto' }} />
+                            </div>
+                            <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2rem', marginBottom: '12px' }}>Delete Identity</h2>
+                            <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)', lineHeight: '1.6', marginBottom: '32px' }}>
+                                This will permanently delete your account, aura, friends, enemies, and all data from the Void. This action is irreversible.
+                            </p>
+
+                            <input 
+                                type="password"
+                                placeholder="Clearance Password"
+                                value={deletePassword}
+                                onChange={(e) => setDeletePassword(e.target.value)}
+                                style={{
+                                    width: '100%', padding: '16px', marginBottom: '12px',
+                                    background: 'rgba(255,255,255,0.05)', border: error ? '1px solid #ff4d4d' : '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '12px', color: '#fff', fontSize: '1rem', outline: 'none'
+                                }}
+                            />
+                            {error && <p style={{ color: '#ff4d4d', fontSize: '0.75rem', marginBottom: '20px' }}>{error}</p>}
+
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button 
+                                    onClick={() => setShowDeleteModal(false)}
+                                    style={{ flex: 1, padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', fontWeight: '700', cursor: 'pointer' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    onClick={handleDelete}
+                                    disabled={!deletePassword || isDeleting}
+                                    style={{ 
+                                        flex: 1, padding: '14px', borderRadius: '12px', background: '#ff4d4d', 
+                                        border: 'none', color: '#fff', fontWeight: '800', cursor: 'pointer',
+                                        opacity: isDeleting ? 0.5 : 1
+                                    }}
+                                >
+                                    {isDeleting ? 'ERASING...' : 'Confirm'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
                 )}
-             </div>
-          </div>
+            </AnimatePresence>
 
-          {/* Danger Zone */}
-          <div style={{ marginTop: '24px', textAlign: 'right' }}>
-             <button 
-                onClick={() => setShowDeleteModal(true)}
-                className="interactive"
-                style={{
-                  background: 'none', border: 'none', color: 'rgba(255,77,77,0.4)', fontFamily: 'var(--font-mono)',
-                  fontSize: '0.75rem', textDecoration: 'underline', cursor: 'pointer', display: 'inline-flex',
-                  alignItems: 'center', gap: '8px'
-                }}
-             >
-                <Trash2 size={14} /> DELETE MY IDENTITY
-             </button>
-          </div>
+            <style>{`
+                .glass { background: rgba(10,10,10,0.6); backdrop-filter: blur(20px); }
+                .interactive:active { transform: scale(0.98); }
+                .danger-btn:hover { background: rgba(255,77,77,0.05) !important; border-color: #ff4d4d !important; }
+            `}</style>
         </div>
-      </div>
-
-      <AnimatePresence>
-        {showDeleteModal && (
-          <DeleteModal 
-            onConfirm={async () => {
-                await deleteAccount();
-                setShowDeleteModal(false);
-            }} 
-            onCancel={() => setShowDeleteModal(false)} 
-          />
-        )}
-      </AnimatePresence>
-    </div>
-  );
+    );
 };
 
-export default Profile;
+const AlertTriangle = (props) => (
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
+
+export default Dashboard;

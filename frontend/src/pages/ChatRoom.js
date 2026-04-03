@@ -143,69 +143,90 @@ const ChatRoom = () => {
            </div>
         )}
         {messages.map((msg, i) => {
-          const isMe = (msg.senderId && (msg.senderId === user.id || msg.senderId._id === user.id)) || msg.user === user.name;
+          const isMe = (msg.senderId && (msg.senderId === user.id || msg.senderId._id === user.id)) || msg.user === user.auraName || msg.user === user.name;
           const timeFormat = msg.time || (msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
           const targetId = msg.senderId?._id || msg.senderId;
+          const displayName = isMe ? user.auraName : msg.user;
+          const displayEmoji = isMe ? user.avatarEmoji : (msg.avatarEmoji || '👤');
 
           return (
-            <div key={msg._id || msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
-              <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px', textAlign: isMe ? 'right' : 'left' }}>{isMe ? `${user.name} (You)` : msg.user} • {timeFormat}</div>
-              <div className="glass" style={{ padding: '12px 16px', background: isMe ? 'rgba(233, 30, 99, 0.2)' : 'rgba(255,255,255,0.05)', color: 'white', borderRadius: isMe ? '12px 12px 0 12px' : '0 12px 12px 12px', border: isMe ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)' }}>
-                {msg.text}
-              </div>
+            <div key={msg._id || msg.id || i} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%', display: 'flex', gap: '12px', flexDirection: isMe ? 'row-reverse' : 'row' }}>
               
-              {!isMe && targetId && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-                  <button 
-                    disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
-                    onClick={() => handleAction((t) => updateAura(t, 'up'), targetId, '+1 Aura given')}
-                    className="interactive hover-lift" 
-                    style={{ 
-                      background: 'rgba(94, 200, 122, 0.1)', border: '1px solid #5ec87a', color: '#5ec87a', 
-                      padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', display: 'flex', 
-                      alignItems: 'center', gap: '6px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
-                    }}
-                  >
-                    <Plus size={14} /> Aura
-                  </button>
-                  <button 
-                    disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
-                    onClick={() => handleAction((t) => updateAura(t, 'down'), targetId, '-1 Aura given')}
-                    className="interactive hover-lift" 
-                    style={{ 
-                      background: 'rgba(255, 77, 77, 0.1)', border: '1px solid #ff4d4d', color: '#ff4d4d', 
-                      padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem', display: 'flex', 
-                      alignItems: 'center', gap: '6px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
-                    }}
-                  >
-                    <Minus size={14} /> Aura
-                  </button>
-                  <button 
-                    disabled={user.friends.includes(targetId) || user.enemies.includes(targetId)}
-                    onClick={() => handleAction(addFriend, targetId, 'Added as friend')}
-                    className="interactive hover-lift" 
-                    style={{ 
-                        background: 'rgba(66, 153, 225, 0.1)', border: '1px solid #4299e1', color: '#4299e1',
-                        padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem',
-                        opacity: (user.friends.includes(targetId) || user.enemies.includes(targetId)) ? 0.3 : 1
-                    }}
-                  >
-                    Add Friend
-                  </button>
-                  <button 
-                    disabled={user.enemies.includes(targetId) || user.friends.includes(targetId)}
-                    onClick={() => handleAction(addEnemy, targetId, 'Added as enemy')}
-                    className="interactive hover-lift" 
-                    style={{ 
-                        background: 'rgba(66, 153, 225, 0.1)', border: '1px solid #4299e1', color: '#4299e1',
-                        padding: '4px 12px', borderRadius: '6px', fontSize: '0.75rem',
-                        opacity: (user.enemies.includes(targetId) || user.friends.includes(targetId)) ? 0.3 : 1
-                    }}
-                  >
-                    Add Enemy
-                  </button>
+              <div style={{ 
+                  width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                  border: isMe ? '1px solid var(--accent-primary)' : '1px solid rgba(255,255,255,0.1)',
+                  fontSize: '1.2rem'
+              }}>
+                {displayEmoji}
+              </div>
+
+              <div style={{ textAlign: isMe ? 'right' : 'left' }}>
+                <div style={{ fontSize: '0.7rem', opacity: 0.5, marginBottom: '4px' }}>
+                    <span style={{ color: isMe ? 'var(--accent-primary)' : '#fff', fontWeight: '800' }}>{displayName}</span> • {timeFormat}
                 </div>
-              )}
+                <div className="glass" style={{ 
+                    padding: '12px 16px', background: isMe ? 'rgba(233, 30, 99, 0.15)' : 'rgba(255,255,255,0.05)', 
+                    color: 'white', borderRadius: isMe ? '16px 0 16px 16px' : '0 16px 16px 16px', 
+                    border: isMe ? '1px solid var(--accent-primary)' : '1px solid var(--glass-border)',
+                    boxShadow: isMe ? '0 0 15px rgba(255, 0, 85, 0.1)' : 'none'
+                }}>
+                    {msg.text}
+                </div>
+                
+                {!isMe && targetId && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
+                    <button 
+                        disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
+                        onClick={() => handleAction((t) => updateAura(t, 'up'), targetId, '+1 Aura given')}
+                        className="interactive hover-lift" 
+                        style={{ 
+                        background: 'rgba(57, 255, 20, 0.05)', border: '1px solid #39FF14', color: '#39FF14', 
+                        padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', display: 'flex', 
+                        alignItems: 'center', gap: '4px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
+                        }}
+                    >
+                        + Aura
+                    </button>
+                    <button 
+                        disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
+                        onClick={() => handleAction((t) => updateAura(t, 'down'), targetId, '-1 Aura given')}
+                        className="interactive hover-lift" 
+                        style={{ 
+                        background: 'rgba(255, 77, 77, 0.05)', border: '1px solid #ff4d4d', color: '#ff4d4d', 
+                        padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', display: 'flex', 
+                        alignItems: 'center', gap: '4px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
+                        }}
+                    >
+                        - Aura
+                    </button>
+                    <button 
+                        disabled={user.friends?.includes(targetId) || user.enemies?.includes(targetId)}
+                        onClick={() => handleAction(addFriend, targetId, 'Added as friend')}
+                        className="interactive hover-lift" 
+                        style={{ 
+                            background: 'rgba(0, 212, 255, 0.05)', border: '1px solid #00D4FF', color: '#00D4FF',
+                            padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem',
+                            opacity: (user.friends?.includes(targetId) || user.enemies?.includes(targetId)) ? 0.3 : 1
+                        }}
+                    >
+                        Add Friend
+                    </button>
+                    <button 
+                        disabled={user.enemies?.includes(targetId) || user.friends?.includes(targetId)}
+                        onClick={() => handleAction(addEnemy, targetId, 'Added as enemy')}
+                        className="interactive hover-lift" 
+                        style={{ 
+                            background: 'rgba(255, 215, 0, 0.05)', border: '1px solid #FFD700', color: '#FFD700',
+                            padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem',
+                            opacity: (user.enemies?.includes(targetId) || user.friends?.includes(targetId)) ? 0.3 : 1
+                        }}
+                    >
+                        Add Enemy
+                    </button>
+                    </div>
+                )}
+              </div>
             </div>
           );
         })}

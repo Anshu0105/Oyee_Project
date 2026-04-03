@@ -64,7 +64,7 @@ const NavItem = ({ icon: Icon, label, children, to }) => {
 
 const Navbar = () => {
   const { toggleTheme } = useTheme();
-  const { user, logoutUser } = useUser();
+  const { user } = useUser();
 
   return (
     <nav className="glass" style={{
@@ -151,11 +151,8 @@ const Navbar = () => {
             
             <div style={{ borderTop: '1px solid var(--glass-border)', margin: '8px 0' }} />
             <button onClick={toggleTheme} className="interactive" style={{ 
-              background: 'none', border: 'none', color: 'var(--accent-secondary)', fontSize: '0.9rem', padding: 0, textAlign: 'left', cursor: 'pointer', marginBottom: '8px' 
+              background: 'none', border: 'none', color: 'var(--accent-secondary)', fontSize: '0.9rem', padding: 0, textAlign: 'left', cursor: 'pointer' 
             }}>Switch Aesthetic</button>
-            <button onClick={logoutUser} className="interactive" style={{ 
-              background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.9rem', padding: 0, textAlign: 'left', cursor: 'pointer', fontWeight: 'bold' 
-            }}>[ Log Out ]</button>
           </NavItem>
         </div>
       </div>

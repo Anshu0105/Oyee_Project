@@ -32,30 +32,36 @@ const getTierColor = (tier, isCurrentUser) => {
 };
 
 const getTodayColor = (todayStr) => {
-  if (todayStr === '+0') return 'var(--text-dim)';
-  if (todayStr.startsWith('+')) return 'var(--accent-green)';
-  if (todayStr.startsWith('-')) return 'var(--accent-primary)';
-  return 'var(--text-dim)';
+  const n = Number(todayStr ?? 0);
+  if (!n) return 'var(--text-dim)';
+  return n > 0 ? 'var(--accent-green)' : 'var(--accent-primary)';
 };
 
 const Leaderboard = () => {
   const { user: currentUser, token } = useUser();
   const [leaderboard, setLeaderboard] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (!token) return;
     
+    setLoading(true);
+    setError('');
     fetch(`${BACKEND_URL}/api/users/leaderboard`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     .then(res => res.json())
     .then(data => {
-       if (Array.isArray(data)) {
-         setLeaderboard(data);
-       }
+      if (Array.isArray(data)) setLeaderboard(data);
+      else setLeaderboard([]);
     })
-    .catch(err => console.error("Failed to sync leaderboard:", err));
+    .catch(err => {
+      console.error("Failed to sync leaderboard:", err);
+      setError('Failed to load leaderboard.');
+    })
+    .finally(() => setLoading(false));
   }, [token]);
 
 
@@ -102,15 +108,25 @@ const Leaderboard = () => {
 
         {/* Table Body */}
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {leaderboard.length === 0 ? (
-             <div style={{ padding: '40px', textAlign: 'center', opacity: 0.3, fontFamily: 'var(--font-mono)' }}>Void is empty...</div>
+          {loading ? (
+            <div style={{ padding: '40px', textAlign: 'center', opacity: 0.6, fontFamily: 'var(--font-mono)' }}>
+              Loading leaderboard...
+            </div>
+          ) : error ? (
+            <div style={{ padding: '40px', textAlign: 'center', opacity: 0.8, fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)' }}>
+              {error}
+            </div>
+          ) : leaderboard.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', opacity: 0.3, fontFamily: 'var(--font-mono)' }}>Void is empty...</div>
           ) : (
             leaderboard.map((entry, index) => {
               const rank = index + 1;
-              const isCurrentUser = entry._id === currentUser.id;
+              const isCurrentUser = !!currentUser?.id && entry._id === currentUser.id;
               const rankColor = getRankColor(rank, isCurrentUser);
-              const tier = calculateTier(entry.aura);
-              const todayStr = entry.weeklyAuraGain >= 0 ? `+${entry.weeklyAuraGain}` : `${entry.weeklyAuraGain}`;
+              const auraValue = Number(entry?.aura ?? entry?.lifetimeAura ?? 0);
+              const tier = calculateTier(auraValue);
+              const weekly = Number(entry?.weeklyAuraGain ?? 0);
+              const todayStr = weekly >= 0 ? `▲ +${weekly}` : `▼ ${weekly}`;
               
               return (
                 <div 
@@ -131,11 +147,17 @@ const Leaderboard = () => {
   
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ fontSize: '1.5rem' }}>{entry.avatarEmoji}</span>
-                    <span style={{ 
-                      fontFamily: 'var(--font-bebas)', fontSize: '1.6rem', color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)', letterSpacing: '1px'
-                    }}>
-                      {entry.auraName}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                      <div style={{ 
+                        fontFamily: 'var(--font-bebas)', fontSize: '1.6rem', color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)', letterSpacing: '1px',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                      }}>
+                        {entry.auraName}
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: entry.isOnline ? 'var(--accent-green)' : 'var(--text-dim)' }}>
+                        {entry.isOnline ? '● ONLINE' : '○ OFFLINE'}{entry.username ? ` · @${entry.username}` : ''}
+                      </div>
+                    </div>
                     {entry.equippedBadge && <span style={{ fontSize: '1.2rem' }}>{entry.equippedBadge}</span>}
                     {isCurrentUser && (
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--text-dim)', marginLeft: '8px' }}>
@@ -145,14 +167,14 @@ const Leaderboard = () => {
                   </div>
   
                   <div style={{ textAlign: 'center', fontFamily: 'var(--font-bebas)', fontSize: '1.7rem', color: isCurrentUser ? 'var(--accent-primary)' : 'var(--text-main)' }}>
-                    {entry.aura.toLocaleString()}
+                    {auraValue.toLocaleString()}
                   </div>
   
                   <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.3rem', color: getTierColor(tier, isCurrentUser), letterSpacing: '1px' }}>
                     {tier}
                   </div>
   
-                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 'bold', color: getTodayColor(todayStr) }}>
+                  <div style={{ textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 'bold', color: getTodayColor(weekly) }}>
                     {todayStr}
                   </div>
                 </div>
@@ -167,7 +189,7 @@ const Leaderboard = () => {
          isOpen={selectedUserId !== null} 
          userId={selectedUserId} 
          token={token}
-         currentUserId={currentUser.id}
+        currentUserId={currentUser?.id}
          onClose={() => setSelectedUserId(null)} 
       />
     </div>

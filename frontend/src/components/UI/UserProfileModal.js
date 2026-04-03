@@ -7,6 +7,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5002'
 const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const canInteract = !!currentUserId && !!profile && currentUserId !== profile._id;
 
   useEffect(() => {
     if (!isOpen || !userId) return;
@@ -97,6 +98,11 @@ const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => 
                 <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2.5rem', letterSpacing: '2px', lineHeight: 1 }}>
                   {profile.auraName.toUpperCase()} {profile.equippedBadge}
                 </h2>
+                {profile.username && (
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: '6px' }}>
+                    @{profile.username}
+                  </div>
+                )}
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: profile.isOnline ? 'var(--accent-green)' : 'var(--text-dim)', marginTop: '8px' }}>
                   {profile.isOnline ? '● ONLINE' : '○ OFFLINE'}
                 </div>
@@ -131,9 +137,25 @@ const UserProfileModal = ({ userId, isOpen, onClose, token, currentUserId }) => 
                     {new Date(profile.createdAt).toLocaleDateString()}
                   </div>
                 </div>
+
+                <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Zap size={18} color="var(--accent-blue)" />
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)' }}>SPENDABLE AURA</div>
+                  <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.4rem', color: 'var(--accent-blue)', letterSpacing: '1px' }}>
+                    {Number(profile.spendableAura ?? 0).toLocaleString()} AURA
+                  </div>
+                </div>
+
+                <div style={{ padding: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <Network size={18} color="#5ec87a" />
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)' }}>LIFETIME AURA</div>
+                  <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.4rem', color: 'var(--accent-green)', letterSpacing: '1px' }}>
+                    {Number(profile.lifetimeAura ?? profile.aura ?? 0).toLocaleString()} AURA
+                  </div>
+                </div>
               </div>
 
-              {currentUserId !== profile._id && (
+              {canInteract && (
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button 
                     onClick={() => handleRelationship('friend')}

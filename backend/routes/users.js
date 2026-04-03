@@ -7,10 +7,28 @@ const { verifyToken } = require('../middleware/auth');
 router.get('/leaderboard', async (req, res) => {
   try {
     const topUsers = await User.find({})
-      .sort({ aura: -1 })
+      .sort({ lifetimeAura: -1 })
       .limit(100)
-      .select('_id username auraName aura avatarEmoji equippedBadge weeklyAuraGain');
-    res.json(topUsers);
+      .select('_id username auraName lifetimeAura avatarEmoji equippedBadge weeklyAuraGain isOnline lastActive spendableAura maxLifetimeAura createdAt');
+
+    // Keep frontend contract stable: expose `aura` as lifetimeAura
+    res.json(
+      topUsers.map((u) => ({
+        _id: u._id,
+        username: u.username,
+        auraName: u.auraName,
+        aura: u.lifetimeAura,
+        lifetimeAura: u.lifetimeAura,
+        avatarEmoji: u.avatarEmoji,
+        equippedBadge: u.equippedBadge,
+        weeklyAuraGain: u.weeklyAuraGain ?? 0,
+        isOnline: u.isOnline,
+        lastActive: u.lastActive,
+        createdAt: u.createdAt,
+        spendableAura: u.spendableAura,
+        maxLifetimeAura: u.maxLifetimeAura
+      }))
+    );
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -20,8 +38,8 @@ router.get('/leaderboard', async (req, res) => {
 router.get('/me/social', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      .populate('friends', 'auraName aura avatarEmoji equippedBadge')
-      .populate('enemies', 'auraName aura avatarEmoji equippedBadge');
+      .populate('friends', 'auraName lifetimeAura avatarEmoji equippedBadge')
+      .populate('enemies', 'auraName lifetimeAura avatarEmoji equippedBadge');
       
     if (!user) return res.status(404).json({ error: 'User not found' });
     
@@ -64,7 +82,10 @@ router.get('/:id/profile', verifyToken, async (req, res) => {
       auraName: targetUser.auraName,
       avatarEmoji: targetUser.avatarEmoji,
       equippedBadge: targetUser.equippedBadge,
-      aura: targetUser.aura,
+      username: targetUser.username,
+      aura: targetUser.lifetimeAura,
+      lifetimeAura: targetUser.lifetimeAura,
+      spendableAura: targetUser.spendableAura,
       weeklyAuraGain: targetUser.weeklyAuraGain || 0,
       createdAt: targetUser.createdAt,
       lastActive: targetUser.lastActive,

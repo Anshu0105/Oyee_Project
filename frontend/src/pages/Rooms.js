@@ -4,28 +4,51 @@ import { Wifi, GraduationCap, MapPin, MessageSquare, AlertCircle, Loader2 } from
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { BACKEND_URL, safeFetch } from '../config';
-const RoomCard = ({ icon: Icon, title, desc, badge, badgeColor = 'var(--glass-border)', onClick, isLoading }) => (
+const RoomCard = ({ icon: Icon, title, desc, badge, badgeColor = 'rgba(255,255,255,0.05)', onClick, isLoading }) => (
   <div className="glass interactive hover-lift" onClick={onClick} style={{
-    padding: '30px',
+    padding: '40px 30px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '16px',
+    gap: '24px',
     cursor: 'pointer',
     transition: 'all 0.3s',
     border: '1px solid var(--glass-border)',
-    position: 'relative',
-    overflow: 'hidden'
+    background: 'rgba(255, 255, 255, 0.02)',
+    borderRadius: '24px',
+    height: '100%',
+    position: 'relative'
   }}>
-    <div style={{ color: 'var(--accent-primary)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <Icon size={40} />
-      {isLoading && <Loader2 size={24} className="spin" />}
+    <div style={{ 
+      width: '60px', 
+      height: '60px', 
+      background: 'rgba(255, 255, 255, 0.03)', 
+      border: '1px solid var(--glass-border)',
+      borderRadius: '12px',
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      color: 'var(--accent-primary)'
+    }}>
+      <Icon size={32} />
     </div>
-    <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.8rem', letterSpacing: '2px' }}>{title}</h3>
-    <p style={{ fontSize: '0.9rem', opacity: 0.7, lineHeight: '1.6' }}>{desc}</p>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+    
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+      <h3 style={{ fontWeight: '800', fontSize: '2rem', letterSpacing: '1px', color: '#fff', lineHeight: 1.2 }}>{title}</h3>
+      <p style={{ fontSize: '0.9rem', opacity: 0.6, lineHeight: '1.6', color: 'var(--text-main)' }}>{desc}</p>
+    </div>
+
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <span style={{ 
-        fontSize: '0.7rem', padding: '4px 10px', background: badgeColor, borderRadius: '4px', letterSpacing: '1px', color: badgeColor !== 'var(--glass-border)' ? '#000' : '#fff', fontWeight: 'bold'
+        fontSize: '0.65rem', 
+        padding: '6px 12px', 
+        background: badgeColor, 
+        borderRadius: '6px', 
+        letterSpacing: '1px', 
+        color: badgeColor !== 'rgba(255,255,255,0.05)' ? '#000' : '#fff', 
+        fontWeight: '700',
+        fontFamily: 'var(--font-mono)'
       }}>{badge}</span>
+      {isLoading && <Loader2 size={16} className="spin" style={{ color: 'var(--accent-primary)' }} />}
     </div>
   </div>
 );
@@ -35,26 +58,15 @@ const Rooms = () => {
   const { token } = useUser();
   const [error, setError] = useState('');
   const [loadingRoom, setLoadingRoom] = useState(null);
-  const hashString = (str) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16);
-  };
 
   const handleWifiRoom = async () => {
     setError('');
     setLoadingRoom('wifi');
     try {
-      // Step 1: Get the user's public IPv4 from a reliable third-party service
       const ipRes = await fetch('https://api.ipify.org?format=json');
       const ipData = await ipRes.json();
       const publicIp = ipData.ip;
 
-      // Step 2: Send it to the backend for secure hashing into a room ID
       const data = await safeFetch('/api/rooms/wifi/discover', {
         method: 'POST',
         headers: { 
@@ -125,18 +137,17 @@ const Rooms = () => {
   };
 
   const rooms = [
-    { id: 'wifi', title: 'WIFI ROOM', icon: Wifi, desc: 'Connect with everyone on the same local network. Same router = same room.', badge: 'AUTO-DETECT', onClick: handleWifiRoom },
-    { id: 'uni', title: 'UNIVERSITY ROOM', icon: GraduationCap, desc: 'Exclusive to your institution. Verified via university mail domain.', badge: 'MAIL VERIFIED', badgeColor: '#48bb78', onClick: handleUniversityRoom },
-    { id: 'nearby', title: 'NEARBY ROOMS', icon: MapPin, desc: 'Discover chat rooms within your physical radius. GPS locked.', badge: 'GPS BASED', badgeColor: '#ecc94b', onClick: handleNearbyRoom },
-    { id: 'dm', title: 'DM', icon: MessageSquare, desc: 'Direct anonymous messages. Connect with your campus peers privately.', badge: 'PRIVATE CHAT', onClick: () => navigate('/messages') },
+    { id: 'wifi', title: 'WIFI ROOM', icon: Wifi, desc: 'Connect with everyone on the same local network. Auto-detecting your pulse.', badge: 'AUTO-DETECT', onClick: handleWifiRoom },
+    { id: 'uni', title: 'UNIVERSITY', icon: GraduationCap, desc: 'Institutional hub. Verified all-rooms aggregator for CGU members.', badge: 'MAIL VERIFIED', badgeColor: '#48bb78', onClick: handleUniversityRoom },
+    { id: 'nearby', title: 'NEARBY', icon: MapPin, desc: 'Physical radius chat. Pulse locked via Snapchat-style map view.', badge: 'GPS BASED', badgeColor: '#ecc94b', onClick: handleNearbyRoom },
+    { id: 'dm', title: 'DM', icon: MessageSquare, desc: 'Private one-on-one connections. Zero logs, 100% anonymous.', badge: 'PRIVATE CHAT', badgeColor: 'rgba(233, 30, 99, 0.15)', onClick: () => navigate('/messages') },
   ];
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', color: 'var(--text-main)' }}>
-      <div style={{ marginBottom: '40px' }}>
-        <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: '3rem', letterSpacing: '4px' }}>JOIN A ROOM</h1>
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', opacity: 0.6 }}>// select your entry point into the void</p>
-        <div style={{ width: '60px', height: '4px', background: 'var(--accent-primary)', marginTop: '16px' }} />
+    <div style={{ padding: '40px 24px', maxWidth: '1400px', margin: '0 auto', color: 'var(--text-main)' }}>
+      <div style={{ marginBottom: '60px' }}>
+        <h1 style={{ fontWeight: '800', fontSize: '4.5rem', letterSpacing: '-0.02em', lineHeight: 1, marginBottom: '16px' }}>LIVE ROOMS</h1>
+        <p style={{ fontWeight: '500', fontSize: '1rem', opacity: 0.5, letterSpacing: '1px' }}>// SELECT YOUR ENTRY POINT INTO THE VOID</p>
       </div>
 
       <AnimatePresence>
@@ -145,9 +156,9 @@ const Rooms = () => {
             initial={{ opacity: 0, y: -20, height: 0 }} 
             animate={{ opacity: 1, y: 0, height: 'auto' }} 
             exit={{ opacity: 0, y: -20, height: 0 }}
-            style={{ marginBottom: '24px' }}
+            style={{ marginBottom: '32px' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', padding: '16px', background: 'rgba(233, 30, 99, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: '8px', fontSize: '0.9rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', padding: '16px', background: 'rgba(233, 30, 99, 0.1)', border: '1px solid var(--accent-primary)', borderRadius: '12px', fontSize: '0.9rem' }}>
               <AlertCircle size={20} />
               {error}
             </div>
@@ -157,11 +168,13 @@ const Rooms = () => {
 
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+        gridTemplateColumns: 'repeat(4, 1fr)', 
         gap: '24px' 
       }}>
         {rooms.map(room => (
-          <RoomCard key={room.id} {...room} isLoading={loadingRoom === room.id} />
+          <div key={room.id} style={{ height: '100%' }}>
+            <RoomCard {...room} isLoading={loadingRoom === room.id} />
+          </div>
         ))}
       </div>
       <style>{`.spin { animation: spin 1s linear infinite; } @keyframes spin { 100% { transform: rotate(360deg); } }`}</style>

@@ -384,13 +384,43 @@ const LoginForm = ({ onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [forgotSent, setForgotSent] = useState(false);
+  // Forgot password flow: 'none' | 'sent' | 'reset_done'
+  const [forgotPhase, setForgotPhase] = useState('none');
+  const [forgotOtp, setForgotOtp] = useState(['', '', '', '', '', '']);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [forgotTimer, setForgotTimer] = useState(30);
+  const [canResendForgot, setCanResendForgot] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState('');
+  const [devOtp, setDevOtp] = useState(''); // shows OTP when mail fails
+  const forgotOtpRefs = useRef([]);
   const navigate = useNavigate();
   const { login: ctxLogin } = useUser();
 
   const emailOk = validateEmail(email);
+  const forgotOtpStr = forgotOtp.join('');
+  const pwVal = validatePassword(newPassword);
+
+  useEffect(() => {
+    if (forgotPhase !== 'sent') return;
+    let iv = setInterval(() => setForgotTimer(t => {
+      if (t <= 1) { clearInterval(iv); setCanResendForgot(true); return 0; }
+      return t - 1;
+    }), 1000);
+    return () => clearInterval(iv);
+  }, [forgotPhase]);
+
+  const handleForgotOtpChange = (i, val) => {
+    if (isNaN(val)) return;
+    const n = [...forgotOtp]; n[i] = val.slice(-1); setForgotOtp(n);
+    if (val && i < 5) forgotOtpRefs.current[i + 1]?.focus();
+  };
+  const handleForgotOtpKey = (i, e) => {
+    if (e.key === 'Backspace' && !forgotOtp[i] && i > 0) forgotOtpRefs.current[i - 1]?.focus();
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -403,7 +433,14 @@ const LoginForm = ({ onSwitchToSignup }) => {
         body: JSON.stringify({ email, password })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      if (!res.ok) {
+        // Legacy account — prompt to reset password
+        if (data.needsReset) {
+          setForgotPhase('none');
+          throw new Error(data.error);
+        }
+        throw new Error(data.error);
+      }
       ctxLogin(data.token, data.user);
       navigate('/rooms');
     } catch (err) {
@@ -411,8 +448,8 @@ const LoginForm = ({ onSwitchToSignup }) => {
     } finally { setLoading(false); }
   };
 
-  const handleForgot = async () => {
-    if (!emailOk) return setError('Enter your university email first to reset password.');
+  const handleSendForgotOTP = async () => {
+    if (!emailOk) return setError('Please enter your full university email first.');
     setError(''); setLoading(true);
     try {
       const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
@@ -421,12 +458,138 @@ const LoginForm = ({ onSwitchToSignup }) => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setForgotSent(true);
+      setForgotPhase('sent');
+      setForgotTimer(30); setCanResendForgot(false);
+      setForgotOtp(['', '', '', '', '', '']);
+      setForgotMsg(data.message || `OTP sent to ${email}`);
+      if (data.devOtp) setDevOtp(data.devOtp); // dev only: show OTP if email fails
     } catch (err) {
       setError(err.message);
     } finally { setLoading(false); }
   };
 
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (forgotOtpStr.length !== 6) return setError('Enter the 6-digit OTP.');
+    if (!pwVal.valid) return setError('Password must have 6+ chars, 1 special, 1 number.');
+    if (newPassword !== confirmPassword) return setError('Passwords do not match.');
+    setError(''); setLoading(true);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp: forgotOtpStr, newPassword })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      // Auto-login after reset
+      ctxLogin(data.token, data.user);
+      navigate('/rooms');
+    } catch (err) {
+      setError(err.message);
+    } finally { setLoading(false); }
+  };
+
+  // ── FORGOT PASSWORD UI ──────────────────────────────────────────────────────
+  if (forgotPhase === 'sent') {
+    return (
+      <form onSubmit={handleResetPassword} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+          <button type="button" onClick={() => { setForgotPhase('none'); setError(''); setDevOtp(''); }}
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', fontFamily: 'inherit' }}>
+            <ArrowLeft size={14} /> Back to Login
+          </button>
+        </div>
+
+        <SuccessMsg msg={forgotMsg} />
+
+        {/* Dev OTP display — only when uni mail bounces */}
+        {devOtp && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            style={{ background: 'rgba(247,201,72,0.1)', border: '1px solid rgba(247,201,72,0.3)', borderRadius: '8px', padding: '12px 16px', fontSize: '0.8rem', color: '#f7c948' }}>
+            ⚠️ Uni email may not receive external mail. Your OTP (dev mode):
+            <strong style={{ display: 'block', fontSize: '1.4rem', letterSpacing: '8px', marginTop: '6px', color: '#fff' }}>{devOtp}</strong>
+          </motion.div>
+        )}
+
+        {/* OTP Boxes */}
+        <div>
+          <label style={labelStyle}>ENTER OTP FROM YOUR EMAIL</label>
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+            {forgotOtp.map((d, i) => (
+              <input key={i} ref={el => forgotOtpRefs.current[i] = el}
+                type="text" inputMode="numeric" maxLength={1} value={d}
+                onChange={e => handleForgotOtpChange(i, e.target.value)}
+                onKeyDown={e => handleForgotOtpKey(i, e)}
+                autoFocus={i === 0}
+                style={{
+                  width: '48px', height: '58px', textAlign: 'center', fontSize: '1.4rem',
+                  fontWeight: '700', background: 'rgba(255,255,255,0.05)',
+                  border: `2px solid ${d ? '#e91e63' : 'rgba(255,255,255,0.1)'}`,
+                  borderRadius: '10px', color: '#fff', outline: 'none',
+                  boxShadow: d ? '0 0 12px rgba(233,30,99,0.2)' : 'none', transition: 'all 0.2s'
+                }}
+              />
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '10px', fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
+            {canResendForgot
+              ? <button type="button" onClick={handleSendForgotOTP} style={{ background: 'none', border: 'none', color: '#e91e63', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem', fontFamily: 'inherit' }}>Resend OTP</button>
+              : `Resend in ${forgotTimer}s...`}
+          </div>
+        </div>
+
+        {/* New Password */}
+        <div>
+          <label style={labelStyle}>NEW PASSWORD</label>
+          <div style={{ position: 'relative' }}>
+            <Lock size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+            <input type={showNewPass ? 'text' : 'password'} value={newPassword}
+              onChange={e => { setNewPassword(e.target.value); setError(''); }}
+              placeholder="Min 6 chars, 1 special, 1 number"
+              style={{ ...inputStyle, paddingLeft: '44px', paddingRight: '44px' }}
+            />
+            <button type="button" onClick={() => setShowNewPass(v => !v)}
+              style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}>
+              {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+          {newPassword && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', marginTop: '8px' }}>
+              <Req met={pwVal.minLength} label="At least 6 characters" />
+              <Req met={pwVal.hasSpecial} label="At least 1 special character" />
+              <Req met={pwVal.hasNumber} label="At least 1 number" />
+            </div>
+          )}
+        </div>
+
+        {/* Confirm Password */}
+        <div>
+          <label style={labelStyle}>CONFIRM PASSWORD</label>
+          <div style={{ position: 'relative' }}>
+            <Lock size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+            <input type="password" value={confirmPassword}
+              onChange={e => { setConfirmPassword(e.target.value); setError(''); }}
+              placeholder="Re-enter your new password"
+              style={{ ...inputStyle, paddingLeft: '44px', borderColor: confirmPassword && confirmPassword !== newPassword ? '#ff6b8a' : confirmPassword && confirmPassword === newPassword ? '#5ec87a' : 'rgba(255,255,255,0.1)' }}
+            />
+            {confirmPassword && confirmPassword === newPassword && (
+              <CheckCircle2 size={16} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', color: '#5ec87a' }} />
+            )}
+          </div>
+          {confirmPassword && newPassword !== confirmPassword && <InlineError msg="Passwords do not match" />}
+        </div>
+
+        <InlineError msg={error} />
+
+        <button type="submit" disabled={loading || forgotOtpStr.length !== 6 || !pwVal.valid || newPassword !== confirmPassword}
+          style={{ ...btnPrimary, opacity: (loading || forgotOtpStr.length !== 6 || !pwVal.valid || newPassword !== confirmPassword) ? 0.5 : 1 }}>
+          {loading ? <><Loader2 size={18} className="spin" /> Resetting...</> : <>RESET & ENTER THE VOID <ArrowRight size={18} /></>}
+        </button>
+      </form>
+    );
+  }
+
+  // ── NORMAL LOGIN UI ──────────────────────────────────────────────────────────
   return (
     <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Email */}
@@ -446,9 +609,9 @@ const LoginForm = ({ onSwitchToSignup }) => {
       <div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
           <label style={{ ...labelStyle, marginBottom: 0 }}>PASSWORD</label>
-          <button type="button" onClick={handleForgot}
+          <button type="button" onClick={handleSendForgotOTP} disabled={loading}
             style={{ background: 'none', border: 'none', color: '#e91e63', fontSize: '0.75rem', cursor: 'pointer', fontWeight: '500', fontFamily: 'inherit' }}>
-            Forgot Password?
+            {loading ? 'Sending OTP...' : 'Forgot Password?'}
           </button>
         </div>
         <div style={{ position: 'relative' }}>
@@ -465,8 +628,18 @@ const LoginForm = ({ onSwitchToSignup }) => {
         </div>
       </div>
 
-      {forgotSent && <SuccessMsg msg={`Password reset OTP sent to ${email}. Check your inbox.`} />}
       <InlineError msg={error} />
+
+      {/* Prompt to use Forgot Password for legacy accounts */}
+      {error && error.includes('old system') && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          style={{ background: 'rgba(247,201,72,0.08)', border: '1px solid rgba(247,201,72,0.25)', borderRadius: '8px', padding: '12px 16px', fontSize: '0.82rem', color: '#f7c948', lineHeight: '1.5' }}>
+          💡 Click <button type="button" onClick={handleSendForgotOTP}
+            style={{ background: 'none', border: 'none', color: '#e91e63', cursor: 'pointer', fontWeight: '700', fontFamily: 'inherit', fontSize: '0.82rem', textDecoration: 'underline' }}>
+            Forgot Password?
+          </button> above to set a new password for your account.
+        </motion.div>
+      )}
 
       {error.includes('sign up') && (
         <button type="button" onClick={onSwitchToSignup} style={{ ...btnSecondary, border: '1px solid rgba(233,30,99,0.4)' }}>

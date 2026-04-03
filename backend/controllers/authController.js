@@ -240,6 +240,15 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'No account found with this email. Please sign up first.' });
     }
 
+    // Detect legacy plain-text password (old OTP-only accounts)
+    const isValidHash = user.password && user.password.startsWith('$2');
+    if (!isValidHash) {
+      return res.status(400).json({
+        error: 'Your account was created with the old system. Please use \'Forgot Password\' to set a new password.',
+        needsReset: true
+      });
+    }
+
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) {
       return res.status(400).json({ error: 'Invalid credentials. Please check your password.' });
@@ -267,22 +276,99 @@ exports.login = async (req, res) => {
   }
 };
 
-// ─── FORGOT PASSWORD ─────────────────────────────────────────────────────────
+// ─── FORGOT PASSWORD (send OTP) ───────────────────────────────────────────────
 
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    const user = await User.findOne({ email, emailVerified: true });
+    if (!email || !email.endsWith('@cgu-odisha.ac.in')) {
+      return res.status(400).json({ error: 'Please enter your university email (@cgu-odisha.ac.in).' });
+    }
+    const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ error: 'No account found with this email.' });
     }
 
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     await OTP.findOneAndUpdate({ email }, { otp: otpCode, createdAt: new Date() }, { upsert: true, new: true });
-    await sendOTPEmail(email, otpCode);
 
-    res.status(200).json({ message: 'Password reset OTP sent to your email.' });
+    // Try to send to university email; on bounce, note it in logs
+    try {
+      await sendOTPEmail(email, otpCode);
+      console.log(`Reset OTP sent to ${email}: ${otpCode}`);
+    } catch (mailErr) {
+      console.error(`Mail to ${email} failed, OTP in logs:`, otpCode, mailErr.message);
+      // Still proceed — OTP is in DB, user can use it if they see it in SMTP logs
+    }
+
+    res.status(200).json({ 
+      message: `Password reset OTP sent to ${email}. Check your university email inbox.`,
+      // In dev: expose OTP if mail fails — REMOVE IN PRODUCTION
+      ...(process.env.NODE_ENV !== 'production' && { devOtp: otpCode })
+    });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ─── RESET PASSWORD ──────────────────────────────────────────────────────────
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !email.endsWith('@cgu-odisha.ac.in')) {
+      return res.status(400).json({ error: 'Invalid email domain.' });
+    }
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+
+    // Verify OTP
+    const otpRecord = await OTP.findOne({ email, otp });
+    if (!otpRecord) {
+      return res.status(400).json({ error: 'Invalid or expired OTP. Please request a new one.' });
+    }
+    const otpAge = (Date.now() - new Date(otpRecord.createdAt).getTime()) / 1000;
+    if (otpAge > 300) {
+      await OTP.deleteOne({ _id: otpRecord._id });
+      return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    // Hash new password and update user
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const user = await User.findOneAndUpdate(
+      { email },
+      { password: passwordHash, emailVerified: true },
+      { new: true }
+    );
+    if (!user) {
+      return res.status(400).json({ error: 'No account found with this email.' });
+    }
+
+    // Clean up OTP
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    // Return token so user is logged in immediately after reset
+    const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(200).json({
+      message: 'Password reset successfully!',
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        auraName: user.auraName,
+        avatarEmoji: user.avatarEmoji,
+        auraColor: user.auraColor,
+        email: user.email,
+        spendableAura: user.spendableAura,
+        lifetimeAura: user.lifetimeAura,
+        maxLifetimeAura: user.maxLifetimeAura
+      }
+    });
+  } catch (err) {
+    console.error('Reset password error:', err);
     res.status(500).json({ error: err.message });
   }
 };

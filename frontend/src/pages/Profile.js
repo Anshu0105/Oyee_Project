@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Trash2, Shield, Palette, Zap, Users, LogOut, Check, X, AlertTriangle } from 'lucide-react';
+import { Trash2, Shield, Palette, Zap, Users, LogOut, Check, X, AlertTriangle, Settings } from 'lucide-react';
 import { safeFetch } from '../config';
 import { motion, AnimatePresence } from 'framer-motion';
 

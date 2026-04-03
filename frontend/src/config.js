@@ -1,6 +1,6 @@
 export const BACKEND_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:5002'
-  : (import.meta.env.VITE_BACKEND_URL || 'https://oyeee-backend.onrender.com');
+  : (process.env.REACT_APP_BACKEND_URL || 'https://oyeee-backend.onrender.com');
 
 export async function safeFetch(url, options = {}) {
   const res = await fetch(`${BACKEND_URL}${url}`, options);

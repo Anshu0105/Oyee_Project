@@ -37,6 +37,10 @@ const UserSchema = new mongoose.Schema({
     }]
   },
 
+  // Customization
+  theme: { type: String, default: 'wine' },
+  claimedItems: [{ type: String }],
+
   createdAt: { type: Date, default: Date.now }
 });
 

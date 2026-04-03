@@ -10,7 +10,11 @@ export const ThemeProvider = ({ children }) => {
   });
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'wine' ? 'blue' : 'wine'));
+    const cycle = ['wine', 'blue', 'green', 'gold', 'orange'];
+    setTheme(prev => {
+        const nextIdx = (cycle.indexOf(prev) + 1) % cycle.length;
+        return cycle[nextIdx];
+    });
   };
 
   useEffect(() => {

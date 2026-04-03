@@ -151,11 +151,41 @@ router.post('/relationship/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete user identity
+// Update current user's aesthetics (avatar, theme)
+router.put('/me/profile', verifyToken, async (req, res) => {
+  try {
+    const { avatarEmoji, theme } = req.body;
+    const updates = {};
+    if (avatarEmoji) updates.avatarEmoji = avatarEmoji;
+    if (theme) updates.theme = theme;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id, 
+      { $set: updates }, 
+      { new: true }
+    ).select('-password');
+
+    res.json(updatedUser);
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete user identity and clean up cross-links
 router.delete('/me', verifyToken, async (req, res) => {
   try {
-    await User.findByIdAndDelete(req.user.id);
-    res.json({ success: true, message: 'Identity permanently erased.' });
+    const userId = req.user.id;
+
+    // 1. Remove from all other users' social graphs
+    await User.updateMany(
+      { $or: [{ friends: userId }, { enemies: userId }] },
+      { $pull: { friends: userId, enemies: userId } }
+    );
+
+    // 2. Erase the actual identity
+    await User.findByIdAndDelete(userId);
+
+    res.json({ success: true, message: 'Identity permanently erased from the Void.' });
   } catch(err) {
     res.status(500).json({ error: err.message });
   }

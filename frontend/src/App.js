@@ -12,9 +12,20 @@ import AuraStore from './pages/AuraStore';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
 import { useUser } from './context/UserContext';
+import { useTheme } from './context/ThemeContext';
+import { useEffect } from 'react';
 import './App.css';
 
 function App() {
+  const { user } = useUser();
+  const { setTheme } = useTheme();
+
+  useEffect(() => {
+    if (user && user.theme) {
+      setTheme(user.theme);
+    }
+  }, [user?.theme, setTheme]);
+
   return (
     <Router>
       <div className="App">

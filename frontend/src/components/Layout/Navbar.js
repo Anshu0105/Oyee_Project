@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, MessageSquare, LayoutGrid, Trophy, ShoppingBag, ChevronDown, Flame, Settings, Gift, Palette, LogOut, Check, X } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
@@ -96,6 +96,7 @@ const NavItem = ({ icon: Icon, label, children, to }) => {
 };
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const { toggleTheme } = useTheme();
   const { user, logoutUser } = useUser();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -155,9 +156,13 @@ const Navbar = () => {
             <span>{user.streak || 7}</span>
           </div>
 
-          <div style={{ position: 'relative' }} ref={dropdownRef}>
+          <div 
+            style={{ position: 'relative' }} 
+            onMouseEnter={() => setShowProfileDropdown(true)}
+            onMouseLeave={() => setShowProfileDropdown(false)}
+          >
             <div 
-              onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+              onClick={() => navigate('/profile')}
               style={{
                 width: '42px', height: '42px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)',
                 border: `2px solid ${showProfileDropdown ? '#FF0055' : 'rgba(255,255,255,0.1)'}`,

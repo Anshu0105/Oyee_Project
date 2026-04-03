@@ -83,6 +83,24 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const updateProfile = async (updates) => {
+    try {
+      const data = await safeFetch('/api/users/me/profile', {
+        method: 'PUT',
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updates)
+      });
+      setUser(prev => ({ ...prev, ...updates }));
+      return data;
+    } catch(err) {
+      console.error(err);
+      throw err;
+    }
+  };
+
   const loginUser = (data) => {
     setToken(data.token);
     localStorage.setItem('oyeeeToken', data.token);
@@ -93,6 +111,7 @@ export const UserProvider = ({ children }) => {
       aura: data.user.aura || 0,
       avatarEmoji: data.user.avatarEmoji,
       auraColor: data.user.auraColor,
+      theme: data.user.theme || 'wine',
       friends: data.user.friends || [],
       enemies: data.user.enemies || [],
       auraVotesGiven: data.user.auraVotes?.given || []
@@ -103,7 +122,7 @@ export const UserProvider = ({ children }) => {
     localStorage.removeItem('oyeeeToken');
     setToken(null);
     setUser({
-      name: 'Anonymous', aura: 0, friends: [], enemies: [], auraVotesGiven: [], id: null, avatarEmoji: '👤', auraColor: '#FFFFFF'
+      name: 'Anonymous', aura: 0, friends: [], enemies: [], auraVotesGiven: [], id: null, avatarEmoji: '👤', auraColor: '#FFFFFF', theme: 'wine'
     });
     window.location.href = '/login';
   };
@@ -128,7 +147,7 @@ export const UserProvider = ({ children }) => {
   };
 
   return (
-    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, loginUser, logoutUser, deleteAccount }}>
+    <UserContext.Provider value={{ user, token, setToken, updateAura, addFriend, addEnemy, addClaimedItem, updateProfile, loginUser, logoutUser, deleteAccount }}>
       {children}
     </UserContext.Provider>
   );

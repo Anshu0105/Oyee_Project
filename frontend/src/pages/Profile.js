@@ -1,33 +1,87 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '../context/UserContext';
 import { useTheme } from '../context/ThemeContext';
-import { Settings, Shield, Palette, Zap, Users, Megaphone } from 'lucide-react';
-import { BACKEND_URL, safeFetch } from '../config';
-const calculateTier = (aura) => {
-  if (aura > 1000) return 'STARBORN';
-  if (aura > 500) return 'THUNDER';
-  if (aura > 200) return 'RISING';
-  return 'GHOST';
-}
+import { Trash2, Shield, Palette, Zap, Users, LogOut, Check, X, AlertTriangle } from 'lucide-react';
+import { safeFetch } from '../config';
+import { motion, AnimatePresence } from 'framer-motion';
 
-const pricingOptions = [
-  { days: 1, price: 49, impressions: '~500' },
-  { days: 3, price: 99, impressions: '~1,500' },
-  { days: 7, price: 199, impressions: '~4,000' },
+const themes = [
+  { id: 'wine', name: 'WINE PURPLE', color: '#FF0055' },
+  { id: 'blue', name: 'CROWN BLUE', color: '#4299e1' },
+  { id: 'green', name: 'NEON GREEN', color: '#48bb78' },
+  { id: 'gold', name: 'DAZZLING GOLD', color: '#ecc94b' },
+  { id: 'orange', name: 'CYBER ORANGE', color: '#ed8936' }
 ];
 
+const emojis = ['👤', '👽', '🤖', '👻', '🐱', '🎭'];
+
+const DeleteModal = ({ onConfirm, onCancel }) => (
+  <motion.div 
+    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    style={{
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(12px)', zIndex: 3000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center'
+    }}
+  >
+    <motion.div 
+      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+      style={{
+        background: '#121212', border: '1px solid rgba(255,0,0,0.3)', padding: '40px',
+        borderRadius: '32px', width: '100%', maxWidth: '450px', textAlign: 'center',
+        boxShadow: '0 0 50px rgba(255,0,0,0.1)'
+      }}
+    >
+      <div style={{ 
+        width: '80px', height: '80px', background: 'rgba(255,0,0,0.1)', borderRadius: '50%',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ff4d4d',
+        margin: '0 auto 24px'
+      }}>
+        <AlertTriangle size={40} />
+      </div>
+      <h3 style={{ fontSize: '1.8rem', fontWeight: '900', marginBottom: '16px', fontFamily: 'var(--font-bebas)', letterSpacing: '1px' }}>ERASE IDENTITY?</h3>
+      <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '32px' }}>
+        This will permanently delete your aura, friends, enemies, and all data from the void. <strong>This action cannot be undone.</strong>
+      </p>
+      
+      <div style={{ display: 'flex', gap: '16px' }}>
+        <button 
+          onClick={onCancel}
+          style={{ 
+            flex: 1, padding: '16px', background: 'rgba(255,255,255,0.05)', border: 'none', 
+            borderRadius: '16px', color: '#fff', fontWeight: '700', cursor: 'pointer',
+            fontFamily: 'var(--font-mono)', fontSize: '0.8rem'
+          }}
+        >
+          CANCEL
+        </button>
+        <button 
+          onClick={onConfirm}
+          style={{ 
+            flex: 1, padding: '16px', background: '#ff4d4d', border: 'none', 
+            borderRadius: '16px', color: '#fff', fontWeight: '900', cursor: 'pointer',
+            boxShadow: '0 10px 20px rgba(255,77,77,0.2)', fontFamily: 'var(--font-bebas)',
+            fontSize: '1.1rem', letterSpacing: '1px'
+          }}
+        >
+          CONFIRM DELETE
+        </button>
+      </div>
+    </motion.div>
+  </motion.div>
+);
+
 const Profile = () => {
-  const { user, token, deleteAccount } = useUser();
-  const { setTheme, theme: currentTheme } = useTheme();
-  const [selectedPricing, setSelectedPricing] = useState(1);
-  const [promoText, setPromoText] = useState('');
-  
+  const { user, token, logoutUser, deleteAccount, updateProfile } = useUser();
+  const [activeTab, setActiveTab] = useState('friends');
   const [friends, setFriends] = useState([]);
   const [enemies, setEnemies] = useState([]);
-  const [activeTab, setActiveTab] = useState('friends');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [loadingSocial, setLoadingSocial] = useState(true);
 
   useEffect(() => {
     if (!token) return;
+    setLoadingSocial(true);
     safeFetch('/api/users/me/social', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -35,422 +89,247 @@ const Profile = () => {
       setFriends(data.friends || []);
       setEnemies(data.enemies || []);
     })
-    .catch(err => console.error("Failed to load social graph:", err));
+    .catch(err => console.error("Social graph failed:", err))
+    .finally(() => setLoadingSocial(false));
   }, [token]);
+
+  const handleUpdate = async (updates) => {
+    try {
+      await updateProfile(updates);
+    } catch(err) {
+      console.error("Update failed:", err);
+    }
+  };
 
   const displayedConnections = activeTab === 'friends' ? friends : enemies;
 
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundColor: 'var(--bg-main)',
-      color: 'var(--text-main)',
-      padding: '40px 32px',
+      backgroundColor: '#000000',
+      color: '#ffffff',
+      padding: '40px 64px',
       fontFamily: 'var(--font-inter)',
     }}>
-      {/* Header */}
-      <div style={{ marginBottom: '40px' }}>
-        <h1 style={{
-          fontFamily: 'var(--font-bebas)',
-          fontSize: '3.5rem',
-          letterSpacing: '4px',
-          color: 'var(--text-main)',
-          lineHeight: 1,
-          marginBottom: '8px',
-        }}>
-          PROFILE
-        </h1>
-        <p style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: '0.85rem',
-          color: 'var(--text-dim)',
-          letterSpacing: '1px',
-        }}>
-          // your anonymous identity
-        </p>
-        <div style={{ width: '48px', height: '3px', background: 'var(--accent-primary)', marginTop: '10px', borderRadius: '2px' }} />
+      {/* Top Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '48px' }}>
+        <div>
+          <h1 style={{ fontFamily: 'var(--font-bebas)', fontSize: '4rem', letterSpacing: '4px', margin: 0, lineHeight: 0.9 }}>
+            IDENTITY PANEL
+          </h1>
+          <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontSize: '0.8rem', marginTop: '12px', letterSpacing: '2px', opacity: 0.8 }}>
+            // CUSTOMIZE YOUR ANONYMOUS MANIFESTATION
+          </p>
+          <div style={{ width: '60px', height: '3px', background: 'var(--accent-primary)', marginTop: '8px' }} />
+        </div>
+        <button 
+          onClick={logoutUser}
+          className="interactive hover-lift"
+          style={{ 
+            background: 'none', border: '1px solid rgba(255,0,85,0.4)', color: 'var(--accent-primary)',
+            padding: '10px 24px', borderRadius: '8px', fontFamily: 'var(--font-bebas)', fontSize: '1.1rem',
+            letterSpacing: '1px', opacity: 0.8
+          }}
+        >
+          LOG OUT
+        </button>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(300px, 380px) 1fr',
-        gap: '40px',
-        alignItems: 'start'
-      }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: '48px', alignItems: 'start' }}>
         
-        {/* LEFT COLUMN */}
+        {/* LEFT COLUMN: IDENTITY & STATS */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
           
           {/* Identity Box */}
-          <div className="glass" style={{ padding: '32px', border: '1px solid var(--glass-border)' }}>
+          <div className="glass" style={{ padding: '40px 32px', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.02)', borderRadius: '24px' }}>
             <div style={{
-              width: '80px',
-              height: '80px',
-              border: '2px solid var(--accent-primary)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '2.5rem',
-              color: 'var(--accent-primary)',
-              marginBottom: '16px',
-              borderRadius: '50%'
+                width: '100px', height: '100px', background: 'rgba(255,0,85,0.05)', border: '2px solid var(--accent-primary)',
+                borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '3rem', marginBottom: '24px', boxShadow: '0 0 30px rgba(255,0,85,0.1)'
             }}>
-              {user.name.charAt(0).toUpperCase()}
+                {user.avatarEmoji}
             </div>
-            <h2 style={{
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '2.2rem',
-              letterSpacing: '2px',
-              color: 'var(--text-main)',
-              textTransform: 'uppercase',
-              marginBottom: '4px'
-            }}>
-              {user.name}
+            <h2 style={{ fontFamily: 'var(--font-bebas)', fontSize: '3rem', letterSpacing: '2px', margin: 0 }}>
+                {user.name}
             </h2>
-            <p style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.8rem',
-              color: 'var(--text-dim)',
-            }}>
-              // {user.email || 'anon@university.edu'}
-            </p>
+            <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent-primary)', fontSize: '0.8rem', opacity: 0.5 }}>//</p>
           </div>
 
-          {/* Aura Points Card */}
-          <div className="glass" style={{
-            padding: '32px',
-            position: 'relative',
-            overflow: 'hidden',
-            border: '1px solid var(--glass-border)'
+          {/* Balance/Stats Box */}
+          <div className="glass" style={{ 
+            padding: '40px 32px', borderRadius: '24px', position: 'relative', overflow: 'hidden',
+            border: '1px solid var(--glass-border)', background: 'rgba(0,0,0,0.3)'
           }}>
-            <div style={{
-              position: 'absolute',
-              right: '-10px',
-              top: '10px',
-              fontSize: '6rem',
-              color: 'var(--accent-primary)',
-              opacity: 0.1,
-              fontFamily: 'var(--font-bebas)',
-              pointerEvents: 'none'
-            }}>
-              ⚡
-            </div>
-
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-dim)', letterSpacing: '2px', marginBottom: '8px' }}>
-              AURA POINTS
-            </p>
-            <div style={{ fontFamily: 'var(--font-bebas)', fontSize: '4.5rem', color: 'var(--text-main)', lineHeight: 1, marginBottom: '24px' }}>
-              {user.aura}
-            </div>
-
-            {/* Progress Bar */}
-            <div style={{ position: 'relative', height: '6px', background: 'rgba(255,255,255,0.1)', marginBottom: '16px', borderRadius: '3px' }}>
-              <div style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                bottom: 0,
-                width: `${Math.min((user.aura / 1000) * 100, 100)}%`,
-                background: 'var(--accent-primary)',
-                borderRadius: '3px',
-                boxShadow: '0 0 10px var(--accent-primary)'
-              }} />
+            <div style={{ position: 'absolute', right: '-20px', top: '20px', fontSize: '12rem', fontWeight: '900', opacity: 0.03, color: 'white', pointerEvents: 'none', fontFamily: 'var(--font-bebas)' }}>
+                VOID
             </div>
             
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontFamily: 'var(--font-mono)',
-              fontSize: '0.65rem',
-              color: 'var(--text-dim)',
-              marginBottom: '24px'
-            }}>
-              <span>0</span>
-              <span style={{ color: 'var(--accent-primary)' }}>⚡ 500 (THUNDER)</span>
-              <span>⭐ 1000 (STARBORN)</span>
+            <div style={{ marginBottom: '32px' }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', marginBottom: '8px' }}>SPENDABLE BALANCE (LIQUID)</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px' }}>
+                    <span style={{ fontSize: '5rem', fontWeight: '900', fontFamily: 'var(--font-bebas)', lineHeight: 1 }}>{user.aura}</span>
+                    <Zap size={24} fill="var(--accent-primary)" color="var(--accent-primary)" />
+                </div>
             </div>
 
-            <div style={{ height: '1px', background: 'var(--glass-border)', margin: '16px 0' }} />
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                 <span style={{ color: 'var(--accent-green)' }}>AuraPlus+++</span>
-                 <span style={{ color: 'var(--accent-primary)' }}>AuraMinus---</span>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)' }}>LIFETIME EARNED (FIXED)</span>
+                    <span style={{ fontWeight: '700', fontSize: '1.2rem' }}>{user.aura}</span>
+                </div>
             </div>
-          </div>
 
-          {/* Recent Rooms */}
-          <div>
-            <h3 style={{
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '1.4rem',
-              letterSpacing: '2px',
-              color: 'var(--accent-primary)',
-              marginBottom: '16px'
-            }}>
-              RECENT ACTIVITY
-            </h3>
-            <div className="glass" style={{
-              padding: '32px',
-              textAlign: 'center',
-              border: '1px solid var(--glass-border)'
-            }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                Your history is auto-deleted every 24h
-              </p>
+            <div style={{ marginTop: '40px', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>FLOOR PROTECTION:</span>
+                    <span style={{ fontSize: '0.65rem', color: '#48bb78', fontWeight: '800' }}>10% OF PEAK</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontWeight: '900', fontSize: '0.9rem' }}>0</span>
+                    <Zap size={10} fill="#ffffff" color="transparent" />
+                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)' }}>(RESTRICTED WITHDRAWAL)</span>
+                </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+        {/* RIGHT COLUMN: CUSTOMIZATION & CONNECTIONS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '48px' }}>
           
-          {/* SETTINGS CARD */}
-          <div className="glass" style={{
-            padding: '32px',
-            border: '1px solid var(--glass-border)'
-          }}>
-            <h2 style={{
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '2rem',
-              letterSpacing: '2px',
-              color: 'var(--text-main)',
-              marginBottom: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <Settings size={28} className="spin-hover" /> SETTINGS
-            </h2>
+          {/* Customization Section */}
+          <div className="glass" style={{ padding: '48px', borderRadius: '32px', border: '1px solid var(--glass-border)' }}>
+            <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '2.2rem', letterSpacing: '2px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
+                <Settings size={28} /> CUSTOMIZATION
+            </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-               <div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)', marginBottom: '12px', letterSpacing: '1px' }}>
-                    <Palette size={14} /> THEME SELECTION
-                  </label>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                     <button 
-                       onClick={() => setTheme('wine')}
-                       className="interactive"
-                       style={{
-                         flex: 1,
-                         padding: '16px',
-                         background: currentTheme === 'wine' ? 'var(--accent-primary)' : 'rgba(233, 30, 99, 0.1)',
-                         border: `1px solid ${currentTheme === 'wine' ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
-                         borderRadius: '8px',
-                         color: currentTheme === 'wine' ? 'white' : 'var(--accent-primary)',
-                         fontFamily: 'var(--font-bebas)',
-                         fontSize: '1.1rem',
-                         letterSpacing: '1px',
-                         cursor: 'pointer',
-                         transition: 'all 0.3s'
-                       }}
-                     >
-                        WINE-PURPLE
-                     </button>
-                     <button 
-                       onClick={() => setTheme('blue')}
-                       className="interactive"
-                       style={{
-                         flex: 1,
-                         padding: '16px',
-                         background: currentTheme === 'blue' ? 'var(--accent-primary)' : 'rgba(245, 196, 0, 0.1)',
-                         border: `1px solid ${currentTheme === 'blue' ? 'var(--accent-primary)' : 'var(--glass-border)'}`,
-                         borderRadius: '8px',
-                         color: currentTheme === 'blue' ? 'var(--bg-main)' : 'var(--accent-primary)',
-                         fontFamily: 'var(--font-bebas)',
-                         fontSize: '1.1rem',
-                         letterSpacing: '1px',
-                         cursor: 'pointer',
-                         transition: 'all 0.3s'
-                       }}
-                     >
-                        CROWN-BLUE
-                     </button>
-                  </div>
-               </div>
-               
-               <div style={{ padding: '16px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
-                 <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', lineHeight: '1.5' }}>
-                   * Theme selection is saved to your local device. 
-                   Consistent across all pages of the void.
-                 </p>
-               </div>
+            {/* Avatar Emojis */}
+            <div style={{ marginBottom: '48px' }}>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Users size={14} /> SELECT AVATAR EMOJI
+                </p>
+                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    {emojis.map(e => (
+                        <button 
+                            key={e}
+                            onClick={() => handleUpdate({ avatarEmoji: e })}
+                            className="interactive"
+                            style={{
+                                width: '60px', height: '60px', background: user.avatarEmoji === e ? 'var(--accent-primary)' : 'rgba(255,255,255,0.05)',
+                                border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '1.8rem',
+                                transition: 'all 0.3s', boxShadow: user.avatarEmoji === e ? '0 0 20px rgba(255,0,85,0.2)' : 'none'
+                            }}
+                        >
+                            {e}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
-               <div style={{ padding: '16px', background: 'rgba(255,0,0,0.05)', borderRadius: '8px', border: '1px solid rgba(255,0,0,0.3)' }}>
-                 <h3 style={{ fontFamily: 'var(--font-bebas)', fontSize: '1.2rem', color: '#ff4d4d', marginBottom: '8px', letterSpacing: '1px' }}>DANGER ZONE</h3>
-                 <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', lineHeight: '1.5', marginBottom: '16px' }}>
-                   Permanently erase your identity, aura points, and connections. This action cannot be reversed.
-                 </p>
-                 <button 
-                   onClick={() => {
-                     if (window.confirm("Are you absolutely sure you want to permanently delete your identity? This cannot be undone.")) {
-                       deleteAccount();
-                     }
-                   }}
-                   className="interactive"
+            {/* Theme Palette */}
+            <div>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Palette size={14} /> SELECT THEME PALETTE
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
+                    {themes.map(t => (
+                        <button 
+                            key={t.id}
+                            onClick={() => handleUpdate({ theme: t.id })}
+                            className="interactive hover-lift"
+                            style={{
+                                padding: '16px 20px', background: user.theme === t.id ? t.color : 'rgba(255,255,255,0.03)',
+                                border: `1px solid ${user.theme === t.id ? t.color : 'rgba(255,255,255,0.1)'}`,
+                                borderRadius: '12px', color: user.theme === t.id ? '#ffffff' : t.color,
+                                fontFamily: 'var(--font-bebas)', fontSize: '1.1rem', letterSpacing: '1px',
+                                textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                boxShadow: user.theme === t.id ? `0 0 20px ${t.color}33` : 'none'
+                            }}
+                        >
+                            {t.name}
+                            {user.theme === t.id && <Check size={16} />}
+                        </button>
+                    ))}
+                </div>
+            </div>
+          </div>
+
+          {/* Connections Section */}
+          <div className="glass" style={{ padding: '48px', borderRadius: '32px', border: '1px solid var(--glass-border)' }}>
+             <div style={{ display: 'flex', gap: '40px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '32px' }}>
+                <button 
+                   onClick={() => setActiveTab('friends')}
                    style={{
-                     width: '100%',
-                     padding: '12px',
-                     background: '#ff4d4d',
-                     color: 'white',
-                     border: 'none',
-                     borderRadius: '4px',
-                     fontFamily: 'var(--font-bebas)',
-                     fontSize: '1.1rem',
-                     letterSpacing: '1px',
-                     cursor: 'pointer'
+                       background: 'none', border: 'none', padding: '0 0 16px', fontFamily: 'var(--font-bebas)', 
+                       fontSize: '1.8rem', letterSpacing: '2px', color: activeTab === 'friends' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
+                       borderBottom: activeTab === 'friends' ? '3px solid var(--accent-primary)' : '3px solid transparent',
+                       transition: 'all 0.3s', cursor: 'pointer'
                    }}
-                 >
-                   DELETE IDENTITY
-                 </button>
-               </div>
-            </div>
+                >
+                    FRIENDS ({friends.length})
+                </button>
+                <button 
+                   onClick={() => setActiveTab('enemies')}
+                   style={{
+                       background: 'none', border: 'none', padding: '0 0 16px', fontFamily: 'var(--font-bebas)', 
+                       fontSize: '1.8rem', letterSpacing: '2px', color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'rgba(255,255,255,0.3)',
+                       borderBottom: activeTab === 'enemies' ? '3px solid var(--accent-primary)' : '3px solid transparent',
+                       transition: 'all 0.3s', cursor: 'pointer'
+                   }}
+                >
+                    ENEMIES ({enemies.length})
+                </button>
+             </div>
+
+             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {loadingSocial ? (
+                    <div style={{ opacity: 0.3, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center', padding: '24px' }}>// LOADING PEERS...</div>
+                ) : displayedConnections.length === 0 ? (
+                    <div style={{ opacity: 0.3, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center', padding: '24px' }}>// NO PEERS DISCOVERED</div>
+                ) : (
+                    displayedConnections.map(peer => (
+                        <div key={peer._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <span style={{ fontSize: '1.5rem' }}>{peer.avatarEmoji || '👤'}</span>
+                                <span style={{ fontWeight: '700', fontSize: '1.1rem' }}>{peer.auraName || peer.username}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent-primary)', fontWeight: '800' }}>
+                                <span>{peer.aura}</span>
+                                <Zap size={14} fill="currentColor" />
+                            </div>
+                        </div>
+                    ))
+                )}
+             </div>
           </div>
 
-          {/* CONNECTIONS CARD */}
-          <div className="glass" style={{
-            padding: '32px',
-            border: '1px solid var(--glass-border)'
-          }}>
-            <h2 style={{
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '2rem',
-              letterSpacing: '2px',
-              color: 'var(--text-main)',
-              marginBottom: '24px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <Users size={28} /> CONNECTIONS
-            </h2>
-
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: '32px', borderBottom: '1px solid var(--glass-border)', marginBottom: '24px' }}>
-              <div 
+          {/* Danger Zone */}
+          <div style={{ marginTop: '24px', textAlign: 'right' }}>
+             <button 
+                onClick={() => setShowDeleteModal(true)}
                 className="interactive"
-                onClick={() => setActiveTab('friends')}
                 style={{
-                  fontFamily: 'var(--font-bebas)',
-                  fontSize: '1.1rem',
-                  letterSpacing: '1px',
-                  color: activeTab === 'friends' ? 'var(--accent-primary)' : 'var(--text-dim)',
-                  paddingBottom: '8px',
-                  borderBottom: activeTab === 'friends' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer'
-                }}>
-                FRIENDS ({friends.length})
-              </div>
-              <div 
-                className="interactive"
-                onClick={() => setActiveTab('enemies')}
-                style={{
-                  fontFamily: 'var(--font-bebas)',
-                  fontSize: '1.1rem',
-                  letterSpacing: '1px',
-                  color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'var(--text-dim)',
-                  paddingBottom: '8px',
-                  borderBottom: activeTab === 'enemies' ? '2px solid var(--accent-primary)' : '2px solid transparent',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  cursor: 'pointer'
-                }}>
-                ENEMIES ({enemies.length})
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {displayedConnections.length === 0 ? (
-                 <div style={{ opacity: 0.4, fontFamily: 'var(--font-mono)', fontSize: '0.8rem', textAlign: 'center', padding: '20px' }}>Void links empty...</div>
-              ) : displayedConnections.map((f, i) => {
-                const tier = calculateTier(f.aura);
-                return (
-                  <div key={f._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ fontSize: '1.2rem', filter: activeTab === 'enemies' ? 'grayscale(100%) opacity(0.5)' : 'none' }}>{f.avatarEmoji}</div>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: activeTab === 'enemies' ? 'var(--accent-primary)' : 'var(--text-main)', fontWeight: 'bold' }}>
-                        {f.auraName}
-                      </span>
-                      {tier === 'THUNDER' && <span style={{ color: '#f7c948', fontSize: '0.9rem' }}>⚡</span>}
-                      {tier === 'STARBORN' && <span style={{ color: '#8c52ff', fontSize: '0.9rem' }}>⭐</span>}
-                      {f.equippedBadge && <span style={{ fontSize: '0.9rem' }}>{f.equippedBadge}</span>}
-                    </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-                      {f.aura.toLocaleString()} aura
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* PROMOTE CARD */}
-          <div className="glass" style={{
-            padding: '32px',
-            border: '1px solid var(--glass-border)'
-          }}>
-            <h2 style={{
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '2rem',
-              letterSpacing: '2px',
-              color: 'var(--accent-primary)',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <Megaphone size={28} /> PROMOTE
-            </h2>
-            <textarea 
-              value={promoText}
-              onChange={(e) => setPromoText(e.target.value)}
-              placeholder="Write your promotional message here.. emojis welcome 🔥✨"
-              style={{
-                width: '100%',
-                height: '80px',
-                background: 'rgba(0,0,0,0.2)',
-                border: '1px solid var(--glass-border)',
-                padding: '16px',
-                color: '#ffffff',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '0.9rem',
-                resize: 'none',
-                outline: 'none',
-                marginBottom: '8px',
-                borderRadius: '8px'
-              }}
-            />
-            <button className="interactive" style={{
-              width: '100%',
-              background: 'var(--accent-primary)',
-              color: '#ffffff',
-              border: 'none',
-              padding: '16px',
-              fontFamily: 'var(--font-bebas)',
-              fontSize: '1.2rem',
-              letterSpacing: '2px',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              transition: 'all 0.3s'
-            }}>
-              PAY & PROMOTE
-            </button>
+                  background: 'none', border: 'none', color: 'rgba(255,77,77,0.4)', fontFamily: 'var(--font-mono)',
+                  fontSize: '0.75rem', textDecoration: 'underline', cursor: 'pointer', display: 'inline-flex',
+                  alignItems: 'center', gap: '8px'
+                }}
+             >
+                <Trash2 size={14} /> DELETE MY IDENTITY
+             </button>
           </div>
         </div>
       </div>
-      <style>{`
-        .spin-hover:hover {
-           transform: rotate(180deg);
-           transition: transform 0.6s ease;
-        }
-      `}</style>
+
+      <AnimatePresence>
+        {showDeleteModal && (
+          <DeleteModal 
+            onConfirm={async () => {
+                await deleteAccount();
+                setShowDeleteModal(false);
+            }} 
+            onCancel={() => setShowDeleteModal(false)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

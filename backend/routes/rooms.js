@@ -1,43 +1,65 @@
 const express = require('express');
 const router = express.Router();
+const crypto = require('crypto');
 const { verifyToken } = require('../middleware/auth');
 const User = require('../models/User');
-const crypto = require('crypto');
+const Room = require('../models/Room');
 
-// University Room Validation Endpoint
-router.get('/university/check-access', verifyToken, async (req, res) => {
+// 1. WiFi Room - IP Detection & Auto-Join
+router.post('/wifi/detect', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id);
-    if (!user.email.endsWith('@cgu-odisha.ac.in')) {
-      return res.status(403).json({ 
-        error: "University email required", 
-        message: "Please log out and verify your @cgu-odisha.ac.in identity" 
+    // In a real production env, req.ip or x-forwarded-for would be used.
+    // For this implementation, we'll simulate it or use the provided IP if any.
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    
+    // Hash Subnet (e.g., 192.168.1.x)
+    const subnet = ip.split('.').slice(0, 3).join('.');
+    const networkHash = crypto.createHash('md5').update(subnet).digest('hex');
+    
+    const roomId = `wifi_${networkHash}`;
+    
+    // Check if room exists, if not create it
+    let room = await Room.findOne({ networkHash });
+    if (!room) {
+      room = new Room({
+        name: `WiFi Room (${subnet}.x)`,
+        networkHash,
+        type: 'Wifi',
+        description: 'Automatically detected local network room.'
       });
+      await room.save();
     }
-    if (!user.emailVerified) {
-       return res.status(403).json({ 
-         error: "Email not verified", 
-         message: "Verification pending. Check your university inbox." 
-       });
-    }
-    res.json({ access: true, roomId: "uni_global" });
-  } catch(err) { res.status(500).json({ error: err.message }); }
+
+    res.json({ 
+      success: true, 
+      roomId: room._id, // Internal ID or the string ID
+      name: room.name,
+      userCount: room.userCount
+    });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// GPS Based Room Clustering Endpoint using Haversine algorithm
+// 2. GPS Based Room Discovery (Snapchat-style Heatmap backend)
 router.post('/nearby', verifyToken, async (req, res) => {
   try {
-    const { lat, lng, radiusKm = 5 } = req.body;
+    const { lat, lng, radiusKm = 10 } = req.body;
     
-    // First, update the calling user's geospatial location in the DB
+    // Update calling user's location
     await User.findByIdAndUpdate(req.user.id, {
       location: { type: 'Point', coordinates: [lng, lat] }
     });
     
-    // Convert km to radians for MongoDB $centerSphere (Earth radius = ~6371km)
+    // Find rooms nearby
     const radiusInRadians = radiusKm / 6371;
+    const nearbyRooms = await Room.find({
+      location: {
+        $geoWithin: { $centerSphere: [[lng, lat], radiusInRadians] }
+      }
+    }).populate('creator', 'auraName');
     
-    // Find all users (excluding self) within the geographic sphere who are Online
+    // Also find active users nearby for "hotspot" logic
     const nearbyUsers = await User.find({
       isOnline: true,
       _id: { $ne: req.user.id },
@@ -45,35 +67,70 @@ router.post('/nearby', verifyToken, async (req, res) => {
         $geoWithin: { $centerSphere: [[lng, lat], radiusInRadians] }
       }
     });
+
+    res.json({
+      success: true,
+      rooms: nearbyRooms,
+      usersNearby: nearbyUsers.length,
+      heatmapData: nearbyRooms.map(r => ({
+        lat: r.location.coordinates[1],
+        lng: r.location.coordinates[0],
+        weight: r.userCount + 1
+      }))
+    });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Create Custom Room
+router.post('/create', verifyToken, async (req, res) => {
+  try {
+    const { name, description, type, maxUsers, lat, lng } = req.body;
     
-    // Build dynamic room based on cluster logic
-    // Using a hashed generic bounding name or simple radius name to group peers
-    const clusterRoomId = `nearby_${Math.floor(lat * 10)}_${Math.floor(lng * 10)}`;
+    const existingRoom = await Room.findOne({ name });
+    if (existingRoom) return res.status(400).json({ error: 'Room name already taken' });
+
+    const newRoom = new Room({
+      name,
+      description,
+      type: type || 'Custom',
+      maxUsers: maxUsers || 50,
+      creator: req.user.id,
+      location: lat && lng ? { type: 'Point', coordinates: [lng, lat] } : undefined
+    });
+
+    await newRoom.save();
+    res.status(201).json({ success: true, room: newRoom });
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. University Room Aggregator
+router.get('/university/all', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user.email.endsWith('@cgu-odisha.ac.in')) {
+      return res.status(403).json({ error: "Institutional access required" });
+    }
+
+    // Return all active rooms created by university users
+    const allRooms = await Room.find().sort({ userCount: -1 }).limit(50);
     
     res.json({
       success: true,
-      roomId: clusterRoomId,
-      usersFound: nearbyUsers.length,
-      users: nearbyUsers.map((u) => ({ auraName: u.auraName, badge: u.equippedBadge })) // Anonymized subset
+      university: "CGU-Odisha",
+      activeRooms: allRooms.length,
+      rooms: {
+        wifi: allRooms.filter(r => r.type === 'Wifi'),
+        gps: allRooms.filter(r => r.type === 'GPS-based'),
+        custom: allRooms.filter(r => r.type === 'Custom' || r.type === 'Open')
+      }
     });
-  } catch(err) { res.status(500).json({ error: err.message }); }
-});
-
-// Automated WiFi Room Discovery (Based on Public IPv4)
-router.post('/wifi/discover', verifyToken, async (req, res) => {
-  try {
-    const { ip } = req.body;
-    if (!ip) return res.status(400).json({ error: 'IP address is required' });
-    
-    // Hash the public IPv4 to create a unique, privacy-safe room ID
-    const hash = crypto
-      .createHash('sha256')
-      .update(ip.trim() + (process.env.JWT_SECRET || 'oyeee_secret'))
-      .digest('hex')
-      .substring(0, 12);
-      
-    res.json({ success: true, roomId: `wifi_${hash}` });
-  } catch(err) { res.status(500).json({ error: err.message }); }
+  } catch(err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

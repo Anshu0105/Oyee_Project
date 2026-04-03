@@ -6,30 +6,17 @@ const socketIo = require('socket.io');
 const path = require('path');
 require('dotenv').config();
 
-const allowedOrigins = [
-  "https://oyeee.chat",
-  "https://www.oyeee.chat",
-  "https://oyeee-frontend.pages.dev",
-  "http://localhost:3000"
-];
-
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: allowedOrigins,
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    methods: ["GET", "POST"]
   }
 });
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Blocked by Void Security (CORS)'));
-    }
-  },
+  origin: process.env.FRONTEND_URL || "http://localhost:3000",
   credentials: true
 }));
 app.use(express.json());
@@ -41,6 +28,7 @@ const adminRoute = require('./routes/admin');
 const roomRoute = require('./routes/rooms');
 const dmRoute = require('./routes/dm');
 const usersRoute = require('./routes/users');
+const trendingRoute = require('./routes/trending');
 
 app.use('/api', messagesRoute);
 app.use('/api', detectorRoute);
@@ -49,6 +37,7 @@ app.use('/api/admin', adminRoute);
 app.use('/api/rooms', roomRoute);
 app.use('/api/dm', dmRoute);
 app.use('/api/users', usersRoute);
+app.use('/api/trending', trendingRoute);
 
 // Serve Standalone Admin UI Safe Zone
 app.use('/admin', express.static(path.join(__dirname, 'public/admin')));

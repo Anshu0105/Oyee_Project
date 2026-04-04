@@ -7,17 +7,22 @@ const { generateAuraName } = require('../utils/nameGenerator');
 
 const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🌮', '🥑', '🍔', '🥟', '🥨'];
 
-// Nodemailer transport - High-performance SSL config for Cloud Manifest
+// Nodemailer transport - Deep Debug Manifest for Cloud Troubleshooting
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // Use SSL for instant connection from cloud environments
+  secure: true, // Use SSL for direct manifest
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  connectionTimeout: 10000, // 10s manifest timeout
+  connectionTimeout: 10000,
   greetingTimeout: 10000,
+  debug: true,   // Spill detailed logs to Render console
+  logger: true,  // Track full manifest history
+  tls: {
+    rejectUnauthorized: false // Bypass regional certificate interference
+  }
 });
 
 // Temporary memory store for OTPs

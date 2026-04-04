@@ -75,12 +75,15 @@ const AuraStore = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      flex: 1,
+      height: '100%',
+      overflowY: 'auto',
       backgroundColor: 'var(--bg-main)',
       color: 'var(--text-main)',
-      padding: '40px 32px',
+      padding: '100px 32px 40px', // Pad top to prevent Navbar overlap
       fontFamily: 'var(--font-inter)',
       position: 'relative',
+      scrollBehavior: 'smooth'
     }}>
       {/* Toast Notifications */}
       <div style={{ position: 'fixed', top: '80px', right: '24px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '8px' }}>

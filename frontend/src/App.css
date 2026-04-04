@@ -30,7 +30,7 @@
   input, textarea { font-size: 16px !important; }
   
   .nav-center { display: none; }
-  .App > * { flex: 1; }
+  .App > *:last-child { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 }
 
 .mobile-only { display: none; }

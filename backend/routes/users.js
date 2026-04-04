@@ -137,8 +137,11 @@ router.post('/aura/:id', verifyToken, async (req, res) => {
     const existingVote = voterUser.auraVotes.given.find(v => v.userId.toString() === targetId);
     if (existingVote) return res.status(400).json({ error: "Already cast an aura vote for this user" });
 
+    // Aura Manifest Calibration: +7 for Plus, -3 for Minus
+    const increment = type === 'up' ? 7 : -3;
+
     // Calculate new aura ensuring it never drops below 0
-    const newAura = Math.max(0, targetUser.aura + increment);
+    const newAura = Math.max(0, (targetUser.aura || 0) + increment);
     
     // Update target's aura and upvoter's history
     await Promise.all([
@@ -147,9 +150,9 @@ router.post('/aura/:id', verifyToken, async (req, res) => {
     ]);
 
     const io = req.app.get('io');
-    io.emit('auraUpdate', { userId: targetId, newAura: targetUser.aura + increment });
+    io.emit('auraUpdate', { userId: targetId, newAura });
 
-    res.json({ success: true, newAura: targetUser.aura + increment });
+    res.json({ success: true, newAura });
   } catch(err) {
     res.status(500).json({ error: err.message });
   }

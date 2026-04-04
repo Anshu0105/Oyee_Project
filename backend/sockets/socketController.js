@@ -92,7 +92,12 @@ module.exports = (io) => {
           { upsert: true, new: true }
         ).catch(err => console.error("Activity Track Error:", err));
 
-        io.to(roomId).emit('receiveMessage', saved);
+        // Broadcast with explicit senderId string for reliable frontend identity matching
+        const broadcastMsg = saved.toObject();
+        broadcastMsg.senderId = String(messageData.senderId || socket.userId || '');
+        broadcastMsg.avatarEmoji = messageData.avatarEmoji || '';
+        broadcastMsg.user = messageData.user || '';
+        io.to(roomId).emit('receiveMessage', broadcastMsg);
         
         // Notify admins if flagged
         if (messageData.flagged) {

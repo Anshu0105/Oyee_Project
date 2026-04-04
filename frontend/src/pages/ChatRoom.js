@@ -181,9 +181,13 @@ const ChatRoom = () => {
            </div>
         )}
         {messages.map((msg, i) => {
-          const isMe = (msg.senderId && (msg.senderId === user.id || msg.senderId._id === user.id)) || msg.user === user.auraName || msg.user === user.name;
+          const currentUserId = String(user?.id || user?._id || '');
+          const msgSenderId = String(msg.senderId?._id || msg.senderId || '');
+          // Only mark as mine if IDs are non-empty and match exactly
+          const isMe = currentUserId.length > 0 && msgSenderId.length > 0 && msgSenderId === currentUserId;
+          
           const timeFormat = msg.time || (msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
-          const targetId = msg.senderId?._id || msg.senderId;
+          const targetId = msgSenderId;
           const displayName = isMe ? user.auraName : msg.user;
           const displayEmoji = isMe ? user.avatarEmoji : (msg.avatarEmoji || '👤');
 
@@ -215,32 +219,32 @@ const ChatRoom = () => {
                 {!isMe && targetId && (
                     <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                     <button 
-                        disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
-                        onClick={() => handleAction((t) => updateAura(t, 'up'), targetId, '+1 Aura given')}
+                        disabled={user.auraVotesGiven?.some(v => v.userId === targetId)}
+                        onClick={() => handleAction((t) => updateAura(t, 'up'), targetId, '+7 Aura Manifested')}
                         className="interactive hover-lift" 
                         style={{ 
                         background: 'rgba(57, 255, 20, 0.05)', border: '1px solid #39FF14', color: '#39FF14', 
                         padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', display: 'flex', 
-                        alignItems: 'center', gap: '4px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
+                        alignItems: 'center', gap: '4px', opacity: (user.auraVotesGiven?.some(v => v.userId === targetId)) ? 0.3 : 1
                         }}
                     >
-                        + Aura
+                        +7 Aura
                     </button>
                     <button 
-                        disabled={user.auraVotesGiven.some(v => v.userId === targetId)}
-                        onClick={() => handleAction((t) => updateAura(t, 'down'), targetId, '-1 Aura given')}
+                        disabled={user.auraVotesGiven?.some(v => v.userId === targetId)}
+                        onClick={() => handleAction((t) => updateAura(t, 'down'), targetId, '-3 Aura Manifested')}
                         className="interactive hover-lift" 
                         style={{ 
                         background: 'rgba(255, 77, 77, 0.05)', border: '1px solid #ff4d4d', color: '#ff4d4d', 
                         padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', display: 'flex', 
-                        alignItems: 'center', gap: '4px', opacity: user.auraVotesGiven.some(v => v.userId === targetId) ? 0.3 : 1
+                        alignItems: 'center', gap: '4px', opacity: (user.auraVotesGiven?.some(v => v.userId === targetId)) ? 0.3 : 1
                         }}
                     >
-                        - Aura
+                        -3 Aura
                     </button>
                     <button 
                         disabled={user.friends?.includes(targetId) || user.enemies?.includes(targetId)}
-                        onClick={() => handleAction(addFriend, targetId, 'Added as friend')}
+                        onClick={() => handleAction(addFriend, targetId, 'Frequency: Friend')}
                         className="interactive hover-lift" 
                         style={{ 
                             background: 'rgba(0, 212, 255, 0.05)', border: '1px solid #00D4FF', color: '#00D4FF',

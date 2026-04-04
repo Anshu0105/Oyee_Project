@@ -58,7 +58,8 @@ const Leaderboard = () => {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100vh',
+      overflowY: 'auto',
       backgroundColor: 'var(--bg-main)',
       color: 'var(--text-main)',
       padding: '40px 32px',

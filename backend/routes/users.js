@@ -137,11 +137,12 @@ router.post('/aura/:id', verifyToken, async (req, res) => {
     const existingVote = voterUser.auraVotes.given.find(v => v.userId.toString() === targetId);
     if (existingVote) return res.status(400).json({ error: "Already cast an aura vote for this user" });
 
-    const increment = type === 'up' ? 1 : -1;
+    // Calculate new aura ensuring it never drops below 0
+    const newAura = Math.max(0, targetUser.aura + increment);
     
     // Update target's aura and upvoter's history
     await Promise.all([
-      User.findByIdAndUpdate(targetId, { $inc: { aura: increment, weeklyAuraGain: increment } }),
+      User.findByIdAndUpdate(targetId, { $set: { aura: newAura }, $inc: { weeklyAuraGain: increment } }),
       User.findByIdAndUpdate(voterId, { $push: { 'auraVotes.given': { userId: targetId, type } } })
     ]);
 

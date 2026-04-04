@@ -7,39 +7,40 @@ const { generateAuraName } = require('../utils/nameGenerator');
 
 const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🌮', '🥑', '🍔', '🥟', '🥨'];
 
-// Nodemailer transport - Hardened for Render + Gmail SSL
+// Nodemailer transport
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // Use SSL for more reliable delivery from cloud environments
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT) || 587,
+  secure: false,
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  connectionTimeout: 10000, // 10 seconds
-  greetingTimeout: 10000,
 });
 
 // Temporary memory store for OTPs
+// Structure: Map<email, { otp, expiresAt, userData }>
 const otpStore = new Map();
 
 exports.sendOtp = async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    console.log(`[AUTH] Initiating Signup OTP for: ${email}`);
     
+    // Institutional Domain & Registration Logic (CGU Odisha)
     const cguRegex = /^(22|23|24|25)\d{4}(0\d{3}|1\d{3}|2000)@cgu-odisha\.ac\.in$/;
+    
     if (!cguRegex.test(email.toLowerCase())) {
       return res.status(400).json({ 
-        error: 'Access Denied: Please use your CGU Student Email (e.g., 2301020816@cgu-odisha.ac.in).' 
+        error: 'Access Denied: Please use a valid CGU Student Email (e.g., 2301020816@cgu-odisha.ac.in) from active batches (2022-2025).' 
       });
     }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'Identity already manifested in the Void.' });
+    if (existingUser) return res.status(400).json({ error: 'User already exists' });
 
+    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
+    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
 
     otpStore.set(email, {
       otp,
@@ -51,23 +52,14 @@ exports.sendOtp = async (req, res) => {
       from: `"OYEEE Auth" <${process.env.SMTP_USER}>`,
       to: email,
       subject: 'Your OYEEE Authentication Code',
-      html: `
-        <div style="background: #000; color: #fff; padding: 30px; border-radius: 20px; border: 1px solid #FF0055; font-family: sans-serif;">
-          <h2 style="color: #FF0055; letter-spacing: 2px;">WELCOME TO THE VOID</h2>
-          <p>Your 6-digit verification code is:</p>
-          <div style="font-size: 2.5rem; font-weight: 900; letter-spacing: 5px; color: #fff; margin: 20px 0;">${otp}</div>
-          <p style="opacity: 0.5;">This code expires in 5 minutes. Secure your identity.</p>
-        </div>
-      `
+      text: `Your OTP for OYEEE is: ${otp}. It expires in 5 minutes.`,
+      html: `<h2>Welcome to OYEEE</h2><p>Your 6-digit verification code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`
     };
 
-    console.log(`[SMTP] Attempting to transmit Signup OTP to: ${email}`);
     await transporter.sendMail(mailOptions);
-    console.log(`[SMTP] Signup OTP successfully transmitted.`);
     res.status(200).json({ message: 'OTP sent successfully' });
   } catch (err) {
-    console.error(`[SMTP ERROR] Signup failed: ${err.message}`);
-    res.status(500).json({ error: `SMTP Transmission Failure: ${err.message}` });
+    res.status(500).json({ error: err.message });
   }
 };
 
@@ -143,13 +135,8 @@ exports.loginUser = async (req, res) => {
 exports.requestPasswordReset = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log(`[RECOVERY] Requesting reset for: ${email}`);
-    
     const user = await User.findOne({ email });
-    if (!user) {
-      console.warn(`[RECOVERY] Identity not found: ${email}`);
-      return res.status(404).json({ error: 'This identity does not exist in our records.' });
-    }
+    if (!user) return res.status(404).json({ error: 'Identity not found in the Void' });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = Date.now() + 5 * 60 * 1000;
@@ -159,26 +146,22 @@ exports.requestPasswordReset = async (req, res) => {
     const mailOptions = {
       from: `"OYEEE Security" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: 'Recover Your OYEEE Identity',
+      subject: 'Reset Your OYEEE Password',
       html: `
-        <div style="background: #000; color: #fff; padding: 30px; border-radius: 20px; border: 1px solid #FF0055; font-family: sans-serif;">
-            <h2 style="color: #FF0055; letter-spacing: 2px;">IDENTITY RECOVERY</h2>
-            <p>A recovery signal was initiated for your OYEEE profile. If this was you, use the code below to reset your credentials:</p>
-            <div style="font-size: 2.5rem; font-weight: 900; letter-spacing: 5px; color: #fff; margin: 25px 0; text-align: center;">${otp}</div>
-            <p style="opacity: 0.5; font-size: 0.8rem;">This authentication code expires in 5 minutes.</p>
-            <div style="height: 1px; background: rgba(255,255,255,0.1); margin: 20px 0;"></div>
-            <p style="font-size: 0.7rem; opacity: 0.3;">OYEEE PROTOCOL // ENCRYPTED RECOVERY SIGNAL</p>
+        <div style="font-family: sans-serif; padding: 20px; background: #000; color: #fff; border-radius: 12px; border: 1px solid #FF0055;">
+          <h2 style="color: #FF0055;">Password Reset Request</h2>
+          <p>You requested a password reset for your OYEEE account.</p>
+          <p>Your authentication code is: <strong style="font-size: 1.5rem; letter-spacing: 2px;">${otp}</strong></p>
+          <p>This code expires in 5 minutes.</p>
+          <p style="font-size: 0.8rem; opacity: 0.5;">If you didn't request this, you can safely ignore this email.</p>
         </div>
       `
     };
 
-    console.log(`[SMTP] Transmitting recovery signal to: ${email}`);
     await transporter.sendMail(mailOptions);
-    console.log(`[SMTP] Recovery signal successfully transmitted.`);
-    res.json({ message: 'Recovery code sent successfully.' });
+    res.json({ message: 'Reset code sent successfully' });
   } catch (err) {
-    console.error(`[SMTP ERROR] Recovery failed: ${err.message}`);
-    res.status(500).json({ error: `Connection to the Mail Hub timed out. Verify your Void settings. Details: ${err.message}` });
+    res.status(500).json({ error: err.message });
   }
 };
 

@@ -17,6 +17,30 @@ router.get('/me/activity', verifyToken, async (req, res) => {
   }
 });
 
+// Fetch current user's profile without password
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'User not found in the Void' });
+    
+    res.json({
+        id: user._id,
+        username: user.username,
+        auraName: user.auraName,
+        auraPoints: user.aura,
+        avatarEmoji: user.avatarEmoji,
+        auraColor: user.auraColor,
+        theme: user.theme || 'wine',
+        friends: user.friends || [],
+        enemies: user.enemies || [],
+        auraVotesGiven: user.auraVotes?.given || [],
+        claimedItems: user.claimedItems || []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Fetch top 100 users for the Public Leaderboard
 router.get('/leaderboard', async (req, res) => {
   try {

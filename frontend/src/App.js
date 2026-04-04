@@ -11,6 +11,7 @@ import Message from './pages/Message';
 import AuraStore from './pages/AuraStore';
 import Profile from './pages/Profile';
 import Leaderboard from './pages/Leaderboard';
+import AuthSuccess from './pages/AuthSuccess';
 import { useUser } from './context/UserContext';
 import { useTheme } from './context/ThemeContext';
 import { useEffect } from 'react';
@@ -33,6 +34,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/auth-success" element={<AuthSuccess />} />
           <Route path="/*" element={
             <>
               <Navbar />

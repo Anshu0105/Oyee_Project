@@ -4,6 +4,9 @@ const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const session = require('express-session');
+const passport = require('passport');
+require('./config/passport'); // Initialize passport config
 require('dotenv').config();
 
 const allowedOrigins = [
@@ -34,6 +37,17 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+// Session Configuration for Passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'oyeee_void_session_secret_2026',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 const messagesRoute = require('./routes/messages');
 const detectorRoute = require('./routes/detector');

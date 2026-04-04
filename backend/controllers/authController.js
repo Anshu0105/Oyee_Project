@@ -12,6 +12,7 @@ const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
   secure: true, 
+  family: 4, // Force IPv4 to bypass ENETUNREACH IPv6 issues on cloud networks
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,

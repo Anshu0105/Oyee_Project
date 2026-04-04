@@ -122,6 +122,29 @@ exports.loginUser = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(400).json({ error: 'Invalid credentials' });
 
+    // Streak and Login Logic
+    const todayStr = new Date().toISOString().split('T')[0];
+    const lastLoginStr = user.lastLoginDate;
+    
+    if (!lastLoginStr || lastLoginStr === "") {
+        // Initial login
+        user.streak = 1;
+        user.lastLoginDate = todayStr;
+    } else if (lastLoginStr !== todayStr) {
+        const lastLogin = new Date(lastLoginStr);
+        const today = new Date(todayStr);
+        const diffDays = Math.floor((today - lastLogin) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            user.streak += 1;
+        } else if (diffDays > 1) {
+            user.streak = 1;
+        }
+        user.lastLoginDate = todayStr;
+    }
+    
+    await user.save();
+
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '3d' });
 
     res.status(200).json({ 
@@ -129,7 +152,8 @@ exports.loginUser = async (req, res) => {
       user: { 
         id: user._id, username: user.username, role: user.role, email: user.email, 
         auraName: user.auraName, auraPoints: user.aura, avatarEmoji: user.avatarEmoji, 
-        auraColor: user.auraColor, theme: user.theme || 'wine', claimedItems: user.claimedItems || []
+        auraColor: user.auraColor, theme: user.theme || 'wine', claimedItems: user.claimedItems || [],
+        streak: user.streak || 1
       } 
     });
   } catch (err) {

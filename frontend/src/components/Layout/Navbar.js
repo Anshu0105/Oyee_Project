@@ -191,7 +191,7 @@ const Navbar = () => {
             <div 
               onClick={fetchActivity}
               className="streak-counter interactive" 
-              title={`${user.streak || 7} day streak`} 
+              title={`${user.streak || 0} day streak`} 
               style={{
                 display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
                 background: 'rgba(255, 152, 0, 0.1)', borderRadius: '20px', border: '1px solid rgba(255, 152, 0, 0.2)',
@@ -199,7 +199,7 @@ const Navbar = () => {
               }}
             >
               <Flame size={16} fill="currentColor" />
-              <span>{user.streak || 7}</span>
+              <span>{user.streak || 0}</span>
             </div>
           )}
 

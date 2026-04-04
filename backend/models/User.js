@@ -52,6 +52,10 @@ const UserSchema = new mongoose.Schema({
   violationCount: { type: Number, default: 0 },
   isReported: { type: Boolean, default: false },
 
+  // Streak Logic
+  streak: { type: Number, default: 0 },
+  lastLoginDate: { type: String, default: "" }, // Format: YYYY-MM-DD
+  
   createdAt: { type: Date, default: Date.now }
 });
 

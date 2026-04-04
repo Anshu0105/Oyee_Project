@@ -122,7 +122,7 @@ export const StreakModal = ({ isOpen, onClose, data, userStats }) => {
                 <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '3rem', fontWeight: '900', color: 'var(--streak-orange)', display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <Flame size={40} fill="currentColor" />
-                        {userStats.streak || 7}
+                        {userStats.streak || 0}
                     </div>
                     <div style={{ fontSize: '0.7rem', fontWeight: '800', opacity: 0.5, letterSpacing: '1px' }}>CURRENT STREAK</div>
                 </div>

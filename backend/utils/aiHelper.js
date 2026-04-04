@@ -27,6 +27,12 @@ async function aiModerate(text) {
  * AI Chat Summary
  */
 async function summarizeMessages(messages, maxBullets = 4) {
+  // If no API key, manifest a simulated cognitive synthesis for testing
+  if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === "YOUR_KEY_HERE") {
+    const topics = [...new Set(messages.map(m => m.text.split(' ')[0]))].slice(0, 3).join(', ');
+    return `[SIMULATED NEURAL SYNTHESIS]\n• Manifested signals from ${messages.length} peers detected.\n• Frequent data points observed: ${topics}...\n• Cognitive summary enabled once GEMINI_API_KEY is active.`;
+  }
+
   try {
     const textToSummarize = messages.map(m => `${m.user}: ${m.text}`).join('\n');
     const prompt = `Summarize these unread chat messages in max ${maxBullets} short bullet points. 
@@ -38,7 +44,7 @@ async function summarizeMessages(messages, maxBullets = 4) {
     return response.text();
   } catch (err) {
     console.error("AI Summary failed:", err);
-    return "You missed some conversations in the void.";
+    return `[NEURAL STALL]\n• The void is distorting the signal.\n• Observed ${messages.length} messages, but synthesis failed.`;
   }
 }
 

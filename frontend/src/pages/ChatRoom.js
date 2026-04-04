@@ -63,8 +63,11 @@ const ChatRoom = () => {
   useEffect(() => {
     if (!token) return;
 
+    // Canonical Room ID logic: use roomData if available, fallback to raw id
+    const canonicalId = roomData?.room_code || id;
+
     socketRef.current = io(BACKEND_URL);
-    socketRef.current.emit('joinRoom', id);
+    socketRef.current.emit('joinRoom', canonicalId);
 
     socketRef.current.on('receiveMessage', (messageData) => {
       setMessages(prev => [...prev, messageData]);
@@ -77,7 +80,7 @@ const ChatRoom = () => {
     return () => {
       socketRef.current.disconnect();
     };
-  }, [id, token]);
+  }, [id, token, roomData]); // Re-join if roomData manifest arrives
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -109,9 +112,11 @@ const ChatRoom = () => {
     }
 
     const senderName = user.name || 'Anonymous';
+    // Always transmit on the canonical frequency
+    const canonicalId = roomData?.room_code || id;
 
     const messagePayload = {
-      roomId: id,
+      roomId: canonicalId,
       text: input,
       user: senderName,
       senderId: user.id || user._id,
@@ -150,7 +155,7 @@ const ChatRoom = () => {
           {roomData && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--border-main)' }}>
                 <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-mono)', opacity: 0.5 }}>ROOM ID:</span>
-                <span style={{ fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>{id}</span>
+                <span style={{ fontSize: '0.8rem', fontWeight: '800', letterSpacing: '1px' }}>{roomData.room_code || id}</span>
                 <button 
                     onClick={copyToClipboard}
                     style={{ background: 'none', border: 'none', color: copied ? '#48bb78' : 'var(--accent-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '2px' }}

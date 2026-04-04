@@ -175,7 +175,11 @@ router.post('/join', verifyToken, async (req, res) => {
     const { room_code } = req.body;
     if (!room_code) return res.status(400).json({ error: 'Room code is required' });
 
-    const room = await Room.findOne({ room_code });
+    // Case-insensitive manifest lookup
+    const room = await Room.findOne({ 
+      room_code: { $regex: new RegExp(`^${room_code.trim()}$`, 'i') } 
+    });
+    
     if (!room) return res.status(404).json({ error: 'Room not found or expired' });
 
     if (room.members.length >= room.max_users) {
@@ -195,7 +199,11 @@ router.post('/join', verifyToken, async (req, res) => {
 
 router.get('/info/:roomCode', verifyToken, async (req, res) => {
   try {
-    const room = await Room.findOne({ room_code: req.params.roomCode });
+    // Case-insensitive manifest lookup for direct navigation
+    const room = await Room.findOne({ 
+      room_code: { $regex: new RegExp(`^${req.params.roomCode.trim()}$`, 'i') } 
+    });
+    
     if (!room) return res.status(404).json({ error: 'Room not found' });
     res.json(room);
   } catch (err) {

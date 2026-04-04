@@ -208,7 +208,7 @@ const PrivateRoomModal = ({ isOpen, onClose }) => {
                       maxLength={10}
                       value={joinCode}
                       onChange={e => setJoinCode(e.target.value)}
-                      style={{ ...inputStyle, textAlign: 'center', fontSize: '1.2rem', letterSpacing: '4px', textTransform: 'uppercase' }}
+                      style={{ ...inputStyle, textAlign: 'center', fontSize: '1.2rem' }}
                     />
                   </div>
 

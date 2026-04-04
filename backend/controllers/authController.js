@@ -7,24 +7,26 @@ const { generateAuraName } = require('../utils/nameGenerator');
 
 const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🌮', '🥑', '🍔', '🥟', '🥨'];
 
-// Nodemailer transport
+// Nodemailer transport - High-performance SSL config for Cloud Manifest
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT) || 587,
-  secure: false,
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // Use SSL for instant connection from cloud environments
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  connectionTimeout: 10000, // 10s manifest timeout
+  greetingTimeout: 10000,
 });
 
 // Temporary memory store for OTPs
-// Structure: Map<email, { otp, expiresAt, userData }>
 const otpStore = new Map();
 
 exports.sendOtp = async (req, res) => {
   try {
     const { username, email, password } = req.body;
+    console.log(`[AUTH] Initiating Signup OTP Manifest for: ${email}`);
     
     // Institutional Domain & Registration Logic (CGU Odisha)
     const cguRegex = /^(22|23|24|25)\d{4}(0\d{3}|1\d{3}|2000)@cgu-odisha\.ac\.in$/;
@@ -36,11 +38,11 @@ exports.sendOtp = async (req, res) => {
     }
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'User already exists' });
+    if (existingUser) return res.status(400).json({ error: 'Identity already manifested in the Void.' });
 
     // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 mins
+    const expiresAt = Date.now() + 5 * 60 * 1000;
 
     otpStore.set(email, {
       otp,
@@ -56,10 +58,13 @@ exports.sendOtp = async (req, res) => {
       html: `<h2>Welcome to OYEEE</h2><p>Your 6-digit verification code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`
     };
 
+    console.log(`[SMTP] Attempting to transmit signal to Google Mail Hub...`);
     await transporter.sendMail(mailOptions);
+    console.log(`[SMTP] Signal Transmitted Successfully.`);
     res.status(200).json({ message: 'OTP sent successfully' });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(`[SMTP ERROR] Manifest Failure: ${err.message}`);
+    res.status(500).json({ error: `Connection to the Mail Hub timed out. Verify your settings. Details: ${err.message}` });
   }
 };
 

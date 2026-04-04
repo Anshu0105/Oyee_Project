@@ -41,7 +41,7 @@ exports.sendOtp = async (req, res) => {
     });
 
     const { error: sendError } = await resend.emails.send({
-      from: 'OYEEE Auth <onboarding@resend.dev>',
+      from: 'OYEEE Auth <noreply@oyeee.chat>',
       to: [email],
       subject: 'Your OYEEE Authentication Code',
       html: `

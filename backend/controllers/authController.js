@@ -2,23 +2,14 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../middleware/auth');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const { generateAuraName } = require('../utils/nameGenerator');
 
 const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🌮', '🥑', '🍔', '🥟', '🥨'];
 
-// Nodemailer transport - Standard SSL gateway for OYEEE 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, 
-  family: 4, // Force IPv4 to bypass ENETUNREACH IPv6 issues on cloud networks
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  connectionTimeout: 15000, 
-});
+// Resend HTTPS Email Gateway — bypasses all SMTP port/IPv6 blocking on cloud
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 // Temporary memory store for OTP manifestations
 const otpStore = new Map();
@@ -49,9 +40,9 @@ exports.sendOtp = async (req, res) => {
       userData: { email: email.toLowerCase(), password }
     });
 
-    const mailOptions = {
-      from: `"OYEEE Auth" <${process.env.SMTP_USER}>`,
-      to: email,
+    const { error: sendError } = await resend.emails.send({
+      from: 'OYEEE Auth <onboarding@resend.dev>',
+      to: [email],
       subject: 'Your OYEEE Authentication Code',
       html: `
         <div style="background: #000; color: #fff; padding: 40px; border-radius: 20px; border: 1px solid #FF0055; font-family: sans-serif;">
@@ -61,12 +52,15 @@ exports.sendOtp = async (req, res) => {
           <p style="opacity: 0.5;">This manifestation signal expires in 10 minutes. Secure your identity.</p>
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (sendError) {
+      return res.status(500).json({ error: `Email delivery failed: ${sendError.message}` });
+    }
+
     res.status(200).json({ message: 'Frequency signal transmitted successfully.' });
   } catch (err) {
-    res.status(500).json({ error: `Mail hub stalling: ${err.message}` });
+    res.status(500).json({ error: `OTP system error: ${err.message}` });
   }
 };
 

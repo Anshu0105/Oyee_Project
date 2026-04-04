@@ -7,110 +7,110 @@ const { generateAuraName } = require('../utils/nameGenerator');
 
 const emojis = ['🥭', '🍜', '🌮', '🍔', '🍕', '🍣', '🍩', '🥓', '🧇', '🥞', '🥨', '🌮', '🥑', '🍔', '🥟', '🥨'];
 
-// Nodemailer transport - Deep Debug Manifest for Cloud Troubleshooting
+// Nodemailer transport - Standard SSL gateway for OYEEE 
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port: 465,
-  secure: true, // Use SSL for direct manifest
+  secure: true, 
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
-  connectionTimeout: 10000,
-  greetingTimeout: 10000,
-  debug: true,   // Spill detailed logs to Render console
-  logger: true,  // Track full manifest history
-  tls: {
-    rejectUnauthorized: false // Bypass regional certificate interference
-  }
+  connectionTimeout: 15000, 
 });
 
-// Temporary memory store for OTPs
+// Temporary memory store for OTP manifestations
 const otpStore = new Map();
 
 exports.sendOtp = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    console.log(`[AUTH] Initiating Signup OTP Manifest for: ${email}`);
+    const { email, password } = req.body;
     
-    // Institutional Domain & Registration Logic (CGU Odisha)
+    // Strict CGU Odisha Institutional Rule (Batches 2022-2025)
     const cguRegex = /^(22|23|24|25)\d{4}(0\d{3}|1\d{3}|2000)@cgu-odisha\.ac\.in$/;
     
     if (!cguRegex.test(email.toLowerCase())) {
       return res.status(400).json({ 
-        error: 'Access Denied: Please use a valid CGU Student Email (e.g., 2301020816@cgu-odisha.ac.in) from active batches (2022-2025).' 
+        error: 'Manifest Rejected: Please use a valid CGU Student Email (e.g., 2301020816@cgu-odisha.ac.in).' 
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
     if (existingUser) return res.status(400).json({ error: 'Identity already manifested in the Void.' });
 
-    // Generate 6-digit OTP
+    // Generate 6-digit manifest code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 5 * 60 * 1000;
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 min window
 
-    otpStore.set(email, {
+    otpStore.set(email.toLowerCase(), {
       otp,
       expiresAt,
-      userData: { username, email, password }
+      userData: { email: email.toLowerCase(), password }
     });
 
     const mailOptions = {
       from: `"OYEEE Auth" <${process.env.SMTP_USER}>`,
       to: email,
       subject: 'Your OYEEE Authentication Code',
-      text: `Your OTP for OYEEE is: ${otp}. It expires in 5 minutes.`,
-      html: `<h2>Welcome to OYEEE</h2><p>Your 6-digit verification code is: <strong>${otp}</strong></p><p>It expires in 5 minutes.</p>`
+      html: `
+        <div style="background: #000; color: #fff; padding: 40px; border-radius: 20px; border: 1px solid #FF0055; font-family: sans-serif;">
+          <h2 style="color: #FF0055; letter-spacing: 2px; text-transform: uppercase;">Identity Manifest Protocol</h2>
+          <p>A signup signal was initiated for OYEEE. Use the code below to manifest your existence:</p>
+          <div style="font-size: 3rem; font-weight: 900; letter-spacing: 5px; color: #fff; margin: 30px 0; text-align: center;">${otp}</div>
+          <p style="opacity: 0.5;">This manifestation signal expires in 10 minutes. Secure your identity.</p>
+        </div>
+      `
     };
 
-    console.log(`[SMTP] Attempting to transmit signal to Google Mail Hub...`);
     await transporter.sendMail(mailOptions);
-    console.log(`[SMTP] Signal Transmitted Successfully.`);
-    res.status(200).json({ message: 'OTP sent successfully' });
+    res.status(200).json({ message: 'Frequency signal transmitted successfully.' });
   } catch (err) {
-    console.error(`[SMTP ERROR] Manifest Failure: ${err.message}`);
-    res.status(500).json({ error: `Connection to the Mail Hub timed out. Verify your settings. Details: ${err.message}` });
+    res.status(500).json({ error: `Mail hub stalling: ${err.message}` });
   }
 };
 
 exports.verifySignup = async (req, res) => {
   try {
     const { email, otp } = req.body;
-    
-    const storedData = otpStore.get(email);
-    if (!storedData) return res.status(400).json({ error: 'OTP request expired or never manifested.' });
+    const storedData = otpStore.get(email.toLowerCase());
 
+    if (!storedData) return res.status(400).json({ error: 'Manifest signal lost or expired. Request a new code.' });
     if (Date.now() > storedData.expiresAt) {
-      otpStore.delete(email);
-      return res.status(400).json({ error: 'Code has returned to the Void (Expired).' });
+      otpStore.delete(email.toLowerCase());
+      return res.status(400).json({ error: 'Signal expired.' });
     }
+    if (storedData.otp !== otp) return res.status(400).json({ error: 'Incorrect manifestation code.' });
 
-    if (storedData.otp !== otp) return res.status(400).json({ error: 'Invalid authentication signal.' });
-
-    const { username, password } = storedData.userData;
-    otpStore.delete(email);
+    const { password } = storedData.userData;
+    otpStore.delete(email.toLowerCase());
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Dynamic Identity Synthesis
     const auraName = await generateAuraName();
     const avatarEmoji = emojis[Math.floor(Math.random() * emojis.length)];
     const auraColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
     const newUser = new User({
-      username, email, password: hashedPassword, auraName, avatarEmoji, auraColor, role: 'user'
+      username: email.toLowerCase().split('@')[0], 
+      email: email.toLowerCase(), 
+      password: hashedPassword, 
+      auraName, 
+      avatarEmoji, 
+      auraColor, 
+      role: 'user'
     });
 
     const savedUser = await newUser.save();
-    
     const token = jwt.sign({ id: savedUser._id, role: savedUser.role }, JWT_SECRET, { expiresIn: '3d' });
 
     res.status(201).json({ 
-      message: `Identity manifest complete, ${auraName}!`,
+      message: `Identity complete, ${auraName}!`,
       token,
       user: {
-          id: savedUser._id, username: savedUser.username, auraName, auraPoints: 0,
-          avatarEmoji, auraColor, role: savedUser.role, theme: 'wine'
+          id: savedUser._id, auraName, auraPoints: 0,
+          avatarEmoji, auraColor, role: 'user', theme: 'wine'
       }
     });
   } catch (err) {
